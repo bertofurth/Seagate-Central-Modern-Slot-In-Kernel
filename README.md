@@ -12,6 +12,26 @@ a pre-requisite / co-requisite of this project. That is,
 you must upgrade the samba service on the Seagate Central
 before, or at the same time as upgrading the Linux kernel.
 
+A pre-compiled linux v5.4.X kernel based on the instructions
+in this guide is currently available at
+
+BERTO
+https://www.dropbox.com/s/wwesnz5cmc9hlcy/seagate-central-samba-4.14.6-15-Aug-2021.tar.gz
+BERTO
+
+There are three sets of instructions included in this project.
+
+# INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
+Apply necessary patches and cross compile the linux kernel for
+Seagate Central from scratch.
+
+# INSTRUCTIONS_INSTALL_KERNEL.md
+Manually install the new linux kernel onto the Seagate Central.
+
+# INSTRUCTIONS_INSTALL_WITH_SAMBA.md
+Install the kernel as part of a firmware upgrade that includes
+system tweaks and the required samba server upgrade.
+
 ## Acknowledgements
 This project is based on the Seagate Central Firmware GPL
 source code as provided at
@@ -96,27 +116,7 @@ By using a modern kernel users are able to install the latest versions of
 modern linux software tools that depend on the services and interfaces provided 
 by an up to date version of the Linux kernel.
 
-## Prerequisites
-### Disk space
-BERTO : This procedure will take up to a maximum of about 1GiB of disk space
-on the building host. It will only consume about 10?? BERTO megabytes of extra 
-storage space on the Seagate Central.
 
-### Time
-BERTO : The build components take a total of about 45 minutes to complete on an 
-8 core i7 PC. It takes about 6.5 hours on a Raspberry Pi 4B.
-
-### A cross compilation suite on a build host
-You can follow the instructions at
-
-https://github.com/bertofurth/Seagate-Central-Toolchain
-
-to generate a cross compilation toolset that will generate binaries,
-headers and other data suitable for the Seagate Central.
-
-If you have already gone through the pre-requisite process of compiling
-replacement samba software then you should already have this cross
-compiling software built and ready to use.
 
 ### Samba version 4.x installed on the Seagate Central
 The original version of the samba file sharing service loaded on the
@@ -175,36 +175,6 @@ BERTO The alternative procedure detailed in
 and will in fact automatically re-enable su access as a result of the
 procedure.
 
-### Required tools
-As mentioned above, the most important software used by this procedure is
-the cross compiler and associated toolset. This will most likely need to be
-manually generated before commencing this procedure as there is unlikely 
-to be a pre-built cross compiler tool set for Seagate Central readily 
-available.
-
-There is a guide to generate a cross compilation toolset suitable for the 
-Seagate Central at the following link.
-
-https://github.com/bertofurth/Seagate-Central-Toolchain
-
-It is suggested to build the latest versions of gcc and binutils available.
-
-BERTO The following packages or their equivalents may also need to be installed on 
-the building system.
-BERTO
-#### OpenSUSE Tumbleweed - Aug 2021 (zypper add ...)
-* zypper install -t pattern devel_basis
-* gcc-c++
-* unzip
-* lbzip2
-* bzip2
-* libtirpc-devel
-
-#### Debian 10 - Buster (apt-get install ...)
-* build-essential
-* unzip
-* gawk
-* curl (or use wget)
 
 
 
