@@ -23,6 +23,14 @@ Seagate_central_linux (Single Disk Version) project at
 
 https://github.com/KL-Yang/seagate_central_linux
 
+Finally the 64K memory page size work is largely based on
+the work by Gregory Clement as documented at
+
+https://lwn.net/ml/linux-arm-kernel/20200611134914.765827-1-gregory.clement@bootlin.com/
+
+Thank you to all the greater minds than mine that have paved 
+the way for this project.
+
 ## Pre-compiled kernel download link
 BERTO A pre-compiled kernel based on this project and base on linux BERTO BERTO is available at
 
@@ -43,19 +51,25 @@ Central while still keeping their user Data volume intact and running
 the original Seagate supplied tools with as little interruption as
 possible.
 
-This is different to the project by KL-Yang which provides a kernel
-to be run on a Seagate Central which has a completely new operating
-system installed.
-
-This project also includes support for the Seagate Central USB port
-which the KL-Yang project has not added at the time of writing (check
-the project page linked above).
-
 The hope is that by providing a modern kernel to replace the old 
 v2.6 native kernel, users will be able to add new modern software 
 services to their Seagate Central without having to go through the
 dangerous and tedious process of installing an entirely new operating 
 system.
+
+This is different to the project by KL-Yang which provides a kernel
+to be run on a Seagate Central to be used as part of installing a
+completely new operating system.
+
+The main obstacle this project had to overcome was incorporating 
+support for 64K page sizes. This was required because the native disk
+format for the user Data partition on a Seagate Central uses 64K pages.
+These are only supported natively by linux when the memory pages are
+64K or larger.
+
+This project also includes support for the Seagate Central USB port
+which the KL-Yang project has not added at the time of writing (check
+the project page linked above).
 
 Here is a list of *some* of the new features that can be supported by 
 using this upgraded kernel.
@@ -70,8 +84,8 @@ advantages provided by an IPv6 enabled network can now be taken advanage
 of.
 
 #### Other kinds of USB devices
-With this customized kernel new kinds of USB devices, such as a video
-camera can be connected to the unit.
+By using a standard modern linux kernel new kinds of USB devices, such as
+a video camera, can be connected to the unit.
 
 #### Security
 By using a modern kernel security flaws in older kernel versions are fixed
@@ -197,45 +211,6 @@ BERTO
 
 
 
-
-Things I didn't port over
-
-	• Jumbo Ethernet Frames :
-
-Jumbo Ethernet frames allow devices to transmit frames that contain more than the standard data payload of 1500 bytes. This is in order to be able to reduce the packet header transmission and processing overhead associated with transmitting each packet.
-
-I have never come across any home or small enterprise that uses Jumbo Ethernet frames. One important reason for this is because Jumbo Ethernet frames are not supported over Wifi. Jumbo frames only work over hard Ethernet connections and only where all the infrastructure between the server and client (switches and routers) support it. In lower end networks, like the ones where a Seagate Central would typically be deployed, it's not certain that all the networking infrastructure would have this capability.
-
-Jumbo frames only have a noticeable impact in contexts where gigabytes of data are constantly flowing over a hard ethernet network and where microseconds count. I doubt that a Seagate Central is commonly deployed in these kinds of networks. 
-
-I see some internet documentation claims that you can get up to 30% performance improvement with Jumbo Frames enabled however my opinion is that this would only apply in a few rare corner cases. One example might be if a network were running using a 10Mbps Ethernet link (rather than the modern standard of 1Gbps). It might also apply if you were using quite ancient and underpowered Ethernet switching or routing equipment that was being overwhelmed by a flood of frames, or did not use the modern "Cut Through" switching technique that virtually all existing switching equipment now uses.
-
-
-
-	• USB On-The-Go (OTG) support.
-
-I'm confident that the Seagate Central doesn't actually support this however it is functionality that was include in the original Seagate Central Kernel.
-
-USB On-The-Go (OTG) is a mechanism whereby a USB "Device" like a smart phone can act as a USB "Host" so that it can connect to other USB devices like a storage drive or a keyboard. Presumably in the context of a NAS, like a Seagate Central, it would let the NAS act as a "Device" that could connect to a "Host" like a Phone or PC. This way the Phone or PC could directly access the data stored on the NAS via the USB connection. 
-
-I'm confident that the Seagate Central doesn't have this kind of capability because it isn't noted in the Seagate Central documentation and I cannot find any examples online of this kind of functionality being used with a Seagate Central. In addition there doesn't seem to be any method to configure or customize this feature, such as which user's Data folder would be made available over the OTG connection and so forth. Finally there is no mention of "OTG" or "On-The-Go" in the system configuration folder (/etc)
-
-I'm not brave enough to test this functionality by plugging my Seagate Central into my PC or Phone via a reversed polarity male to male USB cable because I'm scared that I'll end up frying something!!
-
-If anyone has actually used this kind of functionality on a Seagate Central then I'd be interested to hear about it and _exactly_ how you got it to work.
-
-	• PCI, SDHCI, XHCI, and other system components not used by the Seagate Central
-
-The Cavium CNS3420 CPU, which the Seagate Central is based on, supports a range of different hardware bus types and devices however the Seagate Central does not make use of all of these.
-
-I've focused my efforts on only porting over support for the hardware components that are present on the Seagate Central Single Hard Drive NAS. 
-
-
-I acknowledge that I haven't done things in the most elegant manner with this code. There are a lot of "#ifdef CONFIG_ARCH_CNS3XXX" statements in code to make things work but my goal here was to just get something working, not to have this code incorporated into the sacred linux kernel source tree.
-
-Some of the areas where someone with more insight and time might like to improve my code
-
-* Some obscure linux subsystems don't compile properly with a 64K page size. For example the "Andrew File System" (CONFIG_AFS_FS) does not seem to be compatible with this size of page.
 
 * NTFS support
 
@@ -373,7 +348,7 @@ kernel: virt_to_phys used for non-linear address: xxxxxxxx (0xb0000000)
 
 These seem to occur due to some of the proprietary Seagate Central software, particularly the "ledmanager" and "networklan" tools. It doesn't seem to impact on the operation of the unit.
 
-Issue : Ethernet disconnect handling
+#### Issue : Ethernet disconnect handling
 
 When the Ethernet cable is physically disconnected from the unit the system doesn't properly recognize this event. Instead it still believes that the Ethernet interface is "up". After the unit is reconnected to the Ethernet it will simply function as if nothing has happened.
 
@@ -383,18 +358,15 @@ The only rare occasion I can envisage where this might be an issue is if someone
 
 The workaround is to simply reboot the unit if a new DHCP lease needs to be quickly acquired, or to simply wait until the unit acquires a new DHCP lease after the old one expires.
 
-Issue : Red blinking LED status light for Internet connectivity
+#### Issue : No red blinking LED status light for lost Ethernet connectivity
 
-When using stock firmware, if a Seagate Central detects that the Ethernet connection is down then the status light on the top of the unit will blink red. This will not occur with the new kernel. This relates to the issue listed above with Ethernet disconnect handling.
+When using stock firmware, if a Seagate Central detects that the Ethernet connection is down then the status light on the top of the unit will blink red. This will not occur when using the new kernel. This relates to the issue listed above with Ethernet disconnect handling.
 
-Note that the status LED still stays solid amber after power on, flashes green during the boot process and stays solid green once the main bootup process is finished. 
+Note that the other LED status states work properly. That is, solid amber after power on, flashing green during the boot process and solid green once the main bootup process is finished. 
 
 Also note that the status LEDs on the Ethernet port itself work fine and will properly indicate the status of the Ethernet port.
 
-Finally, keep a look out for a related project which will provide an alternative "ledmanager" daemon that will let the LED status light be more informative and alert users to more useful conditions such as sustained high CPU or low disk space.
-
-
-Issue : Kernel DEBUG and other obscure options (Rare)
+#### Issue : Kernel DEBUG and other obscure options (Rare)
 
 In some cases there may be problems when the kernel is compiled with some less frequently used configuration options such as older drivers or those under the "Kernel Hacking" menu of the Linux menuconfig dialog.
 
@@ -416,30 +388,60 @@ Some examples I've encountered in my testing.
 
 * CONFIG_AFS_FS, the Andrew File System, will not work with 64K memory pages.
 
-
 The rule of thumb I have had to follow when encountering "weird" issues is to try compiling the kernel with the least number of debugs and optional features turned on as possible.
 
 
 
-TODO : But probably not
+### TODO : (But probably not)
 Here are some components that I *could* have put some effort into but they weren't part of the original Seagate Central so I didn't bother.
 
-Power Management : In this Kernel there's no ability to suspend or to power down one of the CPUs during low CPU usage. It's possible to implement but in my experience a file server needs to be ready to go 100% of the time so it's probably not a feature that would get much use.
+#### Power Management 
+In this kernel there's no ability to suspend or to power down one of the CPUs during low CPU usage. It's possible to implement but in my experience a file server needs to be ready to go 100% of the time so it's probably not a feature that would get much use.
 
-64K to 4K block size : This project supports the 64K block sizes on the Seagate Central data partition by supporting non standard memory page table sizes of 64K. An alternative route would have been to create a guide for converting the user data volume in the Seagate Central from 64K block size to a standard 4K block size. That way none of the 64K PAGE_SIZE work be necessary, however that would have meant the kernel would not be "slot-in" as such.
+#### 64K to 4K block size conversion procedure 
+This project supports the 64K block sizes on the Seagate Central data partition by supporting a non standard memory page table size of 64K.
+
+An alternative route would have been to create a guide for converting the user data volume in the Seagate Central from 64K block size to a standard 4K block size. That way none of the 64K PAGE_SIZE work be necessary, however that would have meant the kernel would not be "slot-in" as such.
+
+#### Jumbo Ethernet Frames 
+Jumbo Ethernet frames allow devices to transmit frames that contain more than the standard data payload of 1500 bytes. This is in order to be able to reduce the packet header transmission and processing overhead associated with transmitting each packet.
+
+I have never come across any home or small enterprise that uses Jumbo Ethernet frames. One important reason for this is because Jumbo Ethernet frames are not supported over Wifi. Jumbo frames only work over hard Ethernet connections where all the infrastructure between the server and client (switches and routers) support it. In lower end networks, like the ones where a Seagate Central would typically be deployed, it's not certain that all the networking infrastructure would have this capability.
+
+Jumbo frames only have a noticeable impact in contexts where gigabytes of data are *constantly* flowing over a hard ethernet network and where microseconds count.
+
+I see some internet documentation claiming that you can get up to 30% performance improvement with Jumbo Frames enabled however my opinion is that this would only apply in a few rare corner cases. One example might be if a network were running using a shared half duplex 10Mbps Ethernet link rather than the modern standards of full duplex 100Mbps and 1Gbps. It might also apply if you were using quite ancient and underpowered Ethernet switching equipment that was being overwhelmed by a flood of frames, or did not use the modern "Cut Through" switching technique that is enabled in virtually all switching equipment made this century.
+
+####  USB On-The-Go (OTG) support.
+I'm confident that the Seagate Central doesn't actually support this however it is functionality that was include in the original Seagate Central Kernel.
+
+USB On-The-Go (OTG) is a mechanism whereby a USB "Device" like a smart phone can act as a USB "Host" so that it can connect to other USB devices like a storage drive or a keyboard. Presumably in the context of the Seagate Central, it would let the NAS act as a "Device" that could connect to a "Host" like a Phone or PC. This way the Phone or PC could directly access the data stored on the NAS via the USB connection. 
+
+I'm confident that the Seagate Central doesn't have this kind of capability because it isn't noted in the Seagate Central documentation and I cannot find any examples online of this kind of functionality being used with a Seagate Central. In addition there doesn't seem to be any method to configure or customize this feature, such as which user's Data folder would be made available over the OTG connection and so forth.
+
+I'm not brave enough to test this functionality by plugging my Seagate Central into my PC or Phone via a reversed polarity male to male USB cable because I'm scared that I'll end up frying something!!
+
+If anyone has actually used this kind of functionality on a Seagate Central then I'd be interested to hear about it and _exactly_ how you got it to work.
+
+#### PCI, SDHCI, XHCI, and other hardware components not used by the Seagate Central
+
+The Cavium CNS3420 CPU, which the Seagate Central is based on, supports a range of different hardware bus types and devices however the Seagate Central does not make use of all of these.
+
+I've focused my efforts on only porting over support for the hardware components that are present on the Seagate Central Single Hard Drive NAS. 
 
 
+## Final thoughts
+I acknowledge that I haven't done things in the most elegant manner with these patches and code. For example there are a lot of "#ifdef" statements introduced into some core kernel source files that get things working, but aren't necessarily very graceful. For these reasons I don't plan to make any effort to submit these patches to the mainline Linux kernel. I also don't make any commitment to maintain this project going forward as future linux versions beyond v5.x are released.
 
+I confess that I haven't always fully comprehended every piece of code I've ported over in order to get this project working. It may be that there are flaws in the original code that I've blindly pulled over. It may be that there are flaws that I've created myself through lack of understanding. As I mentioned, my goal was simply to "get things working".
 
+Since this is the case, I would suggest that you **do not use the products of this project in a mission critical system or in a system that people's health or safety depends on**. 
 
+That being said, I've **not encountered any problems involving data corruption or abrupt loss of connectivity** while testing this kernel myself. 
 
-A confession
-I don't profess to fully comprehend every piece of code I've ported over in order to get this kernel working. It may be that there are flaws in the original code that I've blindly pulled over. It may well be that there are flaws that I've created myself through ignorance, ack of care or lack of understanding. My goal was simply to "get things working".
+Hopefully these instructions can serve as a template for upgrading the linux kernel on other Linux based embedded NAS equipment. In particular the 64K page size additions will hopefully prove useful for other armv6 based NAS equipment.
 
-Please do not use this code in a mission critical system or in a system that people's health or well being depends on. 
-
-I'm not going to attempt to get any of this code ported to mainline linux because I have no plans to volunteer to be it's maintainer and given how old the Seagate Central platform is, I don't think there's going to be a substantial demand for it.
-
+Finally I learned a great deal about Linux, arm32 and embedded systems while writing this guide. Please read these instructions with the understanding that I am still in the process of learning. I trust that this project will help others to learn as well.
 
 
 
