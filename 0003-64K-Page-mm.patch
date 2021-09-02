@@ -1,0 +1,387 @@
+ mm/kasan/init.c      |  5 ++++-
+ mm/madvise.c         |  8 ++++++++
+ mm/memcontrol.c      | 12 ++++++++++--
+ mm/memory.c          | 31 +++++++++++++++++++++++++++----
+ mm/mempolicy.c       |  4 ++++
+ mm/mlock.c           |  4 ++++
+ mm/mprotect.c        |  4 ++++
+ mm/mremap.c          |  5 +++++
+ mm/page_vma_mapped.c |  4 ++++
+ mm/pagewalk.c        |  4 ++++
+ mm/swap_state.c      | 15 ++++++++++++++-
+ mm/swapfile.c        |  4 ++++
+ mm/vmalloc.c         | 13 ++++++++++++-
+ 13 files changed, 104 insertions(+), 9 deletions(-)
+
+diff --git a/mm/kasan/init.c b/mm/kasan/init.c
+index cc64ed6858c6..e7a7970c756a 100644
+--- a/mm/kasan/init.c
++++ b/mm/kasan/init.c
+@@ -343,8 +343,11 @@ static void kasan_remove_pte_table(pte_t *pte, unsigned long addr,
+ 				unsigned long end)
+ {
+ 	unsigned long next;
+-
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr < end; addr = next, pte += PTE_STEP) {
++#else
+ 	for (; addr < end; addr = next, pte++) {
++#endif
+ 		next = (addr + PAGE_SIZE) & PAGE_MASK;
+ 		if (next > end)
+ 			next = end;
+diff --git a/mm/madvise.c b/mm/madvise.c
+index 6d3d348b17f4..f26ed5ef0157 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -396,7 +396,11 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 	orig_pte = pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
+ 	flush_tlb_batched_pending(mm);
+ 	arch_enter_lazy_mmu_mode();
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr < end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr < end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		ptent = *pte;
+ 
+ 		if (pte_none(ptent))
+@@ -593,7 +597,11 @@ static int madvise_free_pte_range(pmd_t *pmd, unsigned long addr,
+ 	orig_pte = pte = pte_offset_map_lock(mm, pmd, addr, &ptl);
+ 	flush_tlb_batched_pending(mm);
+ 	arch_enter_lazy_mmu_mode();
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		ptent = *pte;
+ 
+ 		if (pte_none(ptent))
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index eb8e87c4833f..56570a91925a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5837,7 +5837,11 @@ static int mem_cgroup_count_precharge_pte_range(pmd_t *pmd,
+ 	if (pmd_trans_unstable(pmd))
+ 		return 0;
+ 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE)
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE)
++#endif
+ 		if (get_mctgt_type(vma, addr, *pte, NULL))
+ 			mc.precharge++;	/* increment precharge temporarily */
+ 	pte_unmap_unlock(pte - 1, ptl);
+@@ -6057,10 +6061,14 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
+ retry:
+ 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
+ 	for (; addr != end; addr += PAGE_SIZE) {
+-		pte_t ptent = *(pte++);
++		pte_t ptent = *pte;
+ 		bool device = false;
+ 		swp_entry_t ent;
+-
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		pte += PTE_STEP;
++#else
++		pte++;
++#endif
+ 		if (!mc.precharge)
+ 			break;
+ 
+diff --git a/mm/memory.c b/mm/memory.c
+index 25fc46e87214..3dd8828206a5 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -1086,8 +1086,11 @@ copy_pte_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
+ 			prealloc = NULL;
+ 		}
+ 		progress += 8;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (dst_pte += PTE_STEP, src_pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (dst_pte++, src_pte++, addr += PAGE_SIZE, addr != end);
+-
++#endif
+ 	arch_leave_lazy_mmu_mode();
+ 	spin_unlock(src_ptl);
+ 	pte_unmap(orig_src_pte);
+@@ -1411,8 +1414,11 @@ static unsigned long zap_pte_range(struct mmu_gather *tlb,
+ 		if (unlikely(!free_swap_and_cache(entry)))
+ 			print_bad_pte(vma, addr, ptent, NULL);
+ 		pte_clear_not_present_full(mm, addr, pte, tlb->fullmm);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
+-
++#endif
+ 	add_mm_rss_vec(mm, rss);
+ 	arch_leave_lazy_mmu_mode();
+ 
+@@ -1814,14 +1820,20 @@ static int insert_pages(struct vm_area_struct *vma, unsigned long addr,
+ 	unsigned long pages_to_write_in_pmd;
+ 	int ret;
+ more:
++
+ 	ret = -EFAULT;
+ 	pmd = walk_to_pmd(mm, addr);
+ 	if (!pmd)
+ 		goto out;
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	pages_to_write_in_pmd = min_t(unsigned long,
++		remaining_pages_total, PTRS_PER_PTE_REAL - pte_index(addr));
++#else
+ 	pages_to_write_in_pmd = min_t(unsigned long,
+ 		remaining_pages_total, PTRS_PER_PTE - pte_index(addr));
+-
++#endif
++	
+ 	/* Allocate the PTE if necessary; takes PMD lock once only. */
+ 	ret = -ENOMEM;
+ 	if (pte_alloc(mm, pmd))
+@@ -1832,7 +1844,11 @@ static int insert_pages(struct vm_area_struct *vma, unsigned long addr,
+ 		const int batch_size = min_t(int, pages_to_write_in_pmd, 8);
+ 
+ 		start_pte = pte_offset_map_lock(mm, pmd, addr, &pte_lock);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		for (pte = start_pte; pte_idx < batch_size; pte += PTE_STEP, ++pte_idx) {
++#else
+ 		for (pte = start_pte; pte_idx < batch_size; ++pte, ++pte_idx) {
++#endif
+ 			int err = insert_page_in_batch_locked(mm, pte,
+ 				addr, pages[curr_page_idx], prot);
+ 			if (unlikely(err)) {
+@@ -1877,7 +1893,6 @@ int vm_insert_pages(struct vm_area_struct *vma, unsigned long addr,
+ {
+ #ifdef pte_index
+ 	const unsigned long end_addr = addr + (*num * PAGE_SIZE) - 1;
+-
+ 	if (addr < vma->vm_start || end_addr >= vma->vm_end)
+ 		return -EFAULT;
+ 	if (!(vma->vm_flags & VM_MIXEDMAP)) {
+@@ -2294,7 +2309,11 @@ static int remap_pte_range(struct mm_struct *mm, pmd_t *pmd,
+ 		}
+ 		set_pte_at(mm, addr, pte, pte_mkspecial(pfn_pte(pfn, prot)));
+ 		pfn++;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	arch_leave_lazy_mmu_mode();
+ 	pte_unmap_unlock(mapped_pte, ptl);
+ 	return err;
+@@ -2529,7 +2548,11 @@ static int apply_to_pte_range(struct mm_struct *mm, pmd_t *pmd,
+ 	if (fn) {
+ 		do {
+ 			if (create || !pte_none(*pte)) {
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++			        err = fn(pte += PTE_STEP, addr, data);
++#else
+ 				err = fn(pte++, addr, data);
++#endif
+ 				if (err)
+ 					break;
+ 			}
+diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+index e32360e90274..fc52b305a4ff 100644
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -522,7 +522,11 @@ static int queue_pages_pte_range(pmd_t *pmd, unsigned long addr,
+ 		return 0;
+ 
+ 	mapped_pte = pte = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		if (!pte_present(*pte))
+ 			continue;
+ 		page = vm_normal_page(vma, addr, *pte);
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 16d2ee160d43..0a3d0dff912a 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -370,7 +370,11 @@ static unsigned long __munlock_pagevec_fill(struct pagevec *pvec,
+ 	start += PAGE_SIZE;
+ 	while (start < end) {
+ 		struct page *page = NULL;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		pte += PTE_STEP;
++#else
+ 		pte++;
++#endif
+ 		if (pte_present(*pte))
+ 			page = vm_normal_page(vma, start, *pte);
+ 		/*
+diff --git a/mm/mprotect.c b/mm/mprotect.c
+index 883e2cc85cad..7ac59f35bcba 100644
+--- a/mm/mprotect.c
++++ b/mm/mprotect.c
+@@ -187,7 +187,11 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 				pages++;
+ 			}
+ 		}
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	arch_leave_lazy_mmu_mode();
+ 	pte_unmap_unlock(pte - 1, ptl);
+ 
+diff --git a/mm/mremap.c b/mm/mremap.c
+index 5989d3990020..35e3a00d848e 100644
+--- a/mm/mremap.c
++++ b/mm/mremap.c
+@@ -175,8 +175,13 @@ static void move_ptes(struct vm_area_struct *vma, pmd_t *old_pmd,
+ 	flush_tlb_batched_pending(vma->vm_mm);
+ 	arch_enter_lazy_mmu_mode();
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; old_addr < old_end; old_pte += PTE_STEP, old_addr += PAGE_SIZE,
++				   new_pte += PTE_STEP, new_addr += PAGE_SIZE) {
++#else	
+ 	for (; old_addr < old_end; old_pte++, old_addr += PAGE_SIZE,
+ 				   new_pte++, new_addr += PAGE_SIZE) {
++#endif
+ 		if (pte_none(*old_pte))
+ 			continue;
+ 
+diff --git a/mm/page_vma_mapped.c b/mm/page_vma_mapped.c
+index f7b331081791..c1253a958ea9 100644
+--- a/mm/page_vma_mapped.c
++++ b/mm/page_vma_mapped.c
+@@ -278,7 +278,11 @@ bool page_vma_mapped_walk(struct page_vma_mapped_walk *pvmw)
+ 				pvmw->pte = NULL;
+ 				goto restart;
+ 			}
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++			pvmw->pte += PTE_STEP;
++#else
+ 			pvmw->pte++;
++#endif
+ 			if ((pvmw->flags & PVMW_SYNC) && !pvmw->ptl) {
+ 				pvmw->ptl = pte_lockptr(mm, pvmw->pmd);
+ 				spin_lock(pvmw->ptl);
+diff --git a/mm/pagewalk.c b/mm/pagewalk.c
+index 9b3db11a4d1d..3a4a6baacc02 100644
+--- a/mm/pagewalk.c
++++ b/mm/pagewalk.c
+@@ -33,7 +33,11 @@ static int walk_pte_range_inner(pte_t *pte, unsigned long addr,
+ 		if (addr >= end - PAGE_SIZE)
+ 			break;
+ 		addr += PAGE_SIZE;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		pte += PTE_STEP;
++#else
+ 		pte++;
++#endif
+ 	}
+ 	return err;
+ }
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index c56aa9ac050d..a1d1d1c2f477 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -772,8 +772,16 @@ static void swap_ra_info(struct vm_fault *vmf,
+ 	ra_info->ptes = pte;
+ #else
+ 	tpte = ra_info->ptes;
+-	for (pfn = start; pfn != end; pfn++)
++	for (pfn = start; pfn != end; pfn++) {
++
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		*tpte = *pte;
++		tpte += PTE_STEP;
++		pte += PTE_STEP;
++#else
+ 		*tpte++ = *pte++;
++#endif
++	}
+ #endif
+ 	pte_unmap(orig_pte);
+ }
+@@ -811,8 +819,13 @@ static struct page *swap_vma_readahead(swp_entry_t fentry, gfp_t gfp_mask,
+ 		goto skip;
+ 
+ 	blk_start_plug(&plug);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (i = 0, pte = ra_info.ptes; i < ra_info.nr_pte;
++	     i++, pte += PTE_STEP) {
++#else
+ 	for (i = 0, pte = ra_info.ptes; i < ra_info.nr_pte;
+ 	     i++, pte++) {
++#endif
+ 		pentry = *pte;
+ 		if (pte_none(pentry))
+ 			continue;
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 1e07d1c776f2..a59f1ace0a9e 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -2000,7 +2000,11 @@ static int unuse_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 		}
+ try_next:
+ 		pte = pte_offset_map(pmd, addr);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	pte_unmap(pte - 1);
+ 
+ 	ret = 0;
+diff --git a/mm/vmalloc.c b/mm/vmalloc.c
+index d5cd52805149..e677d60d9e27 100644
+--- a/mm/vmalloc.c
++++ b/mm/vmalloc.c
+@@ -112,7 +112,11 @@ static int vmap_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
+ #endif
+ 		set_pte_at(&init_mm, addr, pte, pfn_pte(pfn, prot));
+ 		pfn++;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PFN_DOWN(size) * PTE_STEP, addr += size, addr != end);
++#else
+ 	} while (pte += PFN_DOWN(size), addr += size, addr != end);
++#endif
+ 	*mask |= PGTBL_PTE_MODIFIED;
+ 	return 0;
+ }
+@@ -319,7 +323,11 @@ static void vunmap_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
+ 	do {
+ 		pte_t ptent = ptep_get_and_clear(&init_mm, addr, pte);
+ 		WARN_ON(!pte_none(ptent) && !pte_present(ptent));
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	*mask |= PGTBL_PTE_MODIFIED;
+ }
+ 
+@@ -454,7 +462,6 @@ static int vmap_pages_pte_range(pmd_t *pmd, unsigned long addr,
+ 	 * nr is a running index into the array which helps higher level
+ 	 * callers keep track of where we're up to.
+ 	 */
+-
+ 	pte = pte_alloc_kernel_track(pmd, addr, mask);
+ 	if (!pte)
+ 		return -ENOMEM;
+@@ -467,7 +474,11 @@ static int vmap_pages_pte_range(pmd_t *pmd, unsigned long addr,
+ 			return -ENOMEM;
+ 		set_pte_at(&init_mm, addr, pte, mk_pte(page, prot));
+ 		(*nr)++;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	*mask |= PGTBL_PTE_MODIFIED;
+ 	return 0;
+ }

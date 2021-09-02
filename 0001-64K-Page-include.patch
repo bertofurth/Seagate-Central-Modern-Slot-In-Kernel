@@ -1,0 +1,219 @@
+ arch/arm/include/asm/elf.h                  |  2 +-
+ arch/arm/include/asm/fixmap.h               |  3 ++-
+ arch/arm/include/asm/page.h                 |  4 ++++
+ arch/arm/include/asm/pgtable-2level-hwdef.h |  8 ++++++++
+ arch/arm/include/asm/pgtable-2level.h       | 14 ++++++++++++++
+ arch/arm/include/asm/pgtable.h              | 14 ++++++++++++++
+ arch/arm/include/asm/shmparam.h             |  4 ++++
+ arch/arm/include/asm/thread_info.h          |  4 ++++
+ include/linux/pgtable.h                     |  5 +++++
+ 9 files changed, 56 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/include/asm/elf.h b/arch/arm/include/asm/elf.h
+index b8102a6ddf16..9eebf08bc36f 100644
+--- a/arch/arm/include/asm/elf.h
++++ b/arch/arm/include/asm/elf.h
+@@ -117,7 +117,7 @@ extern int arm_elf_read_implies_exec(int);
+ #define elf_read_implies_exec(ex,stk) arm_elf_read_implies_exec(stk)
+ 
+ #define CORE_DUMP_USE_REGSET
+-#define ELF_EXEC_PAGESIZE	4096
++#define ELF_EXEC_PAGESIZE	PAGE_SIZE
+ 
+ /* This is the base location for PIE (ET_DYN with INTERP) loads. */
+ #define ELF_ET_DYN_BASE		0x400000UL
+diff --git a/arch/arm/include/asm/fixmap.h b/arch/arm/include/asm/fixmap.h
+index 707068f852c2..f87a8c0aa063 100644
+--- a/arch/arm/include/asm/fixmap.h
++++ b/arch/arm/include/asm/fixmap.h
+@@ -8,6 +8,7 @@
+ 
+ #include <linux/pgtable.h>
+ #include <asm/kmap_size.h>
++#include <linux/sizes.h>
+ 
+ enum fixed_addresses {
+ 	FIX_EARLYCON_MEM_BASE,
+@@ -27,7 +28,7 @@ enum fixed_addresses {
+ 	 * not to clash since early_ioremap() is only available before
+ 	 * paging_init(), and kmap() only after.
+ 	 */
+-#define NR_FIX_BTMAPS		32
++#define NR_FIX_BTMAPS		(SZ_128K / PAGE_SIZE)
+ #define FIX_BTMAPS_SLOTS	7
+ #define TOTAL_FIX_BTMAPS	(NR_FIX_BTMAPS * FIX_BTMAPS_SLOTS)
+ 
+diff --git a/arch/arm/include/asm/page.h b/arch/arm/include/asm/page.h
+index 11b058a72a5b..72d34116c76a 100644
+--- a/arch/arm/include/asm/page.h
++++ b/arch/arm/include/asm/page.h
+@@ -8,7 +8,11 @@
+ #define _ASMARM_PAGE_H
+ 
+ /* PAGE_SHIFT determines the page size */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PAGE_SHIFT              16
++#else
+ #define PAGE_SHIFT		12
++#endif
+ #define PAGE_SIZE		(_AC(1,UL) << PAGE_SHIFT)
+ #define PAGE_MASK		(~((1 << PAGE_SHIFT) - 1))
+ 
+diff --git a/arch/arm/include/asm/pgtable-2level-hwdef.h b/arch/arm/include/asm/pgtable-2level-hwdef.h
+index 556937e1790e..37503789c6d6 100644
+--- a/arch/arm/include/asm/pgtable-2level-hwdef.h
++++ b/arch/arm/include/asm/pgtable-2level-hwdef.h
+@@ -66,7 +66,11 @@
+ /*
+  *   - extended small page/tiny page
+  */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PTE_EXT_XN		(_AT(pteval_t, 1) << 15)	/* v6 */
++#else
+ #define PTE_EXT_XN		(_AT(pteval_t, 1) << 0)		/* v6 */
++#endif
+ #define PTE_EXT_AP_MASK		(_AT(pteval_t, 3) << 4)
+ #define PTE_EXT_AP0		(_AT(pteval_t, 1) << 4)
+ #define PTE_EXT_AP1		(_AT(pteval_t, 2) << 4)
+@@ -74,7 +78,11 @@
+ #define PTE_EXT_AP_UNO_SRW	(PTE_EXT_AP0)
+ #define PTE_EXT_AP_URO_SRW	(PTE_EXT_AP1)
+ #define PTE_EXT_AP_URW_SRW	(PTE_EXT_AP1|PTE_EXT_AP0)
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PTE_EXT_TEX(x)		(_AT(pteval_t, (x)) << 12)	/* Large Page */
++#else
+ #define PTE_EXT_TEX(x)		(_AT(pteval_t, (x)) << 6)	/* v5 */
++#endif
+ #define PTE_EXT_APX		(_AT(pteval_t, 1) << 9)		/* v6 */
+ #define PTE_EXT_COHERENT	(_AT(pteval_t, 1) << 9)		/* XScale3 */
+ #define PTE_EXT_SHARED		(_AT(pteval_t, 1) << 10)	/* v6 */
+diff --git a/arch/arm/include/asm/pgtable-2level.h b/arch/arm/include/asm/pgtable-2level.h
+index 70fe69bdcce2..bd53dc7cfe48 100644
+--- a/arch/arm/include/asm/pgtable-2level.h
++++ b/arch/arm/include/asm/pgtable-2level.h
+@@ -71,6 +71,20 @@
+ #define PTRS_PER_PMD		1
+ #define PTRS_PER_PGD		2048
+ 
++/*
++ * Irrespective of the page size, the number of entries in the L2 page
++ * table remain the same and is set to 512 as indicated by PTS_PER_PTE.
++ * When the page size is set to 64K each unique page table entry has
++ * (64K / 4K) = 16 copies (PTE_STEP). This means there are only 
++ * (PTRS_PER_PTE / PTE_STEP) = (512 / 16) = 32 unique Page Table 
++ * Entries (PTRS_PER_PTE_REAL). This needs to be born in mind when
++ * walking a page table.
++ */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PTRS_PER_PTE_REAL       32
++#define PTE_STEP                16
++#endif
++
+ #define PTE_HWTABLE_PTRS	(PTRS_PER_PTE)
+ #define PTE_HWTABLE_OFF		(PTE_HWTABLE_PTRS * sizeof(pte_t))
+ #define PTE_HWTABLE_SIZE	(PTRS_PER_PTE * sizeof(u32))
+diff --git a/arch/arm/include/asm/pgtable.h b/arch/arm/include/asm/pgtable.h
+index cd1f84bb40ae..879c0ace1890 100644
+--- a/arch/arm/include/asm/pgtable.h
++++ b/arch/arm/include/asm/pgtable.h
+@@ -58,7 +58,11 @@ extern void __pgd_error(const char *file, int line, pgd_t);
+  * mapping to be mapped at.  This is particularly important for
+  * non-high vector CPUs.
+  */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define FIRST_USER_ADDRESS      PAGE_SIZE
++#else
+ #define FIRST_USER_ADDRESS	(PAGE_SIZE * 2)
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
+ 
+ /*
+  * Use TASK_SIZE as the ceiling argument for free_pgtables() and
+@@ -178,6 +182,16 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
+ 
+ #define pmd_page(pmd)		pfn_to_page(__phys_to_pfn(pmd_val(pmd) & PHYS_MASK))
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define pte_index(addr)         (((addr) >> PAGE_SHIFT) & \
++				 (PTRS_PER_PTE_REAL - 1))
++#define pte_offset_kernel(dir, addr)    (pmd_page_vaddr(*(dir)) + \
++					 pte_index(addr) * PTE_STEP)
++#define pte_offset_map(pmd, addr)       (pmd_page_vaddr(*(pmd)) +	\
++					 pte_index(addr) * PTE_STEP)
++#define pte_unmap(pte)                   do { } while (0)
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
++
+ #define pte_pfn(pte)		((pte_val(pte) & PHYS_MASK) >> PAGE_SHIFT)
+ #define pfn_pte(pfn,prot)	__pte(__pfn_to_phys(pfn) | pgprot_val(prot))
+ 
+diff --git a/arch/arm/include/asm/shmparam.h b/arch/arm/include/asm/shmparam.h
+index 367a9dac6150..58752d9585fc 100644
+--- a/arch/arm/include/asm/shmparam.h
++++ b/arch/arm/include/asm/shmparam.h
+@@ -7,7 +7,11 @@
+  * or page size, whichever is greater since the cache aliases
+  * every size/ways bytes.
+  */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define SHMLBA  (PAGE_SIZE)
++#else
+ #define	SHMLBA	(4 * PAGE_SIZE)		 /* attach addr a multiple of this */
++#endif
+ 
+ /*
+  * Enforce SHMLBA in shmat
+diff --git a/arch/arm/include/asm/thread_info.h b/arch/arm/include/asm/thread_info.h
+index 70d4cbc49ae1..4c6f59b2185a 100644
+--- a/arch/arm/include/asm/thread_info.h
++++ b/arch/arm/include/asm/thread_info.h
+@@ -13,6 +13,9 @@
+ #include <asm/fpstate.h>
+ #include <asm/page.h>
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define THREAD_SIZE_ORDER       0
++#else
+ #ifdef CONFIG_KASAN
+ /*
+  * KASan uses a lot of extra stack space so the thread size order needs to
+@@ -22,6 +25,7 @@
+ #else
+ #define THREAD_SIZE_ORDER	1
+ #endif
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
+ #define THREAD_SIZE		(PAGE_SIZE << THREAD_SIZE_ORDER)
+ #define THREAD_START_SP		(THREAD_SIZE - 8)
+ 
+diff --git a/include/linux/pgtable.h b/include/linux/pgtable.h
+index e24d2c992b11..c2cde8e82290 100644
+--- a/include/linux/pgtable.h
++++ b/include/linux/pgtable.h
+@@ -58,10 +58,13 @@
+  * because in such cases PTRS_PER_PxD equals 1.
+  */
+ 
++#ifndef pte_index
+ static inline unsigned long pte_index(unsigned long address)
+ {
+ 	return (address >> PAGE_SHIFT) & (PTRS_PER_PTE - 1);
+ }
++#define pte_index pte_index
++#endif
+ 
+ #ifndef pmd_index
+ static inline unsigned long pmd_index(unsigned long address)
+@@ -92,6 +95,7 @@ static inline pte_t *pte_offset_kernel(pmd_t *pmd, unsigned long address)
+ #define pte_offset_kernel pte_offset_kernel
+ #endif
+ 
++#ifndef pte_offset_map
+ #if defined(CONFIG_HIGHPTE)
+ #define pte_offset_map(dir, address)				\
+ 	((pte_t *)kmap_atomic(pmd_page(*(dir))) +		\
+@@ -100,6 +104,7 @@ static inline pte_t *pte_offset_kernel(pmd_t *pmd, unsigned long address)
+ #else
+ #define pte_offset_map(dir, address)	pte_offset_kernel((dir), (address))
+ #define pte_unmap(pte) ((void)(pte))	/* NOP */
++#endif /* CONFIG_HIGH_PTE */
+ #endif
+ 
+ /* Find an entry in the second-level page table.. */
