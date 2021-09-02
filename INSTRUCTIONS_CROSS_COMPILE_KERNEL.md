@@ -1,22 +1,46 @@
 # INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
+## Summary
+This is a guide that describes how to cross compile a replacement
+linux kernel suitable for installation on a Seagate Central NAS device.
 
+Manual installation of the cross compiled kernel is covered by
+BERTO **INSTRUCTIONS_MANUALLY_INSTALL_BERTO_BERTO.md**
 
-BERTO
-Tested with linux 5.14
+Installation of the cross compiled kernel in conjunction with the
+software using the easier but less flexible firmware upgrade method
+is covered by
+BERTO **INSTRUCTIONS_FIRMWARE_UPGRADE_METHOD.md**
 
+This procedure has been tested to work on the following building
+platforms
+
+* OpenSUSE Tumbleweed (Aug 2021) on x86
+* OpenSUSE Tumbleweed (Aug 2021) on Raspberry Pi 4B
+* Debian 10 (Buster) on x86
+
+The procedure has been tested to work with make v4.3 and v4.2.1 as well
+cross compiler gcc versions 11.2.0, 8.5.0 and 5.5.0.
+
+In general, it is suggested to use the latest stable versions of gcc,
+binutils and associated tools.
+
+The target platform tested was a Seagate Central Single Drive NAS 
+running firmware version 2015.0916.0008-F however I believe these
+instructions should work for other Seagate Central configurations and
+firmware versions.
 
 
 ## Prerequisites
 ### Disk space
-BERTO : This procedure will take up to a maximum of about 1GiB of disk space
-on the building host. It will only consume about 10?? BERTO megabytes of extra 
-storage space on the Seagate Central.
+This procedure will take up to a maximum of about 1.3GiB of disk space
+on the building host. The generated kernel will only consume about
+4MB of storage space on the Seagate Central.
 
 ### Time
-BERTO : The build components take a total of about 45 minutes to complete on an 
-8 core i7 PC. It takes about 6.5 hours on a Raspberry Pi 4B.
+The build component takes a total of about 8 minutes to complete on an 
+8 core i7 PC. It takes about 40 minutes on a Raspberry Pi 4B.
 
-### A cross compilation suite on a build host
+### A cross compilation suite on the build host
 You can follow the instructions at
 
 https://github.com/bertofurth/Seagate-Central-Toolchain
@@ -29,10 +53,10 @@ replacement samba software for the Seagate Centrel then you should already
 have this cross compiling toolchain built and ready to use.
 
 It is possible to use the generic "arm-none" style cross compiler toolchain
-available with many linux distributions when compiling linux however since 
-these generic tools are not suitable for building samba or other userland 
-binaries for the Seagate Central, we suggest that you use the self generated 
-cross compilation toolset instead.
+available with many linux distributions when compiling this linux kernel 
+however since these generic tools are not suitable for building samba or
+other userland binaries for the Seagate Central, we suggest that you use
+the self generated cross compilation toolset instead.
 
 ### Required tools
 An addition to the above mentioned cross compilation toolset the following
@@ -57,6 +81,7 @@ BERTO
 * flex
 * libncurses-dev
 * bc
+* u-boot-tools
 
 
 
@@ -74,6 +99,17 @@ git (optional)
 * curl (or use wget)
 
 BERTO BERTO
+
+### Samba version on the Seagate Central
+Although this is not strictly a pre-requisite of this kernel build procedure
+it is worth re-emphazing here that the original samba file server software on
+the Seagate Central will not work with the new kernel built using this procedure.
+
+See the **README.md** file in this project and the Seagate-Central-Samba project
+at the following link for more details and instructions on how to upgrade the 
+samba service on the Seagate Central.
+
+https://github.com/bertofurth/Seagate-Central-Samba
 
 ## Procedure
 ### Workspace preparation
@@ -110,6 +146,16 @@ example which uses linux v5.14.
      tar -xf linux-5.14.tar.xz
      cd linux-5.14
 
+N.B. If ntfs3 functionality is desired then as of writing there is a
+git repository at the following URL that contains pre-release source code
+supporting read and write support for NTFS volumes. Hopefully this
+functionality will be integrated into the mainline release soon.
+
+https://github.com/Paragon-Software-Group/linux-ntfs3
+
+This document will be updated when a stable release of linux with ntfs3
+support becomes available. 
+
 ### Apply patches
 After changing into the linux source subdirectory patches need to be applied
 to the native linux source code. The following commands will apply the patches
@@ -129,7 +175,7 @@ a stable release of linux with NTFS3 support becomes available.
       patch -p1 < ../0008-optional-ntfs3.patch
 
 ### Copy new files
-New files need to be copied into the linux source tree as follows.
+New source files need to be copied into the linux source tree as follows.
 
      cp -r ../new-files/* .
      
@@ -146,7 +192,7 @@ When building linux it is imporant to use a valid configuration file. This
 project includes a kernel configuration file called
 config-seagate-central-v5.14-all-in-one.txt that will generate a kernel image
 containing all the base functionality required for normal operation of the
-Seagate Central. 
+Seagate Central without the need for any linux modules.
 
 The first thing that needs to be done is for this configuration file to
 be copied to the build directory. In these instructions we assume that the
@@ -216,33 +262,43 @@ a compressed kernel suitable for loading on the Seagate Central.
 Note that the same envionment variables need to be set when running the "make uImage" 
 command as when the "make menuconfig" command was run.
 
-Note also that it might be useful to include the "-j num-cpus" parameter in the make
+Note also that it might be useful to include the "-j[num-cpus]" parameter in the make
 command as this will let the compilation process make use of multiple CPU threads
-and speed up the build process.
-
+and speed up the build process. Specify the number of spare cpu cores available in 
+your system.
+    
 Here is an example of the "make uImage" command being executed
 
      KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make -j6 uImage
     
+The process should complete with a message similar to the following
 
+    Image Name:   Linux-5.14.0-sc
+    Created:      Wed Sep  1 21:11:01 2021
+    Image Type:   ARM Linux Kernel Image (uncompressed)
+    Data Size:    3872904 Bytes = 3782.13 KiB = 3.69 MiB
+    Load Address: 02000000
+    Entry Point:  02000000
+      Kernel: arch/arm/boot/uImage is ready
 
-There are a number of environment variables that need to be set when running the
-make menuconfig command . 
+As per the message the newly generated uImage is located under the
+build directory at ../obj/arch/arm/boot/uImage 
 
-#### LOADADDR=0x02000000
+## Troubleshooting
+Most problems will be due to 
 
+* A needed build system component has not been installed.
+* One of the patches failing to be applied to the linux source tree.
+* One of the new files not being copied into the linux source tree.
 
-and add
-or remove 
+If building fails then it may be helpful to use the "-j1 V=1" options
+when running the make command as per the following example
 
+     .... make -j1 V=1 uImage
 
-
-
-the configuration can be changed
-however it is possible to modify this configuration with 
-
-within the
-one kernel image.
+These options make sure that only 1 cpu thread is active and that
+the make command outputs verbose details of what actions are being
+taken.
 
 
 
