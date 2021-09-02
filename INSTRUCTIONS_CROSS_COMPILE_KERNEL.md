@@ -1,6 +1,10 @@
 # INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
 
 
+BERTO
+Tested with linux 5.14
+
+
 
 ## Prerequisites
 ### Disk space
@@ -21,8 +25,14 @@ to generate a cross compilation toolset that will generate binaries,
 headers and other data suitable for the Seagate Central.
 
 If you have already gone through the pre-requisite process of compiling
-replacement samba software then you should already have this cross
-compiling software built and ready to use.
+replacement samba software for the Seagate Centrel then you should already
+have this cross compiling toolchain built and ready to use.
+
+It is possible to use the generic "arm-none" style cross compiler toolchain
+available with many linux distributions when compiling linux however since 
+these generic tools are not suitable for building samba or other userland 
+binaries for the Seagate Central, we suggest that you use the self generated 
+cross compilation toolset instead.
 
 ### Required tools
 An addition to the above mentioned cross compilation toolset the following
@@ -31,6 +41,9 @@ system.
 BERTO
 #### OpenSUSE Tumbleweed - Aug 2021 (zypper add ...)
 * zypper install -t pattern devel_basis
+
+
+
 * gcc-c++
 * unzip
 * lbzip2
@@ -39,6 +52,23 @@ BERTO
 
 #### Debian 10 - Buster (apt-get install ...)
 * build-essential
+* wget (or use "curl -O")
+* bison
+* flex
+* libncurses-dev
+* bc
+
+
+
+
+* gcc-arm-none-eabi (If no self built cross compiler)
+
+
+git (optional)
+
+
+
+
 * unzip
 * gawk
 * curl (or use wget)
@@ -54,7 +84,7 @@ For example, the following **git** command will download the
 files in this project to a new subdirectory called 
 Seagate-Central-Slot-In-v5.x-Kernel
 
-    git clone https://https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/
+    git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
     
 Alternately, the following **wget** and **unzip** commands will 
 download the files in this project to a new subdirectory called
@@ -72,60 +102,149 @@ the base working directory going forward.
 The next part of the procedure involves gathering the linux source code
 and extracting it.
 
-This procedure was tested using version 5.14 of the linux kernel available
-from
+Download the required version of linux into the working directory, extract
+it and then change into the newly created directory as per the following 
+example which uses linux v5.14.
 
-https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.14.tar.xz
+     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.14.tar.xz
+     tar -xf linux-5.14.tar.xz
+     cd linux-5.14
 
-It was also tested using the NTFS3 filesystem which is available
-from github at
+### Apply patches
+After changing into the linux source subdirectory patches need to be applied
+to the native linux source code. The following commands will apply the patches
 
-https://github.com/Paragon-Software-Group/linux-ntfs3
+     patch -p1 < ../0001-64K-Page-include.patch
+     patch -p1 < ../0002-64K-Page-arm.patch
+     patch -p1 < ../0003-64K-Page-mm.patch
+     patch -p1 < ../0004-64K-Page-misc.patch
+     patch -p1 < ../0005-CNS3XXX-arm.patch
+     patch -p1 < ../0006-drivers.patch
+     patch -p1 < ../0007-arm32.patch
+     
+If the version of linux you are using has support for the NTFS3 file system then
+one more patch *may* need to be applied. This document will be updated when
+a stable release of linux with NTFS3 support becomes available. 
 
-Download the required version of linux into the working directory and
-extract it as per the following example.
+      patch -p1 < ../0008-optional-ntfs3.patch
+
+### Copy new files
+New files need to be copied into the linux source tree as follows.
+
+     cp -r ../new-files/* .
+     
+### Delete obselete files (optional)
+There are a small number of source files that have been replaced and superceeded.
+These can optionally be deleted but leaving them in place doesn't have any negative
+impact.
+
+     rm -f arch/arm/mach-cns3xxx/cns3xxx.h
+     rm -f arch/arm/mach-cns3xxx/pm.h
+
+### Copy the configuration file to the build directory and customize
+When building linux it is imporant to use a valid configuration file. This
+project includes a kernel configuration file called
+config-seagate-central-v5.14-all-in-one.txt that will generate a kernel image
+containing all the base functionality required for normal operation of the
+Seagate Central. 
+
+The first thing that needs to be done is for this configuration file to
+be copied to the build directory. In these instructions we assume that the
+build directory will simply be the "obj" subdirectory of the base working
+directory however you can create another directory elsewhere for this purpose.
+
+From the linux source code base directory run the command
+
+     cp ../config-seagate-central-v5.14-all-in-one.txt ../obj/.config
+     
+The following step allows you to customize the configuration file by running 
+the **make menuconfig** dialog. This dialog presents a user friendly menu driven
+interface which allows you to add, remove and modify kernel features.
+
+Even if you do not wish to customize the configuration it is strongly recommended
+that this step be run anyway because it automatically reconciles any differences
+between the configuration file, your building environment and the version of linux
+being compiled.
+
+There are a number of environment variables that need to be set when running the
+make menuconfig command . 
+
+#### KBUILD_OUTPUT
+This is the location of the build directory and the location of the ".config"
+kernel configuration file. 
+
+#### ARCH
+This is the name of the cpu architecture we are building the linux kernel for.
+In our case this is always set to "arm", referring to 32 bit arm style CPUs as
+used by the Seagate Central.
+
+#### LOADADDR
+This is the address in memory where the kernel needs to be copied to when the
+Seagate Central boots up. This project has been configured so that it should
+always be set to 0x02000000.
+
+#### CROSS_COMPILE
+This is the prefix of the cross compilation toolset being used. If the toolset
+as generated by the Seagate-Central-Toolchain project is being used then by default
+this will be "arm-sc-linux-gnueabi-" . If a "generic" arm cross compiler is being
+used then this might be something like "arm-none-eabi-". Note that this parameter
+will normally have a dash (-) at the end.
+
+#### PATH
+If the cross compiling tool binaries are not in the standard path then the location
+of the tools needs to be prepended to the path. This will most likely be the case
+when using the tools generated by the Seagate-Central-Toolchain project. If using
+the generic arm cross compiler then it probably won't be necessary to set this
+variable.
+
+Here is an example of how the make menuconfig command would be run when using
+the toolchain as generated by the Seagate-Central-Toolchain project.
+
+     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make menuconfig
+     
+When the menuconfig dialog appears make any changes required then select the "exit"
+option at the bottom of the window. 
+
+When prompted "Do you wish to save your configuration" make sure to select "yes" 
+even if you have not made any changes. As mentioned above this step will make sure
+that the kernel configuration file is suitable for your particular build environment.
+
+### Build the kernel
+The linux kernel can now be build with the "make uImage" command in order to generate
+a compressed kernel suitable for loading on the Seagate Central.
+
+Note that the same envionment variables need to be set when running the "make uImage" 
+command as when the "make menuconfig" command was run.
+
+Note also that it might be useful to include the "-j num-cpus" parameter in the make
+command as this will let the compilation process make use of multiple CPU threads
+and speed up the build process.
+
+Here is an example of the "make uImage" command being executed
+
+     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make -j6 uImage
+    
+
+
+There are a number of environment variables that need to be set when running the
+make menuconfig command . 
+
+#### LOADADDR=0x02000000
+
+
+and add
+or remove 
 
 
 
-for each component and installing it into the **src** subdirectory of
-the base working directory.
 
-Here we show the versions of software used when generating this guide.
-Unless otherwise noted these are the latest stable releases at the
-time of writing. Hopefully later versions, or at least those with
-the same major version numbers, will still work with this guide.
+the configuration can be changed
+however it is possible to modify this configuration with 
 
-* gmp-6.2.1
-* nettle-3.7.3
-* acl-2.3.1
-* libtasn1-4.17.0
-* gnutls-3.6.16
-* openldap-2.3.39 (Should be the same version as Seagate Central)
-* samba-4.14.6
+within the
+one kernel image.
 
-Change into the **src** subdirectory of the base working directory
-then download the source archives using **wget**, **curl -O** or a 
-similar tool as follows. Note that these archives are available from 
-a wide variety of sources so if one of the URLs used below does not 
-work try to search for another.
 
-    cd src
-    wget http://mirrors.kernel.org/gnu/gmp/gmp-6.2.1.tar.xz
-    wget http://mirrors.kernel.org/gnu/nettle/nettle-3.7.3.tar.gz
-    wget http://download.savannah.gnu.org/releases/acl/acl-2.3.1.tar.xz
-    wget http://mirrors.kernel.org/gnu/libtasn1/libtasn1-4.17.0.tar.gz   
-    wget https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.16.tar.xz
-    wget https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.3.39.tgz
-    wget https://download.samba.org/pub/samba/samba-4.14.6.tar.gz
 
-Extract each file with the **tar -xf** command.
-
-    tar -xf gmp-6.2.1.tar.xz 
-    tar -xf nettle-3.7.3.tar.gz  
-    tar -xf acl-2.3.1.tar.xz
-    tar -xf libtasn1-4.17.0.tar.gz
-    tar -xf gnutls-3.6.16.tar.xz
-    tar -xf openldap-2.3.39.tgz
-    tar -xf samba-4.14.6.tar.gz
 
 
