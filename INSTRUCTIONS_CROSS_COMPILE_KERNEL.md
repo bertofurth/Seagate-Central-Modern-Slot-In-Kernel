@@ -3,11 +3,11 @@
 This is a guide that describes how to cross compile a replacement
 linux kernel suitable for installation on a Seagate Central NAS device.
 
-Manual installation of the cross compiled kernel is covered by
-BERTO **INSTRUCTIONS_MANUALLY_INSTALL_BERTO_BERTO.md**
+Manual installation of the cross compiled kernel is covered by 
+**INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md**
 
-Installation of the cross compiled kernel in conjunction with the
-software using the easier but less flexible firmware upgrade method
+Installation of the cross compiled kernel in conjunction with samba
+by using the easier but less flexible firmware upgrade method
 is covered by
 BERTO **INSTRUCTIONS_FIRMWARE_UPGRADE_METHOD.md**
 
@@ -270,18 +270,31 @@ As per the message the newly generated uImage is located under the
 build directory at ../obj/arch/arm/boot/uImage 
 
 #### Optional - Build linux modules 
-The default configuration file generates a linux kernel containing
-all the basic functionality required for the Seagate Central to
-function.
+The default configuration file generates a monolithic linux kernel
+containing all the basic functionality required for the Seagate
+Central to function.
 
 If you wish to reduce the size of the kernel image, or to add new
 functionality to the kernel, then you may wish to generate kernel
 modules which can be installed alongside the new kernel.
 
+After making the appropriate kernel configuration changes using
+a tool such as the "make menuconfig" dialog, build the kernel
+modules by issuing the "make modules" command by using a command
+line similar to the following. Make sure to set all the same environment
+variables as used in the previous make commands shown above.
 
+    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make -j6 modules
 
+Finally, use "make modules_install" to copy all the compiled modules to
+a holding directory on the build machine where they can be later copied
+to the Seagate Central for installation. Specify the target directory
+with the INSTALL_MOD_PATH variable.
 
+In this example the module tree is copied to the ../cross directory.
 
+    KBUILD_OUTPUT=../obj INSTALL_MOD_PATH=../cross make modules_install
+ 
 ## Troubleshooting
 Most problems will be due to 
 
