@@ -1,0 +1,17 @@
+--- vsftpd.conf	Tue Jul 27 17:18:57 2021
++++ vsftpd.conf	Tue Jul 27 20:30:00 2021
+@@ -9,7 +9,7 @@
+ # capabilities.
+ 
+ # run standalone
+-listen=YES
++#listen=NO
+ ftp_username=nobody
+ #
+ # Allow anonymous FTP? (Beware - allowed by default if you comment this out).
+@@ -130,4 +130,5 @@
+ #rsa_cert_file=/path/to/your/certificate
+ rsa_cert_file=/etc/vsftpd.pem
+ #rsa_private_key_file=/path/to/your/private/key
++listen_ipv6=YES
+ 

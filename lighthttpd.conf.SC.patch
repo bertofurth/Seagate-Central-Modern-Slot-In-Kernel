@@ -1,0 +1,19 @@
+--- lighttpd.conf	Fri Sep  3 20:06:37 2021
++++ lighttpd.conf	Fri Sep  3 20:06:58 2021
+@@ -166,6 +166,7 @@
+ ## bind to port (default: 80)
+ #server.port                = 80
+ 
++$SERVER["socket"] == "[::]:80" { }
+ #    # deny access completly to these
+     $HTTP["url"] =~ "/(\.|_)ht" { url.access-deny = ( "" ) }
+     $HTTP["url"] =~ "^" + "/blackarmor" + "/(bin|data|inc|conf)/"  { url.access-deny = ( "" ) }
+@@ -269,7 +270,7 @@
+ 
+ 
+ #### SSL engine
+-$SERVER["socket"] == ":443" {                 
++$SERVER["socket"] == "[::]:443" {                 
+ ssl.engine                 = "enable"          
+ ssl.pemfile                = "/www/server.pem"
+ }

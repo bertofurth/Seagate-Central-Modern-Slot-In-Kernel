@@ -1,0 +1,5 @@
+--- afpd.conf	Wed Jul 28 11:46:01 2021
++++ afpd.conf	Fri Sep  3 20:34:00 2021
+@@ -1 +1 @@
+-- -transall -uamlist uams_guest.so,uams_dhx.so,uams_dhx2.so -setuplog "default log_info"
++- -transall -uamlist uams_guest.so,uams_dhx.so,uams_dhx2.so -setuplog "default log_info" -ipaddr ::
