@@ -13,7 +13,7 @@ project. If you want Windows style samba network file sharing
 to work then you must upgrade the samba service on the Seagate 
 Central before, or at the same time as upgrading the Linux kernel.
 
-A pre-compiled linux v5.4.X kernel based on the instructions
+A pre-compiled Linux v5.4.X kernel based on the instructions
 in this guide is currently available at
 
 BERTO
@@ -22,22 +22,23 @@ BERTO
 
 There are three sets of instructions included in this project.
 
-# INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
-Cross compile the new v5.x linux kernel for Seagate Central from scratch.
+### INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
+Cross compile the new v5.x Linux kernel for Seagate Central from scratch.
 
-# INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
-Manually install the new linux kernel onto the Seagate Central.
+### INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
+Manually install the new Linux kernel onto the Seagate Central.
 
-# INSTRUCTIONS_INSTALL_WITH_SAMBA_FIRMWARE_UPGRADE.md
+### INSTRUCTIONS_INSTALL_WITH_SAMBA_FIRMWARE_UPGRADE.md
 Install the kernel as part of an easy web management based firmware
 upgrade process that also upgrades the samba server at the same time.
 
 ## Details
-This project's main goal is to let users seamlessly as possible
-install a new and modern version of the linux kernel on a Seagate
-Central while still keeping their user Data volume intact and using
-as much of the the original Seagate supplied facilities as possible
-and with as little interruption as possible.
+This project's main goals are
+
+* Develop a new and modern version of the Linux kernel for Seagate Central.
+* Make the installation as seamless as possible.
+* Allow users to keep using the existing Data volume.
+* Allow users to continue using the Seagate supplied services.
 
 The hope is that by providing a modern kernel to replace the old 
 v2.6 native kernel, users will be able to add new modern software 
@@ -47,18 +48,18 @@ system.
 
 This is different to the Seagate_central_linux (Single Disk Version)
 project by KL-Yang (see Acknowledgements) which provides a kernel to
-be run on a Seagate Central to be used as part of a completely new
-operating system and without the original Seagate supplied tools.
+be used as a part of a completely new operating system being installed
+on the Seagate Central.
 
 The main obstacle this project had to overcome was incorporating 
 support for 64K memory page sizes. This was required because the native
 disk format for the user Data partition on a Seagate Central uses 64K
-pages. These are only supported natively by linux when the memory pages
-are 64K or larger.
+pages. These are only supported natively by Linux when the memory pages
+are 64K or larger. This goal was largely acheived by drawing on the work
+of Gregory Clement (see Acknowledgements).
 
-This project also includes support for a number of other notable features
-such as 
-* USB port - Allows connection of external drives and other devices.
+The notable features that this project focused on include
+* USB support - Allows connection of external drives and other devices.
 * Symmetric Multiprocessing (SMP) - More efficient and faster processing.
 * IPv6 - The new standard for internet networking.
 * exFAT - New support for exFAT formatted external drives.
@@ -108,7 +109,7 @@ deal with why this is and why it is necessary, and in fact desirable,
 to upgrade the samba software either before, or at the same time as
 upgrading the kernel. 
 
-Samba is the software that allows windows based clients to access the
+Samba is the software that allows Windows based clients to access the
 Seagate Central via the "Network" folder in Windows Explorer. It uses
 a network sharing protocol called SMB to perform this task. 
 
@@ -129,9 +130,9 @@ secure version.
 
 The Seagate Central is based on a Cavium CNS3420 CPU which has 2 CPU 
 cores. In stock Seagate Central firmware, the first CPU core is available
-for normal linux processes and the second is reserved exclusively for the 
+for normal Linux processes and the second is reserved exclusively for the 
 samba file server. In other words, the second CPU cannot be used by any 
-"normal" linux processes. In Seagate Central software this scheme is
+"normal" Linux processes. In Seagate Central software this scheme is
 referred to as the "Cavium SMP Offloading Procession" (SOP), or in
 general terms "Asymmetric Multi Processing" (AMP).
 
@@ -143,21 +144,24 @@ serving functionality will not be slowed down as it will be using the
 second CPU.
 
 Unfortunately, normal modern samba software does not make use of AMP
-mode. This is because AMP is rarely implemented in modern linux systems.
-Most modern linux systems use "Symmetrical Multi Processing" (SMP) which 
-allows **all** linux processes to make use of **any** CPU.
+mode. This is because AMP is rarely implemented in modern Linux systems.
+Most modern Linux systems use "Symmetrical Multi Processing" (SMP) which 
+allows **all** Linux processes to make use of **any** CPU.
 
-Since AMP is not implemented in the linux kernel generated by this guide,
-or in fact by any other modern linux kernel that I know of, the original
-Seagate supplied samba software will not work with this new kernel.
+Since AMP is not implemented in the Linux kernel generated by this guide,
+or by any other modern Linux kernel that I know of, the original Seagate
+supplied samba software will not work with this new kernel.
 
 See the the Seagate-Central-Samba project at the following link for
-more details, explanation, and an easy to follow guide in how to upgrade
-the samba software on the Seagate Central.
+more details, explanation, and an easy to follow guide showing how to
+upgrade the samba software on the Seagate Central.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
 ### NTFS external drive "write" support (Soon to be fixed in kernel v5.15??)
+NTFS is a commonly used filesystem for hard drives formatted using 
+modern Windows operating systems.
+
 Initially, this project will only support "read" access to external USB
 attached NTFS drives. This is expected to be resolved with the advent of
 the paragon read/write capable ntfs3 driver due to be released in Linux
@@ -171,22 +175,22 @@ Unfortunately the v5.x slot in kernel is not able to make use of this
 proprietary driver as it was compiled for use with only the specific kernel
 version used by the original Seagate Central v2.6 kernel.
 
-Linux does have a read-only version of the NTFS file system, which is enabled
-by default using the procedure in this guide, however it is reportedly quite 
-slow and is only able to access an NTFS formatted drive in read-only mode.
+Linux does currently include suppport for a read-only version of the NTFS
+file system however it is reportedly quite slow. This is the version enabled
+in the v5.14 release of linux.
 
 There is a soon to be released new, much faster and reportedly more reliable
-read and write capable NTFS driver called ntfs3 by paragon software. As of
-writing is almost ready to be included in the linux kernel. I have sucessfully
-tested a beta version of this driver on the Seagate Central by using the
-software available at
+read and write capable NTFS driver called ntfs3 by paragon software. I have
+sucessfully tested a beta version of this driver on the Seagate Central by 
+using the pre-release linux kernel available at
 
 https://github.com/Paragon-Software-Group/linux-ntfs3
 
-Regardless, my suggestion is to always format externally attached drives as
-FAT32, rather than NTFS. This ensures that your drive will be compatible with 
-the largest range of devices as possible. Please refer to the following links
-that go into much more detail.
+My suggestion is to format externally attached drives as FAT32, or very 
+large drives as exFAT, rather than NTFS. This ensures that your drive will be
+compatible with the largest range of devices as possible.
+
+Please refer to the following links that go into much more detail.
 
 * How-To Geek : What File System Should I Use For My USB Drive?
 https://www.howtogeek.com/73178/what-file-system-should-i-use-for-my-usb-drive/
@@ -197,6 +201,10 @@ https://www.digitalcitizen.life/what-is-fat32-why-useful/
 * Format a drive with FAT32 greater than 32G (up to 8TB)
 https://www.howtogeek.com/316977/how-to-format-usb-drives-larger-than-32gb-with-fat32-on-windows/
 
+### Minor caveats
+The issues below are unlikely to impact on the normal operation of the
+Seagate Central, however for completeness sake they are documented here.
+
 #### Ethernet disconnect handling
 While running the new kernel, when the Ethernet cable is physically 
 disconnected from the unit the system doesn't properly recognize this
@@ -204,8 +212,14 @@ event. Instead it still believes that the Ethernet interface is "up".
 After the unit is reconnected to the Ethernet it will simply function
 as if nothing has happened.
 
+This issue is due to the proprietary "networklan" tool that the
+Seagate Central uses to manage Ethernet interfaces. It could be fixed
+by modifying the system to use more standard Ethernet management
+tools.
+
 As most dedicated NAS devices are not frequently disconnected from the
-Ethernet LAN I don't believe this will be a major issue.
+Ethernet LAN I don't believe this will be a major issue in the normal
+operation of the Seagate Central.
 
 The only rare occasion I can envisage where this might be an issue is
 if someone were deliberately trying to force the Seagate Central to 
@@ -231,6 +245,10 @@ green once the main bootup process is finished.
 Also note that the status LEDs on the Ethernet port itself work fine
 and will properly indicate the status of the Ethernet port.
 
+TODO : It would be easily possible to modify the inbuild led manager 
+to reflect more useful states, such as sustained high CPU or low
+disk space.
+
 #### Kernel DEBUG and other obscure options (Rare)
 In some cases there may be problems when the kernel is compiled using a
 non default configuration using some less frequently used options such
@@ -248,11 +266,9 @@ Some examples I've encountered in my testing.
 
 * CONFIG_KASAN will cause a hang on boot.
 
-* CONFIG_FORTIFY_SOURCE may cause a hang on boot (Fixed with patch 000)
+* CONFIG_FORTIFY_SOURCE may cause a hang on boot. (Fixed with patch 0007)
 
-* CONFIG_GCC_PLUGINS and/or CONFIG_STACKPROTECTOR_PER_TASK - May cause various strange tracebacks and panics similar to
-
-     Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in . . .
+* CONFIG_GCC_PLUGINS and/or CONFIG_STACKPROTECTOR_PER_TASK causes panics.
 
 * CONFIG_PREEMPT_NONE will stop the Ethernet network from working. 
 
@@ -367,9 +383,9 @@ a Seagate Central. In addition there doesn't seem to be any method to
 configure or customize this feature, such as which user's Data folder
 would be made available over the OTG connection and so forth.
 
-I'm not brave enough to test this functionality by plugging my Seagate
-Central into my PC or Phone via a reversed polarity male to male USB
-cable because I'm scared that I'll end up frying something!!
+I'm not brave enough to experiment with this functionality by plugging 
+my Seagate Central into my PC or Phone via a reversed polarity male to
+male USB cable because I'm scared that I'll end up frying something!
 
 If anyone has actually used this kind of functionality on a Seagate 
 Central then I'd be interested to hear about it and details of *exactly*
@@ -409,7 +425,7 @@ introduced into some core kernel source files that get things working, but
 aren't necessarily very graceful. For these reasons I don't plan to make 
 any effort to submit these patches to the mainline Linux kernel. I also
 don't make any commitment to maintain this project going forward as future 
-linux versions beyond v5.x are released.
+Linux versions beyond v5.x are released.
 
 I confess that I haven't always fully comprehended every piece of code 
 I've ported over in order to get this project working. It may be that 
@@ -418,7 +434,7 @@ may be that there are flaws that I've created myself through lack of
 understanding. As I mentioned, my goal was simply to "get things working".
 
 Hopefully these instructions can serve as a template for upgrading the 
-linux kernel on other Linux based embedded NAS equipment. In particular 
+Linux kernel on other Linux based embedded NAS equipment. In particular 
 the 64K page size additions will hopefully prove useful for other NAS
 products that chose to use 64K pages in their file systems.
 
