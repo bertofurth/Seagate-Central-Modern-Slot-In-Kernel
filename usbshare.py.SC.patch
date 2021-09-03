@@ -1,0 +1,75 @@
+--- usbshare.py	Fri Sep  3 20:58:26 2021
++++ usbshare.py	Fri Sep  3 21:02:51 2021
+@@ -67,6 +67,49 @@
+         nobodyuid = pwd.getpwnam('nobody').pw_uid
+         nobodygid = grp.getgrnam('nogroup').gr_gid
+ 
++        # Try to mount the disk by letting mount autodetect the type and by using less
++        # and less options. This caters for new fstypes supported by the kernel without
++        # having to explicitly identify them with this script or using proprietary fs
++        # identification tools.
++
++        syslog.syslog(syslog.LOG_INFO,'Automount attempt 1 (ntfs3)')
++        proc = subprocess.Popen("/bin/mount -t ntfs3 -o force,acl,nls=utf8,uid=%s,gid=%s %s %s" % 
++            (nobodyuid, nobodygid, self.mdname, sharedir),
++            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++        proc.wait()
++        if proc.returncode == 0:
++            syslog.syslog(syslog.LOG_INFO,'mdname %s mounted using autodetect style 1 in %s' % (self.mdname, sharedir))
++            filesystem = "mounted"
++
++        syslog.syslog(syslog.LOG_INFO,'Automount attempt 2 (ntfs)')
++        proc = subprocess.Popen("/bin/mount -o force,acl,nls=utf8,uid=%s,gid=%s %s %s" % 
++            (nobodyuid, nobodygid, self.mdname, sharedir),
++            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++        proc.wait()
++        if proc.returncode == 0:
++            syslog.syslog(syslog.LOG_INFO,'mdname %s mounted using autodetect style 2 in %s' % (self.mdname, sharedir))
++            filesystem = "mounted"
++
++        if filesystem != "mounted":
++            syslog.syslog(syslog.LOG_INFO,'Automount attempt 3 (hfsplus)')
++            proc = subprocess.Popen("/bin/mount -o force,nls=utf8,umask=0,uid=%s,gid=%s %s %s" %
++                (nobodyuid, nobodygid, self.mdname, sharedir),
++                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++            proc.wait()
++            if proc.returncode == 0:
++                syslog.syslog(syslog.LOG_INFO,'mdname %s mounted using autodetect style 3 in %s' % (self.mdname, sharedir))
++                filesystem = "mounted"
++
++        if filesystem != "mounted":
++            syslog.syslog(syslog.LOG_INFO,'Automount attempt 4 (hfs exfat msdos vfat)')
++            proc = subprocess.Popen("/bin/mount -o umask=0,uid=%s,gid=%s %s %s" %
++                (nobodyuid, nobodygid, self.mdname, sharedir),
++                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++            proc.wait()
++            if proc.returncode == 0:
++                syslog.syslog(syslog.LOG_INFO,'mdname %s mounted using autodetect style 4 in %s' % (self.mdname, sharedir))
++                filesystem = "mounted"
++
+         if filesystem == "Error":
+             syslog.syslog(syslog.LOG_INFO,'mdname %s Error returned in filesystem check' % (self.mdname))
+             # try to recover from the initial failure of parted to discover the kind of
+@@ -98,17 +141,20 @@
+             % (self.mdname, sharedir))
+             subprocess.Popen("chkhfs -a -f " + self.mdname, shell=True,
+             stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+-            subprocess.Popen("/bin/mount -t ufsd -o force,acl,nls=utf8,uid=%s,gid=%s %s %s" %
++            subprocess.Popen("/bin/mount -t hfsplus -o force,nls=utf8,uid=%s,gid=%s %s %s" %
+             (nobodyuid, nobodygid, self.mdname, sharedir),
+             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+         elif filesystem == "ntfs":
+             syslog.syslog(syslog.LOG_INFO,'mdname %s mounted ntfs in %s' % (self.mdname, sharedir))
+             subprocess.Popen("chkntfs -a -f " + self.mdname, shell=True,
+             stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+-            subprocess.Popen("/bin/mount -t ufsd \
++            subprocess.Popen("/bin/mount -t ntfs \
+             -o force,acl,nls=utf8,uid=%s,gid=%s %s %s" %
+             (nobodyuid, nobodygid, self.mdname, sharedir),
+             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
++        elif filesystem == "mounted":
++            # Already mounted. Do nothing.
++            syslog.syslog(syslog.LOG_INFO,'mdname %s automounted in %s' % (self.mdname, sharedir))
+         else:
+             # http://askubuntu.com/questions/34066/mounting-filesystem-with-special-user-id-set
+             syslog.syslog(syslog.LOG_INFO,'mdname %s mounted ext4??%s in %s' %
