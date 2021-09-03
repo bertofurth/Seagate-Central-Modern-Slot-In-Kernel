@@ -433,6 +433,18 @@ there are flaws in the original code that I've blindly pulled over. It
 may be that there are flaws that I've created myself through lack of 
 understanding. As I mentioned, my goal was simply to "get things working".
 
+My main motivation for this project was that even though the Seagate
+Central is an "ancient" platform by modern standards, it is still perfectly
+capable of being useful in a modern home network. After making the upgrades
+in this guide my Seagate Central is happily working as a file server,
+as a storage point for half a dozen security cameras, and I have cross 
+compiled and installed lots of new software and services including 
+
+* Syncthing - Modern file synchronization server and client
+* Motion - Security camera analysis software
+* Up to date versions of linux command line tools
+* MiniDLNA - To replace the bloated and CPU guzzling Twonky DLNA server
+
 Hopefully these instructions can serve as a template for upgrading the 
 Linux kernel on other Linux based embedded NAS equipment. In particular 
 the 64K page size additions will hopefully prove useful for other NAS
