@@ -88,7 +88,8 @@ system.
 ### Samba version on the Seagate Central
 Although this is not strictly a pre-requisite of this kernel build procedure
 it is worth re-emphazing here that the original samba file server software on
-the Seagate Central will not work with the new kernel built using this procedure.
+the Seagate Central will not work once the new kernel built with this 
+procedure is installed on the Seagate Central.
 
 See the **README.md** file in this project and the Seagate-Central-Samba project
 at the following link for more details and instructions on how to upgrade the 
@@ -145,19 +146,19 @@ support becomes available (v5.15?)
 After changing into the linux source subdirectory patches need to be applied
 to the native linux source code. The following commands will apply the patches
 
-     patch -p1 < ../0001-64K-Page-include.patch
-     patch -p1 < ../0002-64K-Page-arm.patch
-     patch -p1 < ../0003-64K-Page-mm.patch
-     patch -p1 < ../0004-64K-Page-misc.patch
-     patch -p1 < ../0005-CNS3XXX-arm.patch
-     patch -p1 < ../0006-drivers.patch
-     patch -p1 < ../0007-arm32.patch
+     patch -p1 < ../0001-linux-64K-Page-include.patch
+     patch -p1 < ../0002-linux-64K-Page-arm.patch
+     patch -p1 < ../0003-linux-64K-Page-mm.patch
+     patch -p1 < ../0004-linux-64K-Page-misc.patch
+     patch -p1 < ../0005-linux-CNS3XXX-arm.patch
+     patch -p1 < ../0006-linux-drivers.patch
+     patch -p1 < ../0007-linux-arm32.patch
      
 TODO : If the version of linux you are using has support for the NTFS3 file system then
 one more patch *may* need to be applied. This document will be updated when
 a stable release of linux with NTFS3 support becomes available. 
 
-     patch -p1 < ../0008-optional-ntfs3.patch
+     patch -p1 < ../0008-linux-optional-ntfs3.patch
 
 ### Copy new files
 New source files need to be copied into the linux source tree as follows.
@@ -291,9 +292,10 @@ a holding directory on the build machine where they can be later copied
 to the Seagate Central for installation. Specify the target directory
 with the INSTALL_MOD_PATH variable.
 
-In this example the module tree is copied to the ../cross directory.
+In this example the module tree is copied to the "cross-mod" subdirectory
+of the base working directory.
 
-    KBUILD_OUTPUT=../obj INSTALL_MOD_PATH=../cross make modules_install
+    KBUILD_OUTPUT=../obj INSTALL_MOD_PATH=../cross-mod make modules_install
  
 ## Troubleshooting
 Most problems will be due to 
