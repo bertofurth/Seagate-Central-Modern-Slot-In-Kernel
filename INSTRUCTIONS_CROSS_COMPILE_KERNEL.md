@@ -3,13 +3,18 @@
 This is a guide that describes how to cross compile a replacement
 linux kernel suitable for installation on a Seagate Central NAS device.
 
-Manual installation of the cross compiled kernel is covered by
-BERTO **INSTRUCTIONS_MANUALLY_INSTALL_BERTO_BERTO.md**
+Manual installation of the cross compiled kernel is covered by 
+**INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md**
 
-Installation of the cross compiled kernel in conjunction with the
-software using the easier but less flexible firmware upgrade method
+Installation of the cross compiled kernel in conjunction with samba
+by using the easier but less flexible firmware upgrade method
 is covered by
 BERTO **INSTRUCTIONS_FIRMWARE_UPGRADE_METHOD.md**
+
+This procedure has been tested to work with Linux Kernel version
+5.14.
+
+TODO : Retest with v5.15 which should have ntfs3 support.
 
 This procedure has been tested to work on the following building
 platforms
@@ -29,7 +34,6 @@ running firmware version 2015.0916.0008-F however I believe these
 instructions should work for other Seagate Central configurations and
 firmware versions.
 
-
 ## Prerequisites
 ### Disk space
 This procedure will take up to a maximum of about 1.3GiB of disk space
@@ -38,7 +42,7 @@ on the building host. The generated kernel will only consume about
 
 ### Time
 The build component takes a total of about 8 minutes to complete on an 
-8 core i7 PC. It takes about 40 minutes on a Raspberry Pi 4B.
+8 core i7 PC. It takes about 45 minutes on a Raspberry Pi 4B.
 
 ### A cross compilation suite on the build host
 You can follow the instructions at
@@ -49,7 +53,7 @@ to generate a cross compilation toolset that will generate binaries,
 headers and other data suitable for the Seagate Central.
 
 If you have already gone through the pre-requisite process of compiling
-replacement samba software for the Seagate Centrel then you should already
+replacement samba software for the Seagate Central then you should already
 have this cross compiling toolchain built and ready to use.
 
 It is possible to use the generic "arm-none" style cross compiler toolchain
@@ -59,51 +63,33 @@ other userland binaries for the Seagate Central, we suggest that you use
 the self generated cross compilation toolset instead.
 
 ### Required tools
-An addition to the above mentioned cross compilation toolset the following
-packages or their equivalents may also need to be installed on  the building
+In addition to the above mentioned cross compilation toolset the following
+packages or their equivalents may also need to be installed on the building
 system.
-BERTO
+
 #### OpenSUSE Tumbleweed - Aug 2021 (zypper add ...)
 * zypper install -t pattern devel_basis
-
-
-
-* gcc-c++
-* unzip
-* lbzip2
-* bzip2
-* libtirpc-devel
+* bc
+* u-boot-tools
+* wget (or use "curl -O")
+* git (to download this project)
+* cross-arm-none-gcc11 (If no self built cross compiler)
 
 #### Debian 10 - Buster (apt-get install ...)
 * build-essential
-* wget (or use "curl -O")
 * bison
 * flex
-* libncurses-dev
 * bc
 * u-boot-tools
-
-
-
-
+* libncurses-dev
+* git (to download this project)
 * gcc-arm-none-eabi (If no self built cross compiler)
-
-
-git (optional)
-
-
-
-
-* unzip
-* gawk
-* curl (or use wget)
-
-BERTO BERTO
 
 ### Samba version on the Seagate Central
 Although this is not strictly a pre-requisite of this kernel build procedure
 it is worth re-emphazing here that the original samba file server software on
-the Seagate Central will not work with the new kernel built using this procedure.
+the Seagate Central will not work once the new kernel built with this 
+procedure is installed on the Seagate Central.
 
 See the **README.md** file in this project and the Seagate-Central-Samba project
 at the following link for more details and instructions on how to upgrade the 
@@ -146,33 +132,33 @@ example which uses linux v5.14.
      tar -xf linux-5.14.tar.xz
      cd linux-5.14
 
-N.B. If ntfs3 functionality is desired then as of writing there is a
+TODO : N.B. If ntfs3 functionality is desired then as of writing there is a
 git repository at the following URL that contains pre-release source code
 supporting read and write support for NTFS volumes. Hopefully this
 functionality will be integrated into the mainline release soon.
 
 https://github.com/Paragon-Software-Group/linux-ntfs3
 
-This document will be updated when a stable release of linux with ntfs3
-support becomes available. 
+TODO : This document will be updated when a stable release of linux with ntfs3
+support becomes available (v5.15?)
 
 ### Apply patches
 After changing into the linux source subdirectory patches need to be applied
 to the native linux source code. The following commands will apply the patches
 
-     patch -p1 < ../0001-64K-Page-include.patch
-     patch -p1 < ../0002-64K-Page-arm.patch
-     patch -p1 < ../0003-64K-Page-mm.patch
-     patch -p1 < ../0004-64K-Page-misc.patch
-     patch -p1 < ../0005-CNS3XXX-arm.patch
-     patch -p1 < ../0006-drivers.patch
-     patch -p1 < ../0007-arm32.patch
+     patch -p1 < ../0001-linux-64K-Page-include.patch
+     patch -p1 < ../0002-linux-64K-Page-arm.patch
+     patch -p1 < ../0003-linux-64K-Page-mm.patch
+     patch -p1 < ../0004-linux-64K-Page-misc.patch
+     patch -p1 < ../0005-linux-CNS3XXX-arm.patch
+     patch -p1 < ../0006-linux-drivers.patch
+     patch -p1 < ../0007-linux-arm32.patch
      
-If the version of linux you are using has support for the NTFS3 file system then
+TODO : If the version of linux you are using has support for the NTFS3 file system then
 one more patch *may* need to be applied. This document will be updated when
 a stable release of linux with NTFS3 support becomes available. 
 
-      patch -p1 < ../0008-optional-ntfs3.patch
+     patch -p1 < ../0008-linux-optional-ntfs3.patch
 
 ### Copy new files
 New source files need to be copied into the linux source tree as follows.
@@ -188,9 +174,9 @@ impact.
      rm -f arch/arm/mach-cns3xxx/pm.h
 
 ### Copy the configuration file to the build directory and customize
-When building linux it is imporant to use a valid configuration file. This
+When building linux it is important to use a valid configuration file. This
 project includes a kernel configuration file called
-config-seagate-central-v5.14-all-in-one.txt that will generate a kernel image
+**config-seagate-central-v5.14-all-in-one.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central without the need for any linux modules.
 
@@ -284,6 +270,33 @@ The process should complete with a message similar to the following
 As per the message the newly generated uImage is located under the
 build directory at ../obj/arch/arm/boot/uImage 
 
+#### Optional - Build linux modules 
+The default configuration file generates a monolithic linux kernel
+containing all the basic functionality required for the Seagate
+Central to function.
+
+If you wish to reduce the size of the kernel image, or to add new
+functionality to the kernel, then you may wish to generate kernel
+modules which can be installed alongside the new kernel.
+
+After making the appropriate kernel configuration changes using
+a tool such as the "make menuconfig" dialog, build the kernel
+modules by issuing the "make modules" command by using a command
+line similar to the following. Make sure to set all the same environment
+variables as used in the previous make commands shown above.
+
+    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make -j6 modules
+
+Finally, use "make modules_install" to copy all the compiled modules to
+a holding directory on the build machine where they can be later copied
+to the Seagate Central for installation. Specify the target directory
+with the INSTALL_MOD_PATH variable.
+
+In this example the module tree is copied to the "cross-mod" subdirectory
+of the base working directory.
+
+    KBUILD_OUTPUT=../obj INSTALL_MOD_PATH=../cross-mod make modules_install
+ 
 ## Troubleshooting
 Most problems will be due to 
 
