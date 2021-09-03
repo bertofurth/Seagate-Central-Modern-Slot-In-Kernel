@@ -303,14 +303,31 @@ installation instructions are followed then these warning messages can
 be eliminated.
 
 ### TODO : (But probably not)
-Here are some components that I *could* have put some effort into but 
-they weren't part of the original Seagate Central so I didn't bother.
+Here are some components that I *could* have put some further effort into,
+and may be inclined to at some later date.
+
+#### Replace the proprietary "networklan" daemon
+The Seagate Central uses a proprietary and closed source tool called
+"networklan" to control and monitor the state of the Ethernet network
+interface.
+
+This tool does not work well with the new kernel. There are a number
+of alternative Ethernet management tools available, however it's unlikely
+that they would be backwards compatible with the original kernel.
+
+Ideally this "networklan" tool should be completely replaced, however
+for the moment workarounds have been put in place in the installation
+procedures that get this tool working "well enough" with the new
+kernel.
 
 #### Power Management 
-In this kernel there's no ability to suspend or to power down one of
-the CPUs during low CPU usage. It's possible to implement but in my
-experience a file server needs to be ready to go 100% of the time so
-it's probably not a feature that would get much use.
+In the new kernel there's no ability to suspend or to power down one of
+the CPUs during low CPU usage. Note that the old kernel had no such 
+functionality either.
+
+It's possible to implement CPU power management but in my experience a
+file server needs to be ready to go 100% of the time so it's probably
+not a feature that would get much use.
 
 #### 64K to 4K partition block size conversion procedure 
 This project supports the 64K block sizes on the Seagate Central data
@@ -352,9 +369,9 @@ quite ancient and underpowered Ethernet switching equipment that was
 being overwhelmed by a flood of frames, or did not use the modern
 "Cut Through" switching technique that is enabled in virtually all
 switching equipment made this century. It may also apply if you
-were using links with a capacity significantly greater than 1Gbps,
-however there's no way a Seagate Central would ever approach that
-speed of data throughput.
+were using links with a capacity of 10Gbps or greater, however there's
+no way a Seagate Central would ever approach that level of data
+throughput.
 
 See the following links for more discussion of Jumbo frames.
 
@@ -366,22 +383,24 @@ http://longwhiteclouds.com/2013/09/10/the-great-jumbo-frames-debate/
 
 ####  USB On-The-Go (OTG)
 USB On-The-Go (OTG) is a mechanism whereby a USB "Device" like a 
-smart phone can act as a USB "Host" so that it can connect to other
-USB devices like a storage drive or a keyboard. Presumably in the 
-context of the Seagate Central, it would let the NAS act as a 
-"Device" that could connect to a "Host" like a Phone or PC. This way
-the Phone or PC could directly access the data stored on the NAS 
-via the USB connection. 
+smart phone or a tablet can act as a USB "Host" so that it can
+connect to other USB devices like a storage drive or a keyboard.
 
-I'm confident that the Seagate Central has never supported OTG however
-however it is functionality that was included in the original Seagate 
-Central Kernel.
+Presumably in the context of the Seagate Central, it would let the
+NAS act as a "Device" that could connect to a "Host" like a PC.
+This way the PC could directly access the data stored on the NAS 
+via the USB connection. That is, the Seagate Central would act
+like a USB harddrive.
 
-OTG isn't mentioned in the Seagate Central documentation and I cannot
+I'm confident that the Seagate Central has never supported USB OTG
+however it is a capability that was actually included in the original
+Seagate Central Kernel.
+
+USB OTG isn't mentioned in the Seagate Central documentation and I cannot
 find any examples online of this kind of functionality being used with
 a Seagate Central. In addition there doesn't seem to be any method to
 configure or customize this feature, such as which user's Data folder
-would be made available over the OTG connection and so forth.
+would be made available over the USB OTG connection and so forth.
 
 I'm not brave enough to experiment with this functionality by plugging 
 my Seagate Central into my PC or Phone via a reversed polarity male to
@@ -400,23 +419,25 @@ I've focused my efforts on only porting over support for the hardware
 components that are present on the Seagate Central Single Hard Drive NAS. 
 
 ## Acknowledgements
-This project is based on the Seagate Central Firmware GPL
-source code available at
+I am very greatful to the following sources who I've based this project on.
+
+This work is primarily based on the Seagate Central GPL source code which I
+am grateful to the Seagate corporation for dutifully publishing.
 
 https://www.seagate.com/gb/en/support/downloads/item/central-gpl-fw-master-dl/
 
 It is also based on the excellent work by KL-Yang in the 
-Seagate_central_linux (Single Disk Version) project at
+Seagate_central_linux (Single Disk Version) project.
 
 https://github.com/KL-Yang/seagate_central_linux
 
-The 64K memory page size work is largely based on the work by
-Gregory Clement as documented at
+The 64K memory page size work is largely based on the work by Gregory
+Clement from bootlin.
 
-https://lwn.net/ml/linux-arm-kernel/20200611134914.765827-1-gregory.clement@bootlin.com/
+https://lwn.net/Articles/822868/
 
-Thank you to all the greater minds than mine that have paved 
-the way for this project.
+Thank you to all the greater minds than mine that have paved the way for
+this project.
 
 ## Postscript
 I acknowledge that I haven't done things in the most elegant manner with 
