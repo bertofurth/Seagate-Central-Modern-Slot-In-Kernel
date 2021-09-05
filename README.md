@@ -1,3 +1,8 @@
+# BERTO BERTO BERTO THIS IS NOT FINISHED YET!!!
+
+# IF YOU CAN SEE THIS MESSAGE THEN THESE INSTRUCTIONS DON'T WORK YET!!!
+
+
 # Seagate Central Slot In v5.x Kernel
 A modern slot in Linux Kernel for the Seagate Central NAS
 running stock Seagate Central firmware.
@@ -444,9 +449,10 @@ I acknowledge that I haven't done things in the most elegant manner with
 these patches and code. For example there are a lot of "#ifdef" statements
 introduced into some core kernel source files that get things working, but
 aren't necessarily very graceful. For these reasons I don't plan to make 
-any effort to submit these patches to the mainline Linux kernel. I also
-don't make any commitment to maintain this project going forward as future 
-Linux versions beyond v5.x are released.
+any effort to submit these patches to the mainline Linux kernel. I'm also
+not in a position to be able to make any commitment to maintain this project
+going forward as future Linux versions beyond v5.x are released. That being
+said, please feel free to submit "Issues" and suggestions for improvement.
 
 I confess that I haven't always fully comprehended every piece of code 
 I've ported over in order to get this project working. It may be that 
@@ -455,7 +461,7 @@ may be that there are flaws that I've created myself through lack of
 understanding. As I mentioned, my goal was simply to "get things working".
 
 My main motivation for this project was that even though the Seagate
-Central is an "ancient" platform by modern standards, it is still perfectly
+Central is an "ancient" platform (5-6 years??) , it is still perfectly
 capable of being useful in a modern home network. After making the upgrades
 in this guide my Seagate Central is happily working as a file server,
 as a storage point for half a dozen security cameras, and I have cross 
@@ -465,9 +471,14 @@ compiled and installed lots of new software and services including
 * Motion - Security camera analysis software
 * Up to date versions of linux command line tools
 * MiniDLNA - To replace the bloated and CPU guzzling Twonky DLNA server
+* Joplin server - An opensource note taking alternative to OneNote and Evernote
+
+Obviously since the unit isn't particularly fast it's better to make
+use of these services "one at a time" but thanks to the excessive 
+swap space available on the platform it all seems to hang together well.
 
 Hopefully these instructions can serve as a template for upgrading the 
-Linux kernel on other Linux based embedded NAS equipment. In particular 
+Linux kernel on other arm 32 based embedded NAS equipment. In particular 
 the 64K page size additions will hopefully prove useful for other NAS
 products that chose to use 64K pages in their file systems.
 
