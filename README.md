@@ -314,13 +314,12 @@ support it. In lower end networks, like the ones where a Seagate
 Central would typically be deployed, it's not certain that all the
 networking infrastructure would have this capability.
 
-Jumbo frames only have a noticeable impact in contexts where gigabytes 
-of data are *constantly* flowing over a hard ethernet network and 
-where microseconds count.
-
-I see some internet documentation claiming that you can get up to 
-30% performance improvement with Jumbo Frames enabled however my opinion
-is that a benefit would only be noticed in a few rare corner cases.
+Jumbo frames only have a noticeable impact in contexts where bulk
+data transfers are *constantly* flowing over a hard ethernet network
+and where microseconds count. I see some internet documentation 
+claiming that you can get up to 30% performance improvement with 
+Jumbo Frames enabled however my opinion is that a benefit would only
+be noticed in a few rare corner cases.
 
 One example might be if a network were running using a shared half 
 duplex 10Mbps Ethernet link rather than the modern standards of full
@@ -328,10 +327,15 @@ duplex 100Mbps and 1Gbps. It might also apply if you were using
 quite ancient and underpowered Ethernet switching equipment that was
 being overwhelmed by a flood of frames, or did not use the modern
 "Cut Through" switching technique that is enabled in virtually all
-switching equipment made this century. It may also apply if you
-were using links with a capacity of 10Gbps or greater, however there's
-no way a Seagate Central would ever approach that level of data
-throughput.
+switching equipment made this century. 
+
+It may also be of benefit if you were fully utilizing 1Gbps or greater
+links over sustained periods of time however there's no way a single
+Seagate Central would ever approach that level of data throughput.
+Maybe if you had five Seagate Centrals all transferring data between five
+seperate clients each at the same time over a congested 1Gbps link there
+may be a benefit to be seen. I'd love to get some feedback from anyone
+who has encountered this scenario.
 
 See the following links for more discussion of Jumbo frames.
 
