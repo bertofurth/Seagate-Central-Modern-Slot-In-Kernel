@@ -111,11 +111,11 @@ detail here in approximate order of importance. Only the first one
 involving the samba service is really necessary to pay strict
 attention to.
 
-### samba (SOP / AMP)
+### Samba - Needs to be upgraded. 
 The one major aspect that makes this kernel not quite "plug-in" as such
-is that the original native version of the samba file serving software 
-running on the Seagate Central needs to be upgraded to a modern version
-in order to work with the new kernel.
+is that the original custom version of the samba file serving software 
+running on the Seagate Central (v3.5.16) needs to be upgraded to a modern
+version in order to work with the new kernel.
 
 The associated project **Seagate-Central-Samba** explains why this is 
 necessary and describes in detail a number of ways that this goal
@@ -125,9 +125,10 @@ https://github.com/bertofurth/Seagate-Central-Samba
 
 It is technically possible to try the new kernel on a Seagate Central 
 without upgrading the samba service however it will simply mean that
-samba file sharing will not operate! All of the other services on the
-Seagate Central, such as the web management interface, the ssh/sftp/ftp
-servers and the Twonky DLNA media server, will still work.
+samba / Windows Networking style file sharing will not operate! All
+of the other services on the Seagate Central, such as the web management
+interface, the ssh/sftp/ftp servers and the Twonky DLNA media server,
+will still work.
 
 ### NTFS external drive "write" support (Soon to be fixed in kernel v5.15??)
 Initially, this project will only support "read" access to externally
