@@ -303,7 +303,7 @@ necessary, however that would have meant the kernel would not be
 Jumbo Ethernet frames allow devices to transmit frames that contain 
 more than the standard data payload of 1500 bytes. This is in order 
 to be able to reduce the packet header transmission and processing 
-overhead associated with transmitting each packet.
+overhead associated with each packet.
 
 I have never come across any home or small enterprise that uses Jumbo
 Ethernet frames. One important reason for this is because Jumbo Ethernet
