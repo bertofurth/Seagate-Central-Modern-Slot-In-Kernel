@@ -305,14 +305,14 @@ more than the standard data payload of 1500 bytes. This is in order
 to be able to reduce the packet header transmission and processing 
 overhead associated with each packet.
 
-I have never come across any home or small enterprise that uses Jumbo
-Ethernet frames. One important reason for this is because Jumbo Ethernet
-frames are not supported over Wifi. Jumbo frames only work over hard 
-Ethernet connections where *all* the infrastructure between the server 
-and client (switches and routers) support it. In lower end networks, 
-like the ones where a Seagate Central would typically be deployed, it's 
-not certain that all the networking infrastructure would have this
-capability.
+I have never come across any normal home or small enterprise network 
+that uses Jumbo Ethernet frames. One important reason for this is 
+because Jumbo Ethernet frames are not supported over Wifi. Jumbo 
+frames only work over hard Ethernet connections where *all* the
+infrastructure between the server and client (switches and routers)
+support it. In lower end networks, like the ones where a Seagate
+Central would typically be deployed, it's not certain that all the
+networking infrastructure would have this capability.
 
 Jumbo frames only have a noticeable impact in contexts where gigabytes 
 of data are *constantly* flowing over a hard ethernet network and 
