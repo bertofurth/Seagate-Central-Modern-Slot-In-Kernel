@@ -144,12 +144,13 @@ called ufsd, to mount USB attached NTFS drives. This allowed the Seagate
 Central to seamlessly interact with any attached NTFS formatted USB drives.
 
 Unfortunately the v5.x slot in kernel is not able to make use of this
-proprietary driver as it was compiled for use with only the specific kernel
-version used by the original Seagate Central v2.6 kernel.
+proprietary driver as it was desgined for use with the original custom
+Seagate Central v2.6.35 based Linux kernel.
 
 Linux does currently include suppport for a read-only version of the NTFS
 file system however it is reportedly quite slow. This is the version of NTFS
-support enabled in the v5.14 release of linux.
+support enabled in the v5.14 release of linux that these instructions are 
+currently based one.
 
 There is a soon to be released new, much faster and reportedly more reliable
 read and write capable NTFS driver called ntfs3 by paragon software. I have
