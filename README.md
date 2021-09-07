@@ -111,6 +111,9 @@ detail here in approximate order of importance. Only the first one
 involving the samba service is really necessary to pay strict
 attention to.
 
+
+BERTO TODO : PERFORMANCE. COMPARE NEW SAMBA WITH v2 and v4
+
 ### Samba - Needs to be upgraded. 
 The one major aspect that makes this kernel not quite "plug-in" as such
 is that the original custom version of the samba file serving software 
