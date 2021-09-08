@@ -122,21 +122,26 @@ NAS IP address. After executing the scp command you'll be prompted
 for the user's password.
 
 ### OPTIONAL - Transfer kernel modules to the Seagate Central
+The instructions in this project have been designed so that
+kernel modules are not necessary for the new kernel image
+to function properly. Steps in this procedure dealing with
+modules are optional and should only be executed if you have
+manually built modules and are confident in your understanding of
+how to manage and use them.
+
 If kernel modules have been built then I would suggest archiving 
-the directory they are stored in and then transferring the archive
-to the Seagate Central as per the following example
+the directory they are stored in on the build host and then 
+transferring the archive to the Seagate Central as per the following
+example
 
      tar -caf cross-mod.tar.gz cross-mod/
      scp cross-mod admin@192.168.1.99:
-
-Note that there are no modules included in the pre-built downloadable
-kernel.
 
 ### Transfer the config and script patches to the Seagate Central
 A number of configuration and script files need to be patched on
 the Seagate Central in order to cater for the new kernel's requirements.
 
-Patche files for these file are included in this project and have a
+Patch files for these file are included in this project and have a
 suffix of .SC.patch. These files need to be tranferred to the Seagate
 Central. This can be done via scp as per the following example.
 
@@ -168,31 +173,38 @@ support in the linux kernel the following patch must be applied
 to one of the scripts that controls automatic mounting of newly
 inserted USB devices.
 
-The script can be backed up and patched as follows.
+The script can be backed up and patched with one of the patch files
+transferred to the Seagate Central in a previous step as per the
+following example.
 
      cp /usr/lib/python2.6/site-packages/shares/usbshare.py /usr/lib/python2.6/site-packages/shares/usbshare.py.old
      patch -i usbshare.py.SC.patch /usr/lib/python2.6/site-packages/shares/usbshare.py
 
-### IPv6
-If you would like to use the next generation IPv6 internet
-protocol on the Seagate Central then a few configuration and
-startup files need to be modified. 
-
+### Optional - IPv6
 The original Seagate v2.6.35 kernel did not support IPv6 at all
 and so many components of the system are not by default configured 
 to properly operate in an IPv6 environment.
 
+If you would like to take full advantage of IPv6 functionality 
+in the new kernel then a number of service startup and
+configuration files need to be modified. If you are happy
+to keep using only IPv4 as per the original Seagate Central
+firmware then there's no need to complete the steps in this
+section.
+
 #### Bounce IPv6 on startup
 The Seagate "networklan" daemon is in charge of monitoring the
 Ethernet interface state and providing it's configuration. This
-tool, for some odd reason, deliberately disables IPv6 on the
-ethernet interface. 
+tool deliberately disables IPv6 on the ethernet interface as the
+original Seagate Central firmware does not support IPv6 at all.
 
-For this reason it is necessary to "bounce" IPv6 on the ethernet
-interface after the networklan daemon is started.
+For this reason it is necessary to quickly turn IPv6 off then 
+back on (i.e. bounce) for the ethernet interface after the networklan
+daemon is started.
 
-Create a new script called "/etc/init.d/ipv6_bounce" using either
-the nano or vi editor with the following contents
+Create a new script called "/etc/init.d/ipv6_bounce" by either 
+copying it from this project to the Seagate Central, or by using
+an editor like "nano" or "vi". The script's contents are as follows.
 
     #!/bin/sh
     KERNEL_VERSION=$(uname -r)
@@ -205,7 +217,10 @@ the nano or vi editor with the following contents
     sysctl -w net.ipv6.conf.eth0.disable_ipv6=1
     sysctl -w net.ipv6.conf.eth0.disable_ipv6=0
     
-Modify the permissions of the script to ensure it is executable
+This script simply disables then re-enables IPv6 on the eth0
+interface, but only if the new kernel is in operation.
+
+Modify the permissions of the script to ensure it is executable.
 
      chmod 755 /etc/init.d/ipv6_bounce
 
@@ -214,33 +229,45 @@ bootup
 
     ln -s ../init.d/ipv6_bounce /etc/rcS.d/S44ipv6_bounce
     
-Note that this script must be ordered to execute after the
-S41blackarmor-network startup script.
+Note that this script must be numerically ordered to execute after
+the /etc/rcS.d/S41blackarmor-network startup script.
 
 #### Patch service configuration files for IPv6
-A number of services need to be reconfigured to take full advantage
-of IPv6. These configuration files can be backed up and patched 
-as follows.
+In order for the services mentioned in this section to use IPv6
+their configuration files need to be slightly modified.
 
-Note that only those services you wish to access via IPv6 need
-to have their configuration patched
+Note that only those services you wish to access via both IPv6
+and IPv4 need to have their configuration patched. Also note 
+that if you revert the Seagate Central back to the original
+v2.6.35 kernel then you'll need to also revert the configuration
+files that are modified in this section back to their original 
+states.
 
+Backup and patch the required service configuration files with
+the patches copied to the Seagate Central in a previous step as 
+per the following examples.
+
+     # AFP - Apple Filing Protocol
      cp /etc/netatalk/afpd.conf /etc/netatalk/afpd.conf.old
      patch -i afpd.conf.SC.patch /etc/netatalk/afpd.conf
      
+     # AVAHI - "Zero Conf" networking
      cp /etc/avahi/avahi-daemon.conf /etc/avahi/avahi-daemon.conf.old
      patch -i avahi-daemon.conf.SC.patch /etc/avahi/avahi-daemon.conf
      
+     # Lighthttpd - Web management interface
      cp /etc/lighttpd.conf /etc/lighttpd.conf.old
      patch -i lighthttpd.conf.SC.patch /etc/lighttpd.conf
      
+     # FTP/SFTP server - Legacy file sharing protocols
      cp /etc/vsftpd.conf /etc/vsftpd.conf.old
      patch -i vsftpd.conf.SC.patch /etc/vsftpd.conf
      
-### Copy the new kernel into place
-It's important to execute the steps in this section correctly. Please
-try to read the explanation of what each step is trying to acheive and
-understand what you are doing before executing any commands.
+### Installing the new kernel
+Here is where we actually put the new kernel into place. It's important
+to execute the steps in this section correctly. Please try to read the
+explanation of what each step is trying to acheive and understand what 
+you are doing before executing any commands.
 
 #### Find out which copy of firmware is active
 The Seagate Central keeps two copies of firmware available on the
@@ -248,7 +275,7 @@ hard drive in case one copy becomes corrupted and cannot boot. In
 this step we need to discover which of the two copies is currently
 active on the Seagate Central so that we can modify that one.
 
-The name of the currently active copy is stored in the flash memory
+The name of the currently active kernel is stored in the flash memory
 of the Seagate Central using a variable called **current_kernel** . When
 the bootloader program, u-boot, becomes active just after the Seagate
 Central is switched on, it checks the value of this variable in order
@@ -278,15 +305,15 @@ particularly wrong!
 #### Mount the kernel boot partition
 The kernel image is kept on a disk partition which is not, by default, mounted
 by the Seagate Central during normal operation. We will call this partition
-the **kernel partition**.
+the **kernel boot partition**.
 
-If the **first** copy of firmware is active then the kernel partition is located
-on /dev/sda1 . Mount the kernel partition with the command
+If the **first** copy of firmware is active (kernel1) then the kernel partition
+is located on /dev/sda1 . Mount the kernel boot partition with the command
 
     mount /dev/sda1 /boot
      
-If the **second** copy of firmware is active the the kernel partition is located
-on /dev/sda2 . Mount the kernel partition with the command
+If the **second** copy of firmware is active (kernel2) the the kernel partition 
+is located on /dev/sda2 . Mount the kernel boot partition with the command
 
     mount /dev/sda2 /boot
      
@@ -294,19 +321,13 @@ on /dev/sda2 . Mount the kernel partition with the command
 Change into the /boot directory where the currently active uImage kernel file
 should be located and create a backup copy of the original kernel. 
 
-    cd /boot
-    cp uImage uImage.orig
+    cp /boot/uImage /boot/uImage.old
      
-Note that the kernel partition is only 20M in size, so while there will be
-plenty of room to store the new kernel image and the backup, there won't be
-room to store much more data.
-
 #### Copy the new kernel into place
 Copy the new kernel uImage into place so that on next boot it will be loaded
-by the system. In this example the new uImage file is in the home directory of
-the admin user and is copied into the boot directory.
+by the system. 
 
-    cp /Data/admin/uImage /boot/uImage
+    cp uImage /boot/uImage
 
 Confirm that the new uImage file is in place
 
@@ -319,76 +340,145 @@ different in your case)
     total 6729
     drwx------ 2 root root   12288 Nov 17  2015 lost+found
     -rw-r--r-- 1 root root 3857616 Sep  4 06:39 uImage
-    -rw-r--r-- 1 root root 2989612 Sep  4 06:35 uImage.orig
+    -rw-r--r-- 1 root root 2989612 Sep  4 06:35 uImage.old
+
+Note that the kernel partition is only 20M in size, so while there will be
+plenty of room to store the new kernel image and the backup, there won't be
+room to store much more data.
 
 #### OPTIONAL - Copy the kernel modules into place
+This step should only be performed if you have made your own custom changes
+to the procedure in order to build kernel modules. By default, no kernel
+modules need to be built or installed so this step can be skipped.
+
 If you have an archive of kernel modules associated with the newly installed
-uImage then extract them into the directory where they have been placed then
-copy them to the /lib directory on the unit.
+uImage then extract it and check to make sure that the directory contents
+are as expected.
 
      cd /Data/admin
      tar -xf cross-mod
-     cd cross-mod/
-     cp -r 
+     ls -laR cross-mod/
 
+After checking that the modules have been extracted as expected then copy the
+module tree into place as per the following example.
 
+Note that this is a **very** dangerous part of the process so if you don't
+understand what you are doing here then do not proceed with the following
+command.
 
-Copy the new kernel into place
+     cp -r cross-mod/lib /
 
+There should be a new 5.x.x modules subdirectory on the unit alongside the 
+modules subdirectory for the original v2.6.35 kernel. The output of the 
+following command
 
-OPTIONAL - Copy the modules into place
+     ls -l /lib/modules
 
-reboot
+should show an output similar to the following.
 
+     drwxrwxr-x 4 root root 4096 Sep 17  2015 2.6.35.13-cavm1.whitney-econa.whitney-econa
+     drwxr-xr-x 3 root root 4096 Sep  4 07:08 5.14.0-sc
+     
+Finally remove the original "modules.dep" file in the new module 
+subdirectory. Removing this file will cause the unit to perform a
+"depmod" for the newly installed modules on next boot which will
+properly index them.
 
-On bootup confirm that umame -a says the right thing
+     rm /lib/modules/5.14.0-sc/modules.dep
+     
+### Reboot and confirm the upgrade    
+Finally we reboot the unit and confirm that the new kernel is
+operational.
 
+Rebooting the unit can be performed via the Seagate Central command
+line with the reboot command.
 
-Optional = Revert back to the originals
+     reboot
+     
+Naturally, at the point when the unit is rebooted any ssh sessions to
+the Seagate Central will be disconnected.
 
+After the unit has rebooted re-establish an ssh connection and issue
+the following command to confirm that the unit has loaded the new
+kernel.
 
-Troubleshooting
+     uname -a
+     
+The output should indicate that the version of the running kernel is now
+5.x.x and that SMP functionality is enabled, as per the following sample
+output.
 
-If the old kernel is loaded with the new config files in place then
-the ssh server will still work but the web management interface and
-most other services will not operate.
+BERTO BERTO...SET THE SAME AS THE DOWNLOADABLE ONE
+     Linux NAS-1 5.14.0-rc5-sc+ #138 SMP Wed Sep 8 14:54:33 AEST 2021 armv6l GNU/Linux       
+     
+Further confirm that the services you make use of on the Seagate Central
+are functional, including
 
+* The Web Management interface
+* Samba / Windows file sharing 
+* FTP/SFTP server
+* DLNA media streaming service
 
-Try the revert to the old firmware trick as per the URLs
+### Optional - Revert back to the original kernel
+If the new kernel version is not performing as desired then there is always 
+the option of reinstating the original version.
 
-Observe the status lights on the unit. They will be amber initially
-then should switch to blinking green while the kernel is being loaded
-then should switch to solid green once the unit has booted up.
+If the procedure above has been followed then the sequence of
+commands below issued with root priviledges on the Seagate Central 
+will restore the original kernel version.
 
-After this point if you can't access the unit by ssh then something may
-have gone wrong with the networking component. Try to "ping" the unit.
-Make sure the status lights on the Ethernet LAN port are active.
+First, mount the correct kernel boot partition as per the instructions 
+in the "Installing the new kernel" section.
 
-The easiest thing to do at this point is to follow the document describing
-how to force the Seagate Central to revert to the backup copy of firmware.
+     mount /dev/sda1 /boot
+     
+OR
+
+     mount /dev/sda2 /boot
+     
+Next, restore the original kernel image.     
+     
+     cp /boot/uImage.old /boot/uImage
+
+Restore the original version of the usb drive automount script
+
+     cp /usr/lib/python2.6/site-packages/shares/usbshare.py.old /usr/lib/python2.6/site-packages/shares/usbshare.py
+
+If service configurations have been modified to enable IPv6 then
+these will need to be reverted back to their original versions.
+
+     cp /etc/netatalk/afpd.conf.old /etc/netatalk/afpd.conf
+     cp /etc/avahi/avahi-daemon.conf.old /etc/avahi/avahi-daemon.conf
+     cp /etc/lighttpd.conf.old /etc/lighttpd.conf
+     cp /etc/vsftpd.conf.old /etc/vsftpd.conf
+          
+Finally reboot the unit and confirm that the original kernel is
+back in place.
+
+## Troubleshooting
+The most problematic issue that may occur after a failed kernel upgrade
+is that the unit is no longer accessible via ssh. If this happens then
+the easiest route to pursue is to force the unit to revert to it's
+backup firmware as per the procedure at
+
+http://seagatecentralenhancementclub.blogspot.com/2015/08/revert-to-previous-firmware-on-seagate.html
+
+Archive : https://archive.ph/3eOX0
 
 In essence the steps are
 
-1) Power down the Seagate Central
-2) After a few seconds power up the Seagate Central
-3) Wait 15 or so seconds for the LED status light on top of the unit to start flashing green.
-4) Execute steps 1 - 3 a total of four times in a row.
+1) Power down the Seagate Central.
+2) After a few seconds power up the Seagate Central.
+3) Wait 20 or so seconds for the LED status light on top of the unit to turn from amber to flashing green.
+4) Execute steps 1 - 4 a total of four times in a row.
 5) Power up the unit. It should now attempt to load the backup / alternate version of firmware
 
-If the unit does not become accessible after this point then it might 
-be necessary to take the next step by opening up the unit, removing the 
-harddrive and mounting it on an external system.
-
-I want to note that I have *never* had to do that during the course of
-development and testing. The "reboot 4 times" method has always worked for 
-me.
-
-
-you have to physically power  reboot the 
-Go to the section entitled
-OPTIONAL - Reverting to the old kernel for more details on what to do.
+If the unit is accessable via ssh then the best places to search for
+troubleshooting data include the system bootup log as displayed by
+the **dmesg** command and the system log stored at /var/log/syslog
 
 
 
 
 
+TEST STATIC IP
