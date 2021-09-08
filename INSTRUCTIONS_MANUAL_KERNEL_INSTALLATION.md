@@ -1,12 +1,11 @@
 # INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
 This is a guide that describes how to manually replace the original
-Linux v2.6.25 kernel on a Seagate Central NAS with a new, modern,
-Linux v5.x kernel.
-
-Refer to the README.md file for the location of a precompiled kernel.
+Linux v2.6.25 kernel on a Seagate Central NAS with a previously
+cross compiled modern, Linux v5.x kernel.
 
 Refer to the instructions in **INSTRUCTIONS_CROSS_COMPILE_KERNEL.md**
-to self generate a kernel for use in this procedure.
+to self generate a kernel for use in this procedure or refer to the
+**README.md** file for the location of a precompiled kernel binary.
 
 Installation of the cross compiled kernel in conjunction with samba
 by using the easier but less flexible firmware upgrade method
@@ -15,9 +14,8 @@ BERTO **INSTRUCTIONS_FIRMWARE_UPGRADE_METHOD.md**
 
 The target platform tested was a Seagate Central Single Drive NAS 
 running firmware version 2015.0916.0008-F however I believe these 
-instructions should work for other Seagate Central configurations 
-and firmware versions as long as care is taken to account for any 
-minor differences.
+instructions should work for other Seagate Central firmware versions
+as long as care is taken to account for any minor differences.
 
 These instructions should not be followed "blindly". If you have 
 already made other custom changes to your Seagate Central software via
@@ -41,7 +39,7 @@ Archive : https://archive.ph/ONi4l
 
 That being said, if you are interested in doing further development of
 this kernel then having console access is invaluable for the purposes
-of troubeshooting problems during kernel boot.
+of troubleshooting problems during kernel boot.
 
 ### su/root access on the Seagate Central.
 Make sure that you can establish an ssh session to the Seagate Central
@@ -141,9 +139,9 @@ example
 A number of configuration and script files need to be patched on
 the Seagate Central in order to cater for the new kernel's requirements.
 
-Patch files for these file are included in this project and have a
-suffix of .SC.patch. These files need to be tranferred to the Seagate
-Central. This can be done via scp as per the following example.
+Relevant patch files are included in the base directory of this project 
+and have a suffix of ".SC.patch". These files need to be tranferred to
+the Seagate Central. This can be done via scp as per the following example.
 
      scp *.SC.patch admin@192.168.1.99:
      
@@ -182,12 +180,12 @@ following example.
 
 ### Optional - IPv6
 The original Seagate v2.6.35 kernel did not support IPv6 at all
-and so many components of the system are not by default configured 
+and so many components of the system are not, by default, configured 
 to properly operate in an IPv6 environment.
 
 If you would like to take full advantage of IPv6 functionality 
 in the new kernel then a number of service startup and
-configuration files need to be modified. If you are happy
+configuration files need to be modified. If you would prefer 
 to keep using only IPv4 as per the original Seagate Central
 firmware then there's no need to complete the steps in this
 section.
@@ -199,12 +197,13 @@ tool deliberately disables IPv6 on the ethernet interface as the
 original Seagate Central firmware does not support IPv6 at all.
 
 For this reason it is necessary to quickly turn IPv6 off then 
-back on (i.e. bounce) for the ethernet interface after the networklan
-daemon is started.
+back on for the ethernet interface after the networklan daemon
+is started.
 
 Create a new script called "/etc/init.d/ipv6_bounce" by either 
-copying it from this project to the Seagate Central, or by using
-an editor like "nano" or "vi". The script's contents are as follows.
+copying it from the base directory of this project to the Seagate
+Central, or by using an editor like "nano" or "vi". The script's
+contents are as follows.
 
     #!/bin/sh
     KERNEL_VERSION=$(uname -r)
@@ -230,7 +229,8 @@ bootup
     ln -s ../init.d/ipv6_bounce /etc/rcS.d/S44ipv6_bounce
     
 Note that this script must be numerically ordered to execute after
-the /etc/rcS.d/S41blackarmor-network startup script.
+the /etc/rcS.d/S41blackarmor-network startup script which starts the
+networklan daemon.
 
 #### Patch service configuration files for IPv6
 In order for the services mentioned in this section to use IPv6
@@ -241,7 +241,7 @@ and IPv4 need to have their configuration patched. Also note
 that if you revert the Seagate Central back to the original
 v2.6.35 kernel then you'll need to also revert the configuration
 files that are modified in this section back to their original 
-states.
+states otherwise they won't work at all.
 
 Backup and patch the required service configuration files with
 the patches copied to the Seagate Central in a previous step as 
@@ -266,14 +266,14 @@ per the following examples.
 ### Installing the new kernel
 Here is where we actually put the new kernel into place. It's important
 to execute the steps in this section correctly. Please try to read the
-explanation of what each step is trying to acheive and understand what 
-you are doing before executing any commands.
+explanation of what each step is trying to achieve and understand what 
+you are doing before executing any of the following commands.
 
 #### Find out which copy of firmware is active
 The Seagate Central keeps two copies of firmware available on the
 hard drive in case one copy becomes corrupted and cannot boot. In
 this step we need to discover which of the two copies is currently
-active on the Seagate Central so that we can modify that one.
+active on the Seagate Central so that we can modify the active one.
 
 The name of the currently active kernel is stored in the flash memory
 of the Seagate Central using a variable called **current_kernel** . When
@@ -307,17 +307,19 @@ The kernel image is kept on a disk partition which is not, by default, mounted
 by the Seagate Central during normal operation. We will call this partition
 the **kernel boot partition**.
 
-If the **first** copy of firmware is active (kernel1) then the kernel partition
-is located on /dev/sda1 . Mount the kernel boot partition with the command
+If the **first** copy of firmware is active (kernel1) then the kernel boot 
+partition is located on "/dev/sda1" . Mount the kernel boot partition with the
+command
 
     mount /dev/sda1 /boot
      
-If the **second** copy of firmware is active (kernel2) the the kernel partition 
-is located on /dev/sda2 . Mount the kernel boot partition with the command
+If the **second** copy of firmware is active (kernel2) the the kernel boot 
+partition is located on "/dev/sda2" . Mount the kernel boot partition with the
+command
 
     mount /dev/sda2 /boot
      
-#### Make a backup copy of the original uImage
+#### Make a backup copy of the original kernel (uImage)
 Change into the /boot directory where the currently active uImage kernel file
 should be located and create a backup copy of the original kernel. 
 
@@ -342,10 +344,6 @@ different in your case)
     -rw-r--r-- 1 root root 3857616 Sep  4 06:39 uImage
     -rw-r--r-- 1 root root 2989612 Sep  4 06:35 uImage.old
 
-Note that the kernel partition is only 20M in size, so while there will be
-plenty of room to store the new kernel image and the backup, there won't be
-room to store much more data.
-
 #### OPTIONAL - Copy the kernel modules into place
 This step should only be performed if you have made your own custom changes
 to the procedure in order to build kernel modules. By default, no kernel
@@ -355,11 +353,10 @@ If you have an archive of kernel modules associated with the newly installed
 uImage then extract it and check to make sure that the directory contents
 are as expected.
 
-     cd /Data/admin
-     tar -xf cross-mod
+     tar -xf cross-mod.tar.gz
      ls -laR cross-mod/
 
-After checking that the modules have been extracted as expected then copy the
+After checking that the modules have been extracted as expected, copy the
 module tree into place as per the following example.
 
 Note that this is a **very** dangerous part of the process so if you don't
@@ -455,6 +452,8 @@ these will need to be reverted back to their original versions.
 Finally reboot the unit and confirm that the original kernel is
 back in place.
 
+     reboot
+
 ## Troubleshooting
 The most problematic issue that may occur after a failed kernel upgrade
 is that the unit is no longer accessible via ssh. If this happens then
@@ -467,17 +466,14 @@ Archive : https://archive.ph/3eOX0
 
 In essence the steps are
 
-1) Power down the Seagate Central.
-2) After a few seconds power up the Seagate Central.
-3) Wait 20 or so seconds for the LED status light on top of the unit to turn from amber to flashing green.
-4) Execute steps 1 - 4 a total of four times in a row.
+1) Power down then power up the Seagate Central.
+2) Wait 20 or so seconds for the LED status light on top of the unit to turn from amber to flashing green.
+3) Execute first 2 steps again four times in a row.
 5) Power up the unit. It should now attempt to load the backup / alternate version of firmware
 
 If the unit is accessable via ssh then the best places to search for
 troubleshooting data include the system bootup log as displayed by
 the **dmesg** command and the system log stored at /var/log/syslog
-
-
 
 
 
