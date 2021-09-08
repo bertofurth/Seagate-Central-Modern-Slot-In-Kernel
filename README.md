@@ -211,10 +211,6 @@ green once the main bootup process is finished.  BERTO ARE THERE MORE???
 Also note that the status LEDs on the Ethernet port itself work fine
 and will properly indicate the status of the Ethernet port.
 
-TODO : It would be easily possible to modify the inbuild led manager 
-to reflect more useful states, such as sustained high CPU or low
-disk space.
-
 #### Kernel DEBUG and other obscure options (Rare)
 In some cases there may be problems when the kernel is compiled using a
 non default configuration using some less frequently used options such
@@ -281,6 +277,17 @@ Ideally this "networklan" tool should be completely replaced, however
 for the moment workarounds have been put in place in the installation
 procedures that get this tool working "well enough" with the new
 kernel.
+
+#### Replace the proprietary "ledmanager" daemon
+The Seagate Central uses a proprietary tool called "ledmanager" to
+manage the state of the status LED on the top of the unit.
+
+This tool has some slight incompatibilities with the new kernel.
+
+It would be easily possible to create a new tool that not only
+indicated all the states the current tool is supposed to but other
+useful states such as indicating sustained high CPU or low disk 
+space.
 
 #### Power Management 
 In the new kernel there's no ability to suspend or to power down one of
