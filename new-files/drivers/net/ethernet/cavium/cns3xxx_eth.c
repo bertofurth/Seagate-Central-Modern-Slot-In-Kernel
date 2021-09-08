@@ -105,6 +105,19 @@
 #define MAC1_RX_ERROR 0x00200000
 #define MAC2_RX_ERROR 0x00400000
 
+/* MAC Clock - Seagate Central u-boot */
+#define MAC0_CLOCK_ENABLE   (1<<7)
+#define MAC1_CLOCK_ENABLE   (1<<15)
+#define MAC2_CLOCK_ENABLE   (1<<23)
+
+#define GMII_CLOCK_SKEW     0x00000050
+#define MAC_SPEED_1000          2
+#define MAC_SPEED_100           1
+#define MAC_SPEED_10            0
+
+#define MAC_DUPLEX_FULL         1
+#define MAC_DUPLEX_HALF         0
+
 struct tx_desc
 {
 	u32 sdp; /* segment data pointer */
@@ -215,51 +228,54 @@ struct rx_desc
 };
 
 
+// Comments show offset from CNS3XXX_SWITCH_BASE_VIRT and the
+// name used in u-boot and v2.x kernel source.
 struct switch_regs {
-	u32 phy_control;
-	u32 phy_auto_addr;
-	u32 mac_glob_cfg;
-	u32 mac_cfg[4];
-	u32 mac_pri_ctrl[5], __res;
-	u32 etype[2];
-	u32 udp_range[4];
-	u32 prio_etype_udp;
-	u32 prio_ipdscp[8];
-	u32 tc_ctrl;
-	u32 rate_ctrl;
-	u32 fc_glob_thrs;
-	u32 fc_port_thrs;
-	u32 mc_fc_glob_thrs;
-	u32 dc_glob_thrs;
-	u32 arl_vlan_cmd;
-	u32 arl_ctrl[3];
-	u32 vlan_cfg;
-	u32 pvid[2];
-	u32 vlan_ctrl[3];
-	u32 session_id[8];
-	u32 intr_stat;
-	u32 intr_mask;
-	u32 sram_test;
-	u32 mem_queue;
-	u32 farl_ctrl;
-	u32 fc_input_thrs, __res1[2];
-	u32 clk_skew_ctrl;
-	u32 mac_glob_cfg_ext, __res2[2];
-	u32 dma_ring_ctrl;
-	u32 dma_auto_poll_cfg;
-	u32 delay_intr_cfg, __res3;
-	u32 ts_dma_ctrl0;
-	u32 ts_desc_ptr0;
-	u32 ts_desc_base_addr0, __res4;
-	u32 fs_dma_ctrl0;
-	u32 fs_desc_ptr0;
-	u32 fs_desc_base_addr0, __res5;
-	u32 ts_dma_ctrl1;
-	u32 ts_desc_ptr1;
-	u32 ts_desc_base_addr1, __res6;
-	u32 fs_dma_ctrl1;
-	u32 fs_desc_ptr1;
-	u32 fs_desc_base_addr1;
+	u32 phy_control;             // 0x000 PHY_CTRL_REG
+	u32 phy_auto_addr;           // 0x004 PHY_AUTO_ADDR_REG
+	u32 mac_glob_cfg;            // 0x008 MAC_GLOB_CFG_REG
+	u32 mac_cfg[4];              // 0x00c - 0x018 MAC0_CFG_REG, MAC1_CFG_REG, CPU_CFG_REG, MAC2_CFG_REG
+	u32 mac_pri_ctrl[5];         // 0x01c - 0x02c MAC0_PRI_CTRL_REG, MAC1_PRI_CTRL_REG, CPU_PRI_CTRL_REG, HNAT_PRI_CTRL_REG, MAC2_PRI_CTRL_REG
+	u32 __res;                   // 0x030 MAC0_PRI_CTRL_EXT_REG
+	u32 etype[2];                // 0x034 - 0x038 ETYPE1_ETYPE0_REG, ETYPE3_ETYPE2_REG
+	u32 udp_range[4];            // 0x03c - 0x048 UDP_RANGE0_REG, UDP_RANGE1_REG, UDP_RANGE2_REG, UDP_RANGE3_REG
+	u32 prio_etype_udp;          // 0x04c PRIO_ETYPE_UDP_REG
+	u32 prio_ipdscp[8];          // 0x050 - 0x6c PRIO_IPDSCP_7_0_REG ... PRIO_IPDSCP_63_56_REG
+	u32 tc_ctrl;                 // 0x070 TC_CTRL_REG
+	u32 rate_ctrl;               // 0x074 RATE_CTRL_REG
+	u32 fc_glob_thrs;            // 0x078 FC_GLOB_THRS_REG
+	u32 fc_port_thrs;            // 0x07c FC_PORT_THRS_REG
+	u32 mc_fc_glob_thrs;         // 0x080 MC_GLOB_THRS_REG
+	u32 dc_glob_thrs;            // 0x084 DC_GLOB_THRS_REG
+	u32 arl_vlan_cmd;            // 0x088 ARL_VLAN_CMD_REG
+	u32 arl_ctrl[3];             // 0x08c - 0x094 ARL_CTRL0_REG, ARL_CTRL1_REG, ARL_CTRL2_REG
+	u32 vlan_cfg;                // 0x098 VLAN_CFG
+	u32 pvid[2];                 // 0x09c - 0x0a0 MAC1_MAC0_PVID_REG, MAC2_CPU_PVID_REG
+	u32 vlan_ctrl[3];            // 0x0a4 - 0x0ac VLAN_CTRL0_REG, VLAN_CTRL1_REG, VLAN_CTRL2_REG
+	u32 session_id[8];           // 0x0b0 - 0x0cc SESSION_ID_1_0_REG ... SESSION_ID_15_14_REG
+	u32 intr_stat;               // 0x0d0 INTR_STAT_REG
+	u32 intr_mask;               // 0x0d4 INTR_MASK_REG
+	u32 sram_test;               // 0x0d8 SRAM_TEST_REG
+	u32 mem_queue;               // 0x0dc MEM_QUEUE_REG
+	u32 farl_ctrl;               // 0x0e0 SARL_CTRL_REG
+	u32 fc_input_thrs, __res1[2];     // 0x0e4 - 0x0ec SARL_OQ_GTH_REG, SARL_OQ_YTH_REG, SARL_OQ_RTH_REG
+	u32 clk_skew_ctrl;                // 0x0f0 SLK_SKEW_CTRL_REG
+	u32 mac_glob_cfg_ext, __res2[2];  // 0x0f4 - 0x0fc
+	u32 dma_ring_ctrl;                // 0x100 DMA_RING_CTRL_REG
+	u32 dma_auto_poll_cfg;            // 0x104 DMA_AUTO_POLL_CFG_REG
+	u32 delay_intr_cfg, __res3;       // 0x108 DELAY_INTR_CFG_REG
+	u32 ts_dma_ctrl0;                 // 0x110 TS_DMA_CTRL0_REG
+	u32 ts_desc_ptr0;                 // 0x114 TS_DESC_PTR0_REG
+	u32 ts_desc_base_addr0, __res4;   // 0x118 TS_DESC_BASE_ADDR0_REG
+	u32 fs_dma_ctrl0;                 // 0x120 FS_DMA_CTRL0_REG
+	u32 fs_desc_ptr0;                 // 0x124 FS_DESC_PTR0_REG
+	u32 fs_desc_base_addr0, __res5;   // 0x128 FS_DESC_BASE_ADDR0_REG
+	u32 ts_dma_ctrl1;                 // 0x130 TS_DMA_CTRL1_REG
+	u32 ts_desc_ptr1;                 // 0x134 TS_DESC_PTR1_REG
+	u32 ts_desc_base_addr1, __res6;   // 0x138 TS_DESC_BASE_ADDR1_REG
+	u32 fs_dma_ctrl1;                 // 0x140 FS_DMA_CTRL1_REG
+	u32 fs_desc_ptr1;                 // 0x144 FS_DESC_PTR1_REG
+	u32 fs_desc_base_addr1;           // 0x148 FS_DESC_BASE_ADDR1_REG
 	u32 __res7[109];
 	u32 mac_counter0[13];
 };
@@ -625,7 +641,8 @@ irqreturn_t eth_stat_irq(int irq, void *pdev)
 	if (stat & MAC0_RX_ERROR)
 		switch_port_tab[0]->netdev->stats.rx_dropped++;
 
-	if (stat & MAC0_STATUS_CHANGE) {
+	if ((stat & MAC0_STATUS_CHANGE) &&
+	    switch_port_tab[0]) {
 		cfg = __raw_readl(&sw->regs->mac_cfg[0]);
 		switch_port_tab[0]->phydev->link = (cfg & 0x1);
 		switch_port_tab[0]->phydev->duplex = ((cfg >> 4) & 0x1);
@@ -638,7 +655,8 @@ irqreturn_t eth_stat_irq(int irq, void *pdev)
 		cns3xxx_adjust_link(switch_port_tab[0]->netdev);
 	}
 
-	if (stat & MAC1_STATUS_CHANGE) {
+	if ((stat & MAC1_STATUS_CHANGE) &&
+	    switch_port_tab[1]) {
 		cfg = __raw_readl(&sw->regs->mac_cfg[1]);
 		switch_port_tab[1]->phydev->link = (cfg & 0x1);
 		switch_port_tab[1]->phydev->duplex = ((cfg >> 4) & 0x1);
@@ -651,7 +669,8 @@ irqreturn_t eth_stat_irq(int irq, void *pdev)
 		cns3xxx_adjust_link(switch_port_tab[1]->netdev);
 	}
 
-	if (stat & MAC2_STATUS_CHANGE) {
+	if ((stat & MAC2_STATUS_CHANGE) &&
+	    switch_port_tab[3]) {
 		cfg = __raw_readl(&sw->regs->mac_cfg[3]);
 		switch_port_tab[3]->phydev->link = (cfg & 0x1);
 		switch_port_tab[3]->phydev->duplex = ((cfg >> 4) & 0x1);
@@ -1144,6 +1163,7 @@ static int eth_open(struct net_device *dev)
 	phy_start(port->phydev);
 
 	netif_start_queue(dev);
+
 	if (!ports_open) {
 		ret = request_irq(sw->rx_irq, eth_rx_irq, IRQF_SHARED, "gig_switch", napi_dev);
 		if (ret) {
@@ -1177,6 +1197,7 @@ static int eth_open(struct net_device *dev)
 
 	ports_open++;
 	netif_carrier_on(dev);
+
 	return 0;
 }
 
@@ -1321,6 +1342,7 @@ static int eth_init_one(struct platform_device *pdev)
 	    do_new_mac = 1;
 	}
 #endif
+	
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	regs = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(regs))
@@ -1379,6 +1401,7 @@ static int eth_init_one(struct platform_device *pdev)
 		if (!(plat->ports & (1 << i))) {
 			continue;
 		}
+
 		if (!(dev = alloc_etherdev(sizeof(struct port)))) {
 			goto free_ports;
 		}
@@ -1446,6 +1469,30 @@ static int eth_init_one(struct platform_device *pdev)
 		netif_carrier_off(dev);
 		dev = 0;
 	}
+
+	/*
+	 * KL-Yang came up with this. He is a genius.
+	 */
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//The magic configuration values for Seagate Personal Cloud	
+	__raw_writel(0x5fbe79, regs+4*3);       //regs[3]
+	__raw_writel(0x47be7a, regs+4*4);
+	__raw_writel(0x47a516, regs+4*6);
+	__raw_writel(0x000203, regs+4*34);
+	__raw_writel(0x20001,  regs+4*39);
+	__raw_writel(0x30005,  regs+4*40);
+	__raw_writel(0x3e003e00, regs+4*41);
+	__raw_writel(0x3f, regs+4*42);
+	__raw_writel(0xffff0000, regs+4*43);
+
+	//Those magic is from U-boot, the following is required!
+	temp = GMII_CLOCK_SKEW;
+	__raw_writel(temp, &mdio_regs->clk_skew_ctrl);
+	
+	temp = __raw_readl(&mdio_regs->phy_auto_addr);
+	temp |= MAC0_CLOCK_ENABLE;
+	__raw_writel(temp, &mdio_regs->phy_auto_addr);
+	
 	return 0;
 
 free_ports:
