@@ -40,6 +40,7 @@ enum {
     LS_BLINKING_GREEN,
     LS_BLINKING_YELLOW,
     LS_BLINKING_GREEN_AND_YELLOW,
+    /* N.B. States below are not in the original firmware */
     LS_BLINKING_ALTERNATE,
     LS_BLINKING_GREEN_SLOW,
     LS_BLINKING_YELLOW_SLOW,
@@ -50,7 +51,7 @@ enum {
 
 static struct proc_dir_entry *proc_cns3xxx_leds;
 static struct timer_list cns3xx_leds_timer;
-static char cns3xxx_leds_state_buffer[2];//1 byte + char(10) - new line
+static char cns3xxx_leds_state_buffer[10];//4 bytes + char(10) - new line
 static int cns3xxx_leds_state = LS_OFF;
 static char cns3xxx_blink_flag = 1;
 static DEFINE_SPINLOCK(cns3xx_leds_lock);
@@ -258,6 +259,7 @@ static int cns3xxx_leds_read_proc(struct seq_file *s, void *unused)
     seq_printf(s, "4 - blink green\n");
     seq_printf(s, "5 - blink yellow\n");
     seq_printf(s, "6 - blink green and yellow\n");
+    /* N.B. States below are not in the original firmware */
     seq_printf(s, "7 - blink green and yellow alternately\n");
     seq_printf(s, "8 - slow blink green\n");
     seq_printf(s, "9 - slow blink yellow\n");
@@ -271,10 +273,11 @@ static int cns3xxx_leds_read_proc(struct seq_file *s, void *unused)
 
 int cns3xxx_leds_write_proc(struct file *file, const char *buffer, size_t count, loff_t *ppos)
 {
-    int tmp = 0;
-
+    ulong tmp = 0;
+    int ret;
+    
     if (count > sizeof(cns3xxx_leds_state_buffer) ) {
-        printk(KERN_ERR"failed to set leds state: invalid count: %u - only values between \"%d\" - \"%d\" are accepted\n", count, LS_OFF, LS_NO - 1);
+        printk(KERN_ERR"failed to set leds state: invalid count: %u - only values between \"%u\" - \"%u\" are accepted\n", count, LS_OFF, LS_NO - 1);
         return -EINVAL;
     }
 
@@ -283,15 +286,15 @@ int cns3xxx_leds_write_proc(struct file *file, const char *buffer, size_t count,
         return -EFAULT;
     }
 
-    tmp = cns3xxx_leds_state_buffer[0] - '0';
+    ret = kstrtoul(cns3xxx_leds_state_buffer, 0, &tmp);
 
     if (tmp < LS_OFF || tmp >= LS_NO)
     {
-        printk(KERN_ERR"failed to set leds state: accepted values: \"%d\" - \"%d\" but \"%d\" was received\n", LS_OFF, LS_NO - 1, tmp);
+        printk(KERN_ERR"failed to set leds state: accepted values: \"%u\" - \"%u\" but \"%lu\" was received\n", LS_OFF, LS_NO - 1, tmp);
         return -EINVAL;
     }
 
-    leds_state_manager(tmp);
+    leds_state_manager((unsigned int)tmp);
 
     return count;
 }
