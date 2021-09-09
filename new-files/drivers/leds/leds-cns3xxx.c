@@ -51,7 +51,7 @@ enum {
 
 static struct proc_dir_entry *proc_cns3xxx_leds;
 static struct timer_list cns3xx_leds_timer;
-static char cns3xxx_leds_state_buffer[10];//4 bytes + char(10) - new line
+static char cns3xxx_leds_state_buffer[10];
 static int cns3xxx_leds_state = LS_OFF;
 static char cns3xxx_blink_flag = 1;
 static DEFINE_SPINLOCK(cns3xx_leds_lock);
@@ -273,35 +273,34 @@ static int cns3xxx_leds_read_proc(struct seq_file *s, void *unused)
 
 int cns3xxx_leds_write_proc(struct file *file, const char *buffer, size_t count, loff_t *ppos)
 {
-    ulong tmp = 0;
+    unsigned int tmp;
     int ret;
-    
-    if (count > sizeof(cns3xxx_leds_state_buffer) ) {
+
+    if (count > (sizeof(cns3xxx_leds_state_buffer) - 1)) {
         printk(KERN_ERR"failed to set leds state: invalid count: %u - only values between \"%u\" - \"%u\" are accepted\n", count, LS_OFF, LS_NO - 1);
-	memset(cns3xxx_leds_state_buffer, 0, sizeof(cns3xxx_leds_state_buffer));
         return -EINVAL;
     }
 
     if (copy_from_user(cns3xxx_leds_state_buffer, buffer, count)) {
         printk(KERN_ERR"failed to set leds state: copy_from_user failed\n");
-	memset(cns3xxx_leds_state_buffer, 0, sizeof(cns3xxx_leds_state_buffer));
         return -EFAULT;
     }
-    
-    ret = kstrtoul(cns3xxx_leds_state_buffer, 0, &tmp);
-    memset(cns3xxx_leds_state_buffer, 0, sizeof(cns3xxx_leds_state_buffer));
-    if (!ret) {
-        printk(KERN_ERR"failed to convert leds value to number\n");
-        return -EFAULT;
+
+    cns3xxx_leds_state_buffer[count] = 0x0; /* Ensure null terminator...not very elegant */
+
+    ret = kstrtouint(cns3xxx_leds_state_buffer, 0, &tmp);
+    if (ret != 0) {
+	    printk(KERN_ERR"failed to convert leds value %s to number\n", cns3xxx_leds_state_buffer);
+	    return -EFAULT;
     }
     
     if (tmp < LS_OFF || tmp >= LS_NO)
     {
-        printk(KERN_ERR"failed to set leds state: accepted values: \"%u\" - \"%u\" but \"%lu\" was received\n", LS_OFF, LS_NO - 1, tmp);
+        printk(KERN_ERR"failed to set leds state: accepted values: \"%u\" - \"%u\" but \"%u\" was received\n", LS_OFF, LS_NO - 1, tmp);
         return -EINVAL;
     }
 
-    leds_state_manager((unsigned int)tmp);
+    leds_state_manager(tmp);
 
     return count;
 }
