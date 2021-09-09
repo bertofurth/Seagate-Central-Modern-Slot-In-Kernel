@@ -41,6 +41,10 @@ enum {
     LS_BLINKING_YELLOW,
     LS_BLINKING_GREEN_AND_YELLOW,
     LS_BLINKING_ALTERNATE,
+    LS_BLINKING_GREEN_SLOW,
+    LS_BLINKING_YELLOW_SLOW,
+    LS_BLINKING_GREEN_AND_YELLOW_SLOW,
+    LS_BLINKING_ALTERNATE_SLOW,
     LS_NO
 };
 
@@ -114,7 +118,30 @@ static void cns3xx_leds_timer_callback(struct timer_list *t)
 	cns3xxx_gpio_port_set(0, YELLOW_LED, !cns3xxx_blink_flag);
 	start_leds_timer(BLINK_PERIOD_MS);
 	break;
+    case LS_BLINKING_GREEN_SLOW:
+        cns3xxx_blink_flag ^= 1;
+        cns3xxx_gpio_port_set(0, GREEN_LED, cns3xxx_blink_flag);
+        start_leds_timer(BLINK_PERIOD_MS * 2);
+	break;
+    case LS_BLINKING_YELLOW_SLOW:
+	cns3xxx_blink_flag ^= 1;
+	cns3xxx_gpio_port_set(0, YELLOW_LED, cns3xxx_blink_flag);
+	start_leds_timer(BLINK_PERIOD_MS * 2);
+	break;
+    case LS_BLINKING_GREEN_AND_YELLOW_SLOW:
+	cns3xxx_blink_flag ^= 1;
+	cns3xxx_gpio_port_set(0, GREEN_LED, cns3xxx_blink_flag);
+	cns3xxx_gpio_port_set(0, YELLOW_LED, cns3xxx_blink_flag);
+	start_leds_timer(BLINK_PERIOD_MS * 2);
+	break;
+    case LS_BLINKING_ALTERNATE_SLOW:
+	cns3xxx_blink_flag ^= 1;
+	cns3xxx_gpio_port_set(0, GREEN_LED, cns3xxx_blink_flag);
+	cns3xxx_gpio_port_set(0, YELLOW_LED, !cns3xxx_blink_flag);
+	start_leds_timer(BLINK_PERIOD_MS * 2);
+	break;
     }
+    
 
     spin_unlock(&cns3xx_leds_lock);
 }
@@ -185,6 +212,34 @@ static void leds_state_manager(unsigned int new_state)
             clear_led(YELLOW_LED);
             start_leds_timer(BLINK_PERIOD_MS);
             break;
+
+        case LS_BLINKING_GREEN_SLOW:
+            cns3xxx_blink_flag = 1;
+            set_led(GREEN_LED);
+            clear_led(YELLOW_LED);
+            start_leds_timer(BLINK_PERIOD_MS * 2);
+            break;
+
+        case LS_BLINKING_YELLOW_SLOW:
+            cns3xxx_blink_flag = 1;
+            clear_led(GREEN_LED);
+            set_led(YELLOW_LED);
+            start_leds_timer(BLINK_PERIOD_MS * 2);
+            break;
+
+        case LS_BLINKING_GREEN_AND_YELLOW_SLOW:
+            cns3xxx_blink_flag = 1;
+            set_led(GREEN_LED);
+            set_led(YELLOW_LED);
+            start_leds_timer(BLINK_PERIOD_MS * 2);
+            break;
+
+        case LS_BLINKING_ALTERNATE_SLOW:
+            cns3xxx_blink_flag = 1;
+            set_led(GREEN_LED);
+            clear_led(YELLOW_LED);
+            start_leds_timer(BLINK_PERIOD_MS * 2);
+            break;
     }
 
     spin_unlock(&cns3xx_leds_lock);
@@ -198,12 +253,16 @@ static int cns3xxx_leds_read_proc(struct seq_file *s, void *unused)
     seq_printf(s, "current state: %d\n", cns3xxx_leds_state);
     seq_printf(s, "0 - off\n");
     seq_printf(s, "1 - solid green\n");
-    seq_printf(s, "2 - solid yellow (N.B might be red)\n");
-    seq_printf(s, "3 - solid green and yellow\n");
+    seq_printf(s, "2 - solid yellow (red)\n");
+    seq_printf(s, "3 - solid green and yellow (amber)\n");
     seq_printf(s, "4 - blink green\n");
     seq_printf(s, "5 - blink yellow\n");
     seq_printf(s, "6 - blink green and yellow\n");
     seq_printf(s, "7 - blink green and yellow alternately\n");
+    seq_printf(s, "8 - slow blink green\n");
+    seq_printf(s, "9 - slow blink yellow\n");
+    seq_printf(s, "10 - slow blink green and yellow\n");
+    seq_printf(s, "11 - slow blink green and yellow alternately\n");
 
     spin_unlock(&cns3xx_leds_lock);
 
