@@ -9,11 +9,11 @@ index 397ba6a956e7..f2629a9f2499 100644
  			struct restart_info *info)
  {
  	u32 skip, vbo;
--	struct RESTART_HDR *r_page = ntfs_malloc(DefaultLogPageSize);
+-	struct RESTART_HDR *r_page = kmalloc(DefaultLogPageSize, GFP_NOFS);
 -
-+        struct RESTART_HDR *r_page = ntfs_malloc(PAGE_SIZE > DefaultLogPageSize ?
-+						 PAGE_SIZE :		
-+						 DefaultLogPageSize);
++        struct RESTART_HDR *r_page = kmalloc(PAGE_SIZE > DefaultLogPageSize ?
++						 PAGE_SIZE : DefaultLogPageSize,		
++						 GFP_NOFS);
  	if (!r_page)
  		return -ENOMEM;
  
