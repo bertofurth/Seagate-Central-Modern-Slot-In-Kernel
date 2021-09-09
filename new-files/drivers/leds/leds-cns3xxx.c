@@ -278,16 +278,23 @@ int cns3xxx_leds_write_proc(struct file *file, const char *buffer, size_t count,
     
     if (count > sizeof(cns3xxx_leds_state_buffer) ) {
         printk(KERN_ERR"failed to set leds state: invalid count: %u - only values between \"%u\" - \"%u\" are accepted\n", count, LS_OFF, LS_NO - 1);
+	memset(cns3xxx_leds_state_buffer, 0, sizeof(cns3xxx_leds_state_buffer));
         return -EINVAL;
     }
 
     if (copy_from_user(cns3xxx_leds_state_buffer, buffer, count)) {
         printk(KERN_ERR"failed to set leds state: copy_from_user failed\n");
+	memset(cns3xxx_leds_state_buffer, 0, sizeof(cns3xxx_leds_state_buffer));
         return -EFAULT;
     }
-
+    
     ret = kstrtoul(cns3xxx_leds_state_buffer, 0, &tmp);
-
+    memset(cns3xxx_leds_state_buffer, 0, sizeof(cns3xxx_leds_state_buffer));
+    if (!ret) {
+        printk(KERN_ERR"failed to convert leds value to number\n");
+        return -EFAULT;
+    }
+    
     if (tmp < LS_OFF || tmp >= LS_NO)
     {
         printk(KERN_ERR"failed to set leds state: accepted values: \"%u\" - \"%u\" but \"%lu\" was received\n", LS_OFF, LS_NO - 1, tmp);
