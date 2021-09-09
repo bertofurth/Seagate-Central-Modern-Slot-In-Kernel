@@ -56,14 +56,14 @@ The main obstacle this project had to overcome was incorporating
 support for 64K memory page sizes. This was required because the native
 disk format for the user Data partition on a Seagate Central uses 64K
 pages. These are only supported natively by Linux when the memory pages
-are 64K or larger. This goal was largely acheived by drawing on the work
+are 64K or larger. This goal was largely achieved by drawing on the work
 of Gregory Clement (see Acknowledgements).
 
 The notable features that this project focused on include
 * USB support - Allows connection of external drives and other devices.
 * Symmetric Multiprocessing (SMP) - More efficient and faster processing.
 * IPv6 - The new standard for internet networking.
-* exFAT/NTFS3 - New linux support for exFAT and ntfs formatted USB drives.
+* exFAT/NTFS3 - New Linux support for exFAT and NTFS formatted USB drives.
 * Real time clock (RTC)
 * Access to u-boot environment in flash
 * Ethernet mac-address stored in flash
@@ -87,8 +87,9 @@ In addition, I have never come close to "bricking" any Seagate Central!
 
 The Seagate Central version of the boot loader (u-boot) has a feature 
 where it automatically reverts to the previous version of firmware if
-it finds it is unable to bootup the system after 4 consecutive attempts.
-This normally overcomes any kind of cataclysmic software induced failure.
+it finds it is unable to successfully bootup the system after 4 consecutive
+attempts. This normally overcomes any kind of cataclysmic software induced
+failure.
 
 In the absolute worst case where a Seagate Central were rendered totally
 inoperable there is always the option of physically opening the Seagate
@@ -123,11 +124,11 @@ can be accomplished.
 https://github.com/bertofurth/Seagate-Central-Samba
 
 It is technically possible to try the new kernel on a Seagate Central 
-without upgrading the samba service however it will simply mean that
-samba / Windows Networking style file sharing will not operate! All
-of the other services on the Seagate Central, such as the web management
-interface, the ssh/sftp/ftp servers and the Twonky DLNA media server,
-will still work.
+without upgrading the samba service however, it will simply mean that
+samba / Windows style file sharing will not operate! All of the other
+services on the Seagate Central, such as the web management interface,
+the ssh/sftp/ftp servers and the Twonky DLNA media server, will still 
+work.
 
 ### NTFS external drive "write" support (Soon to be fixed in kernel v5.15??)
 Initially, this project will only support "read" access to externally
@@ -143,17 +144,17 @@ called ufsd, to mount USB attached NTFS drives. This allowed the Seagate
 Central to seamlessly interact with any attached NTFS formatted USB drives.
 
 Unfortunately the v5.x slot in kernel is not able to make use of this
-proprietary driver as it was desgined for use with the original custom
+proprietary driver as it was designed for use with the original custom
 Seagate Central v2.6.35 based Linux kernel.
 
-Linux does currently include suppport for a read-only version of the NTFS
+Linux does currently include support for a read-only version of the NTFS
 file system however it is reportedly quite slow. This is the version of NTFS
 support enabled in the v5.14 release of linux that these instructions are 
 currently based one.
 
 There is a soon to be released new, much faster and reportedly more reliable
 read and write capable NTFS driver called ntfs3 by paragon software. I have
-sucessfully tested a beta version of this driver on the Seagate Central by 
+successfully tested a beta version of this driver on the Seagate Central by 
 using the pre-release linux kernel available at
 
 https://github.com/Paragon-Software-Group/linux-ntfs3
@@ -179,15 +180,15 @@ Seagate Central, however for completeness sake they are documented here.
 
 #### Ethernet reconfiguration and physical disconnect handling
 The Seagate Central uses a proprietary and closed source tool called
-"networklan" to manage the Ethernet interface. Unfortunately this
+"networklan" to manage the Ethernet interface. Unfortunately, this
 tool does not work seamlessly with the new kernel.
 
 For example, while running the new kernel, when the Ethernet cable is
 physically disconnected from the unit the "networklan" tool doesn't 
-properly recognize this event. Instead it will continue to act as if
-the Ethernet interface is still "up". After the unit is physically 
-reconnected to the Ethernet LAN it will simply function as if nothing
-has happened. Normally this doesn't cause any problems.
+properly recognize this event. Instead, the system will continue to
+act as if the Ethernet interface is still "up". After the unit is
+physically reconnected to the Ethernet LAN it will simply function
+as if nothing has happened. Normally this doesn't cause any problems.
 
 Another scenario where a problem may sometimes occur is if the IP address
 configuration of the unit is modified via the Web Management interface.
@@ -213,8 +214,8 @@ for a few seconds after the unit is commanded to reboot.
 Also note that the status LEDs on the Ethernet port itself work fine
 and will properly indicate the status of the Ethernet port.
 
-See the TODO section below dealing with "ledmanager" for details of
-an experimental partial resolution of this issue.
+See the TODO section below dealing with "ledmanager" for more details
+and an experimental partial resolution of this issue.
 
 #### Kernel DEBUG and other obscure options (Rare)
 In some cases there may be problems when the kernel is compiled using a
@@ -245,23 +246,19 @@ The rule of thumb I have had to follow when encountering "weird"
 issues is to try compiling the kernel with the least number of debugs
 and "rare" features turned on as possible.
 
-#### Unusual tracebacks and errors on bootup 
+#### Unusual tracebacks and warnings on bootup 
 Due to some minor incompatibilities between the new kernel and some of 
 the original software on the Seagate Central, a careful examination of 
-the bootup logs may reveal some error messages and tracebacks. 
+the bootup logs may reveal some warning messages and tracebacks. 
 
 These messages do not impact on the main functionality of the unit.
 
-Some examples of these messages include
+Some examples of these warning messages include
 
     WARNING: CPU: X PID: XX at mm/vmalloc.c:XXX vunmap_range_noflush+0xXX/0xXX
 
     WARNING: CPU: X PID: XXXX at arch/arm/mm/physaddr.c:XX __virt_to_phys+0xXX/0xXX kernel: virt_to_phys used for non-linear address: XXXXXXXX (0xXXXXXXXX)
-    
-    udevd[XXX]: BUS= will be removed in a future udev version, please use SUBSYSTEM= to match the event device, or SUBSYSTEMS= to match a parent device, in /etc/udev/rules.d/98-custom-usb.rules:10
-    
-    udevd (XXX): /proc/XXX/oom_adj is deprecated, please use /proc/XXX/oom_score_adj instead.
-    
+       
 These warnings seem to occur due to some of the proprietary Seagate 
 Central software, particularly the "ledmanager" and "networklan" tools.
 
@@ -291,7 +288,9 @@ can sometimes cause cosmetic tracebacks to appear in the system logs.
 
 There is an experimental script that is included in the base directory
 of this project called **new-led-monitor.sh** that could serve
-as the basis for a replacement led status monitor.
+as the basis for a replacement led status monitor. Note that this
+script has not been thoroughly tested but might serve as the basis
+for future work.
 
 #### Power Management 
 In the new kernel there's no ability to suspend or to power down one of
@@ -304,7 +303,7 @@ not a feature that would get much use.
 
 #### 64K to 4K partition block size conversion procedure 
 This project supports the 64K block sizes on the Seagate Central data
-partition by introducing support for a non standard memory page table
+partition by introducing support for a non-standard memory page table
 size of 64K.
 
 An alternative route would have been to create a guide for converting
@@ -319,14 +318,14 @@ more than the standard data payload of 1500 bytes. This is in order
 to be able to reduce the packet header transmission and processing 
 overhead associated with each packet.
 
-I have never come across any normal home or small enterprise network 
+I have never come across any normal home or small enterprise networks
 that uses Jumbo Ethernet frames. One important reason for this is 
-because Jumbo Ethernet frames are not supported over Wifi. Jumbo 
+because Jumbo Ethernet frames are not supported over Wi-Fi. Jumbo 
 frames only work over hard Ethernet connections where *all* the
 infrastructure between the server and client (switches and routers)
-support it. In lower end networks, like the ones where a Seagate
-Central would typically be deployed, it's not certain that all the
-networking infrastructure would have this capability.
+support it. In most home or small enterprise networks, like the ones
+where a Seagate Central would typically be deployed, it's not certain
+that all the networking infrastructure would have this capability.
 
 Jumbo frames only have a noticeable impact in contexts where bulk
 data transfers are *constantly* flowing over a hard ethernet network
@@ -347,7 +346,7 @@ It may also be of benefit if you were fully utilizing 1Gbps or greater
 links over sustained periods of time however there's no way a single
 Seagate Central would ever approach that level of data throughput.
 Maybe if you had five Seagate Centrals all transferring data between five
-seperate clients each at the same time over a congested 1Gbps link there
+separate clients each at the same time over a congested 1Gbps link there
 may be a benefit to be seen. I'd love to get some feedback from anyone
 who has encountered this scenario.
 
@@ -359,7 +358,7 @@ https://www.mirazon.com/jumbo-frames-do-you-really-need-them/
 The Great Jumbo Frames Debate
 http://longwhiteclouds.com/2013/09/10/the-great-jumbo-frames-debate/
 
-####  USB On-The-Go (OTG)
+#### USB On-The-Go (OTG)
 USB On-The-Go (OTG) is a mechanism whereby a USB "Device" like a 
 smart phone or a tablet can act as a USB "Host" so that it can
 connect to other USB devices like a storage drive or a keyboard.
@@ -368,7 +367,7 @@ Presumably in the context of the Seagate Central, it would let the
 NAS act as a "Device" that could connect to a "Host" like a PC.
 This way the PC could directly access the data stored on the NAS 
 via the USB connection. That is, the Seagate Central would act
-like a USB harddrive.
+like a USB hard drive.
 
 I'm confident that the Seagate Central has never supported USB OTG
 however it is a capability that was actually included in the original
@@ -376,7 +375,7 @@ Seagate Central Kernel.
 
 USB OTG isn't mentioned in the Seagate Central documentation and I cannot
 find any examples online of this kind of functionality being used with
-a Seagate Central. In addition there doesn't seem to be any method to
+a Seagate Central. In addition, there doesn't seem to be any method to
 configure or customize this feature, such as which user's Data folder
 would be made available over the USB OTG connection and so forth.
 
@@ -401,11 +400,11 @@ The Seagate-Central-Samba project has a component that allows the easy
 upgrade of the system's samba software via the Web Interface controlled
 firmware upgrade process. Ideally the same kind of process should be available
 for upgrading the kernel, however since the kernel upgrade procedure is
-more likely to cause faults or unanticipated problems for the moment
-the manual kernel installation procedure is the best method to use.
+more likely to be subject to unanticpated problems that require manual
+intervention, manually instaling the kernel is the best route to take.
 
 ## Acknowledgements
-I am very greatful to the following sources who I've based this project on.
+I am very grateful to the following sources who I've based this project on.
 
 This work is primarily based on the Seagate Central GPL source code which I
 am grateful to the Seagate corporation for dutifully publishing.
@@ -418,7 +417,7 @@ Seagate_central_linux (Single Disk Version) project.
 https://github.com/KL-Yang/seagate_central_linux
 
 The 64K memory page size work is largely based on the work by Gregory
-Clement from bootlin.
+Clement from Bootlin.
 
 https://lwn.net/Articles/822868/
 
@@ -427,7 +426,7 @@ this project.
 
 ## Postscript
 I acknowledge that I haven't done things in the most elegant manner with 
-these patches and code. For example there are a lot of "#ifdef" statements
+these patches and code. For example, there are a lot of "#ifdef" statements
 introduced into some core kernel source files that get things working, but
 aren't necessarily very graceful. For these reasons I don't plan to make 
 any effort to submit these patches to the mainline Linux kernel. I'm also
@@ -463,7 +462,7 @@ Linux kernel on other arm 32 based embedded NAS equipment. In particular
 the 64K page size additions will hopefully prove useful for other NAS
 products that chose to use 64K pages in their file systems.
 
-Finally I learned a great deal about Linux, arm32 and embedded systems 
+Finally, I learned a great deal about Linux, arm32 and embedded systems 
 while writing this guide. Please read these instructions with the 
 understanding that I am still in the process of learning. I trust that 
 this project will help others to learn as well.
