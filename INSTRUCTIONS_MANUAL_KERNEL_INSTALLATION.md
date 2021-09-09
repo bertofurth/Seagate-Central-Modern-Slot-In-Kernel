@@ -4,13 +4,13 @@ Linux v2.6.25 kernel on a Seagate Central NAS with a previously
 cross compiled modern, Linux v5.x kernel.
 
 Refer to the instructions in **INSTRUCTIONS_CROSS_COMPILE_KERNEL.md**
-to self generate a kernel for use in this procedure or refer to the
+to cross compile a kernel for use in this procedure or refer to the
 **README.md** file for the location of a precompiled kernel binary.
 
 Installation of the cross compiled kernel in conjunction with samba
 by using the easier but less flexible firmware upgrade method
 is covered by
-BERTO **INSTRUCTIONS_FIRMWARE_UPGRADE_METHOD.md**
+**INSTRUCTIONS_FIRMWARE_UPGRADE_KERNEL.md**
 
 The target platform tested was a Seagate Central Single Drive NAS 
 running firmware version 2015.0916.0008-F however I believe these 
@@ -47,8 +47,8 @@ and that you can succesfully issue the **su** command to gain root
 priviledges. Note that some later versions of Seagate Central firmware
 deliberately disable su access by default.
 
-The alternative procedure detailed in BERTO
-**INSTRUCTIONS_FIRMWARE_UPGRADE_METHOD.md** does not require su access
+The alternative procedure detailed in 
+**INSTRUCTIONS_FIRMWARE_UPGRADE_KERNEL.md** does not require su access
 and will in fact automatically re-enable su access as a result of the
 procedure.
 
