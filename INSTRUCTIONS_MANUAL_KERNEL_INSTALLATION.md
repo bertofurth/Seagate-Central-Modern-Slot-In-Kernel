@@ -395,9 +395,9 @@ line with the reboot command.
 Naturally, at the point when the unit is rebooted any ssh sessions to
 the Seagate Central will be disconnected.
 
-After the unit has rebooted re-establish an ssh connection and issue
-the following command to confirm that the unit has loaded the new
-kernel.
+After the unit has rebooted re-establish an ssh connection to the newly
+upgraded Seagate Central and issue the following command to confirm that
+the unit has loaded the new kernel.
 
      uname -a
      
@@ -406,7 +406,7 @@ The output should indicate that the version of the running kernel is now
 output.
 
 BERTO BERTO...SET THE SAME AS THE DOWNLOADABLE ONE
-     Linux NAS-1 5.14.0-rc5-sc+ #138 SMP Wed Sep 8 14:54:33 AEST 2021 armv6l GNU/Linux       
+     Linux NAS-X 5.14.0-rc5-sc+ #138 SMP Wed Sep 8 14:54:33 AEST 2021 armv6l GNU/Linux       
      
 Further confirm that the services you make use of on the Seagate Central
 are functional, including
@@ -449,10 +449,19 @@ these will need to be reverted back to their original versions.
      cp /etc/lighttpd.conf.old /etc/lighttpd.conf
      cp /etc/vsftpd.conf.old /etc/vsftpd.conf
           
-Finally reboot the unit and confirm that the original kernel is
-back in place.
+Reboot the unit with the reboot command
 
      reboot
+
+Confirm that the original kernel is back in place by issuing the "uname -a"
+command
+
+     uname -a
+     
+The command output should indicate that kernel version has reverted back to
+2.6.35 as per the following sample output.
+
+    Linux NAS-X 2.6.35.13-cavm1.whitney-econa.whitney-econa #1 Wed Sep 16 15:47:59 PDT 2015 armv6l GNU/Linux
 
 ## Troubleshooting
 The most problematic issue that may occur after a failed kernel upgrade
@@ -472,9 +481,13 @@ In essence the steps are
 5) Power up the unit. It should now attempt to load the backup / alternate version of firmware
 
 If the unit is accessable via ssh then the best places to search for
-troubleshooting data include the system bootup log as displayed by
+troubleshooting data includes the system bootup log as displayed by
 the **dmesg** command and the system log stored at /var/log/syslog
 
+If some services are functional but others are not then check the 
+log files pertinant to the failing services as well as relevant messages
+in the the above mentioned log files.
 
-
-TEST STATIC IP
+* samba - /var/log/log.smbd  and /var/log/log.snmd
+* FTP/SFTP - /var/log/vsftpd.log
+* Web Management Interface - /var/log/user.log
