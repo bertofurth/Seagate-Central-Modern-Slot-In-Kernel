@@ -4,8 +4,8 @@
 
 
 # Seagate Central Slot In v5.x Kernel
-A modern slot in Linux Kernel for the Seagate Central NAS
-running stock Seagate Central firmware.
+A modern slot in Linux Kernel for the Seagate Central Single
+Drive NAS running stock Seagate Central firmware.
 
 This accompanies the Seagate-Central-Samba project at the
 following link 
@@ -13,10 +13,10 @@ following link
 https://github.com/bertofurth/Seagate-Central-Samba
 
 Installing the samba software at the above project is
-a strongly recommended pre-requisite / co-requisite of this 
-project. If you want Windows style samba network file sharing
-to work then you must upgrade the samba service on the Seagate 
-Central before, or at the same time as upgrading the Linux kernel.
+a strongly recommended pre-requisite of this project. If you want
+Windows style samba network file sharing to work then you must 
+upgrade the samba service on the Seagate Central before, or at
+the same time as upgrading the Linux kernel.
 
 A pre-compiled Linux v5.4.X kernel based on the instructions
 in this guide is currently available at
@@ -25,7 +25,7 @@ BERTO
 https://www.dropbox.com/s/wwesnz5cmc9hlcy/seagate-cxxxxxxxxxxx.tar.gz
 BERTO
 
-There are three sets of instructions included in this project.
+There are two sets of instructions included in this project.
 
 ### INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
 Cross compile the new v5.x Linux kernel for Seagate Central from scratch.
@@ -33,16 +33,12 @@ Cross compile the new v5.x Linux kernel for Seagate Central from scratch.
 ### INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
 Manually install the new Linux kernel onto the Seagate Central.
 
-### INSTRUCTIONS_INSTALL_WITH_SAMBA_FIRMWARE_UPGRADE.md
-Install the kernel as part of an easy web management based firmware
-upgrade process that also upgrades the samba server at the same time.
-
 ## Details
 This project's main goals are
 
 * Develop a new and modern version of the Linux kernel for Seagate Central.
 * Make the installation as seamless as possible.
-* Allow users to keep using the existing Data volume.
+* Allow users to keep using the existing 64K page formatted Data volume.
 * Allow users to continue using the Seagate supplied services.
 
 The hope is that by providing a modern kernel to replace the old 
@@ -67,12 +63,12 @@ The notable features that this project focused on include
 * USB support - Allows connection of external drives and other devices.
 * Symmetric Multiprocessing (SMP) - More efficient and faster processing.
 * IPv6 - The new standard for internet networking.
-* exFAT - New support for exFAT formatted external drives.
+* exFAT/NTFS3 - New linux support for exFAT and ntfs formatted USB drives.
 * Real time clock (RTC)
 * Access to u-boot environment in flash
-* Fixed Ethernet mac-address stored in flash
+* Ethernet mac-address stored in flash
 * Control of status indicator LED
-* TODO : NTFS (see below)
+* Access to the "Factory Default" button
 
 ## Warning 
 **Performing modifications of this kind on the Seagate Central is not 
@@ -181,21 +177,26 @@ https://www.howtogeek.com/316977/how-to-format-usb-drives-larger-than-32gb-with-
 The issues below are unlikely to impact on the normal operation of the
 Seagate Central, however for completeness sake they are documented here.
 
-#### Ethernet disconnect handling
-While running the new kernel, when the Ethernet cable is physically 
-disconnected from the unit the system doesn't properly recognize this
-event. Instead it still believes that the Ethernet interface is "up".
-After the unit is reconnected to the Ethernet it will simply function
-as if nothing has happened.
+#### Ethernet reconfiguration and physical disconnect handling
+The Seagate Central uses a proprietary and closed source tool called
+"networklan" to manage the Ethernet interface. Unfortunately this
+tool does not work seamlessly with the new kernel.
 
-This issue is due to the proprietary "networklan" tool that the
-Seagate Central uses to manage Ethernet interfaces not working well
-with the new kernel.
+For example, while running the new kernel, when the Ethernet cable is
+physically disconnected from the unit the "networklan" tool doesn't 
+properly recognize this event. Instead it will continue to act as if
+the Ethernet interface is still "up". After the unit is physically 
+reconnected to the Ethernet LAN it will simply function as if nothing
+has happened. Normally this doesn't cause any problems.
 
-The only rare occasion I can envisage where this might be an issue is
-if someone were moving the Seagate Central to a different LAN or
-subnet, however in most cases when this happens the unit would be 
-powered off during the move so there would be no problem.
+Another scenario where a problem may sometimes occur is if the IP address
+configuration of the unit is modified via the Web Management interface.
+After reconfiguration, IPv6 (which is a new capability of the new kernel)
+may not function properly.
+
+It may be that the best course of action is to manually reboot the unit
+after an IP address configuration change or if the unit is deliberately
+physically reconnected to a different LAN.
 
 #### No red blinking LED status light for lost Ethernet connectivity
 When using native Seagate supplied stock firmware, if a Seagate Central
@@ -205,11 +206,15 @@ the new kernel. This relates to the issue listed above with Ethernet
 disconnect handling.
 
 Note that the other LED status states work properly. That is, solid
-amber after power on, flashing green during the boot process and solid
-green once the main bootup process is finished.  BERTO ARE THERE MORE???
+amber after power on, flashing green during the boot process, solid
+green once the main bootup process is finished and flashing red
+for a few seconds after the unit is commanded to reboot. 
 
 Also note that the status LEDs on the Ethernet port itself work fine
 and will properly indicate the status of the Ethernet port.
+
+See the TODO section below dealing with "ledmanager" for details of
+an experimental partial resolution of this issue.
 
 #### Kernel DEBUG and other obscure options (Rare)
 In some cases there may be problems when the kernel is compiled using a
@@ -274,20 +279,19 @@ of alternative Ethernet management tools available, however it's unlikely
 that they would be backwards compatible with the original kernel.
 
 Ideally this "networklan" tool should be completely replaced, however
-for the moment workarounds have been put in place in the installation
-procedures that get this tool working "well enough" with the new
-kernel.
+the tool seems to work well enough in most normal scenarios if one bears
+in mind the minor issues listed in the caveats section above.
 
 #### Replace the proprietary "ledmanager" daemon
 The Seagate Central uses a proprietary tool called "ledmanager" to
 manage the state of the status LED on the top of the unit.
 
-This tool has some slight incompatibilities with the new kernel.
+This tool has some slight incompatibilities with the new kernel which
+can sometimes cause cosmetic tracebacks to appear in the system logs.
 
-It would be easily possible to create a new tool that not only
-indicated all the states the current tool is supposed to but other
-useful states such as indicating sustained high CPU or low disk 
-space.
+There is an experimental script that is included in the base directory
+of this project called **new-led-monitor.sh** that could serve
+as the basis for a replacement led status monitor.
 
 #### Power Management 
 In the new kernel there's no ability to suspend or to power down one of
@@ -391,6 +395,14 @@ Central does not make use of all of these.
 
 I've focused my efforts on only porting over support for the hardware 
 components that are present on the Seagate Central Single Hard Drive NAS. 
+
+#### Incorporate Linux kernel upgrade into Firmware Upgrade procedure
+The Seagate-Central-Samba project has a component that allows the easy
+upgrade of the system's samba software via the Web Interface controlled
+firmware upgrade process. Ideally the same kind of process should be available
+for upgrading the kernel, however since the kernel upgrade procedure is
+more likely to cause faults or unanticipated problems for the moment
+the manual kernel installation procedure is the best method to use.
 
 ## Acknowledgements
 I am very greatful to the following sources who I've based this project on.
