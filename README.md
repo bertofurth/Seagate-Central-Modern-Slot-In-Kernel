@@ -55,7 +55,7 @@ pages. These are only supported natively by Linux when the memory pages
 are 64K or larger. This goal was largely achieved by drawing on the work
 of Gregory Clement (see Acknowledgements).
 
-The notable features that this project focused on include
+The other notable features that this project focused on include
 * USB support - Allows connection of external drives and other devices.
 * Symmetric Multiprocessing (SMP) - More efficient and faster processing.
 * IPv6 - The new standard for internet networking.
@@ -126,8 +126,10 @@ work.
 ### NTFS external drive "write" support (Soon to be fixed in kernel v5.15??)
 Initially, this project will only support "read" access to externally
 attached NTFS formatted drives. This is expected to be resolved with the 
-advent of the paragon read/write capable ntfs3 driver due to be released in
+advent of the Paragon read/write capable ntfs3 driver due to be released in
 Linux kernel v5.15 or soon after.
+
+https://www.paragon-software.com/home/ntfs3-driver-faq/
 
 NTFS is a commonly used filesystem for large hard drives formatted using 
 modern Windows operating systems.
@@ -296,20 +298,23 @@ not a feature that would get much use.
 
 #### 64K to 4K partition block size conversion procedure 
 This project supports the 64K block sizes on the Seagate Central data
-partition by introducing support for a non-standard memory page table
-size of 64K.
+partition by introducing support for a non-standard memory page size 
+of 64K.
 
-An alternative route would have been to create a guide for converting
-the user data volume in the Seagate Central from 64K block size to a 
-standard 4K block size. That way none of the 64K PAGE_SIZE work be 
-necessary, however that would have meant the kernel would not be 
-"slot-in" as such.
+While using 64K pages, as opposed to standard 4K pages, has a potential
+performance benefit, it means that the system is less memory efficient.
+
+One possibility might be to create a guide for converting the user data
+volume in the Seagate Central from 64K block size to a standard 4K block
+size. That way a standard memory page size of 4k could be used in the
+kernel which would be slightly more efficient in terms of memory and
+disk usage.
 
 #### Jumbo Ethernet Frames 
 Jumbo Ethernet frames allow devices to transmit frames that contain 
 more than the standard data payload of 1500 bytes. This is in order 
-to be able to reduce the packet header transmission and processing 
-overhead associated with each packet.
+to reduce the packet header processing overhead associated with 
+each packet.
 
 I have never come across any normal home or small enterprise networks
 that uses Jumbo Ethernet frames. One important reason for this is 
