@@ -7,11 +7,6 @@ Refer to the instructions in **INSTRUCTIONS_CROSS_COMPILE_KERNEL.md**
 to cross compile a kernel for use in this procedure or refer to the
 **README.md** file for the location of a precompiled kernel binary.
 
-Installation of the cross compiled kernel in conjunction with samba
-by using the easier but less flexible firmware upgrade method
-is covered by
-**INSTRUCTIONS_FIRMWARE_UPGRADE_KERNEL.md**
-
 The target platform tested was a Seagate Central Single Drive NAS 
 running firmware version 2015.0916.0008-F however I believe these 
 instructions should work for other Seagate Central firmware versions
@@ -19,7 +14,7 @@ as long as care is taken to account for any minor differences.
 
 These instructions should not be followed "blindly". If you have 
 already made other custom changes to your Seagate Central software via
-the command line, such as installing other cross compled software,
+the command line, such as installing other cross compiled software,
 then make sure that none of the steps below interfere with those 
 changes.
 
@@ -43,14 +38,16 @@ of troubleshooting problems during kernel boot.
 
 ### su/root access on the Seagate Central.
 Make sure that you can establish an ssh session to the Seagate Central
-and that you can succesfully issue the **su** command to gain root
-priviledges. Note that some later versions of Seagate Central firmware
+and that you can successfully issue the **su** command to gain root
+privileges. Note that some later versions of Seagate Central firmware
 deliberately disable su access by default.
 
-The alternative procedure detailed in 
-**INSTRUCTIONS_FIRMWARE_UPGRADE_KERNEL.md** does not require su access
-and will in fact automatically re-enable su access as a result of the
-procedure.
+If you do not have su access on your Seagate Central then note that 
+the "Firmware Upgrade" option of the Seagate-Central-Samba project
+provides a method of re-enabling su access as a part of installing the
+updated samba software. 
+
+https://github.com/bertofurth/Seagate-Central-Samba
 
 ### Know how to copy files between your host and the Seagate Central. 
 Not only should you know how to transfer files to and from your Seagate
@@ -60,20 +57,20 @@ samba is not working to use FTP or SCP which should both still work.
 
 ### Samba version on the Seagate Central
 Although this is not strictly a pre-requisite of this kernel installation
-procedure it is worth re-emphazing here that the samba file sharing service
-on the Seagate Central will not work after the new kernel is installed unless
-arrangements have been made to upgrade it.
+procedure it is worth reemphasising that the original samba file sharing 
+service on the Seagate Central will not work after the new kernel is
+installed unless it is upgraded to a modern version.
 
-See the README.md file in this project and the Seagate-Central-Samba 
-project at the following link for more details and instructions on how to
-upgrade the samba service on the Seagate Central.
+See the Seagate-Central-Samba project at the following link for more
+details and instructions on how to upgrade the samba service on the
+Seagate Central.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
 That being said, it's possible to proceed past this point without updating
 the samba service if you just want to give the new kernel a quick test.
-You will still be able to use the web management service and most of the
-other services on the Seagate Central.
+You will still be able to access the unit via ssh and the web management 
+service.
 
 ## Procedure
 ### Workspace preparation
@@ -102,12 +99,18 @@ the base working directory going forward.
 You should have a self generated or downloaded kernel "uImage" file
 which you'd like to install on the Seagate Central. 
 
-If you have just completed cross compiling the kernel as per the 
-INSTRUCTIONS_CROSS_COMPILE_KERNEL.md in this project then the
+If you have cross compiled the kernel as per  
+**INSTRUCTIONS_CROSS_COMPILE_KERNEL.md** in this project then the
 generated "uImage" kernel file will be in the following
 location relative to the base working directory.
 
     obj/arch/arm/boot/uImage
+
+If you have downloaded a pre-compiled kernel with a name like
+"uImage.v5.14.0-sc" then it is suggested that the file be
+renamed to "uImage" at this point. For example
+
+     mv uImage.v5.14.0-sc uImage
 
 Transfer this image to the Seagate Central. In this example we use 
 the scp command with the "admin" user to copy the kernel to the 
@@ -152,7 +155,7 @@ Central.
 
 ### Login as root or prepend sudo to further commands
 The commands after this point in the procedure must be executed with
-root priviedges on the Seagate Central. This can be done by either 
+root privileges on the Seagate Central. This can be done by either 
 prepending **sudo** to each command or by issuing the **su** command
 and becoming the root user.
 
@@ -167,13 +170,14 @@ https://github.com/bertofurth/Seagate-Central-Samba
 
 ### NTFS/exFAT USB insertion
 In order to take advantage of the new exFAT and NTFS file system
-support in the linux kernel the following patch must be applied
+support in the Linux kernel the following patch must be applied
 to one of the scripts that controls automatic mounting of newly
 inserted USB devices.
 
-The script can be backed up and patched with one of the patch files
-transferred to the Seagate Central in a previous step as per the
-following example.
+The script should first be backed up. Next it should be patched using
+the "usbshare.py.SC.patch" patch file that was transferred to the
+Seagate Central in a previous step.
+
 
      cp /usr/lib/python2.6/site-packages/shares/usbshare.py /usr/lib/python2.6/site-packages/shares/usbshare.py.old
      patch -i usbshare.py.SC.patch /usr/lib/python2.6/site-packages/shares/usbshare.py
@@ -190,15 +194,16 @@ to keep using only IPv4 as per the original Seagate Central
 firmware then there's no need to complete the steps in this
 section.
 
-#### Bounce IPv6 on startup
+#### Bounce IPv6 on eth0 at startup
 The Seagate "networklan" daemon is in charge of monitoring the
 Ethernet interface state and providing it's configuration. This
-tool deliberately disables IPv6 on the ethernet interface as the
-original Seagate Central firmware does not support IPv6 at all.
+tool deliberately removes IPv6 address configuration on the
+ethernet interface as the original Seagate Central firmware does
+not support IPv6.
 
-For this reason it is necessary to quickly turn IPv6 off then 
-back on for the ethernet interface after the networklan daemon
-is started.
+To overcome this, it is necessary to quickly turn IPv6 off then 
+back on for the ethernet interface after the networklan tool is
+invoked.
 
 Create a new script called "/etc/init.d/ipv6_bounce" by either 
 copying it from the base directory of this project to the Seagate
@@ -217,7 +222,9 @@ contents are as follows.
     sysctl -w net.ipv6.conf.eth0.disable_ipv6=0
     
 This script simply disables then re-enables IPv6 on the eth0
-interface, but only if the new kernel is in operation.
+interface, but only if the new kernel is in operation. This
+means that this script is safe to leave in place even if the
+kernel is reverted back to the original version.
 
 Modify the permissions of the script to ensure it is executable.
 
@@ -233,7 +240,7 @@ the /etc/rcS.d/S41blackarmor-network startup script which starts the
 networklan daemon.
 
 #### Patch service configuration files for IPv6
-In order for the services mentioned in this section to use IPv6
+In order for some services on the Seagate Central to use IPv6
 their configuration files need to be slightly modified.
 
 Note that only those services you wish to access via both IPv6
@@ -251,7 +258,7 @@ per the following examples.
      cp /etc/netatalk/afpd.conf /etc/netatalk/afpd.conf.old
      patch -i afpd.conf.SC.patch /etc/netatalk/afpd.conf
      
-     # AVAHI - "Zero Conf" networking
+     # AVAHI - "Zero Conf" mDNS service
      cp /etc/avahi/avahi-daemon.conf /etc/avahi/avahi-daemon.conf.old
      patch -i avahi-daemon.conf.SC.patch /etc/avahi/avahi-daemon.conf
      
@@ -265,9 +272,9 @@ per the following examples.
      
 ### Installing the new kernel
 Here is where we actually put the new kernel into place. It's important
-to execute the steps in this section correctly. Please try to read the
+to execute the steps in this section correctly. **Please try to read the
 explanation of what each step is trying to achieve and understand what 
-you are doing before executing any of the following commands.
+you are doing before executing any of the following commands.**
 
 #### Find out which copy of firmware is active
 The Seagate Central keeps two copies of firmware available on the
@@ -313,13 +320,13 @@ command
 
     mount /dev/sda1 /boot
      
-If the **second** copy of firmware is active (kernel2) the the kernel boot 
+If the **second** copy of firmware is active (kernel2) then the kernel boot 
 partition is located on "/dev/sda2" . Mount the kernel boot partition with the
 command
 
     mount /dev/sda2 /boot
      
-#### Make a backup copy of the original kernel (uImage)
+#### Make a backup copy of the original kernel
 Change into the /boot directory where the currently active uImage kernel file
 should be located and create a backup copy of the original kernel. 
 
@@ -327,7 +334,8 @@ should be located and create a backup copy of the original kernel.
      
 #### Copy the new kernel into place
 Copy the new kernel uImage into place so that on next boot it will be loaded
-by the system. 
+by the system. Note that the active kernel image in the /boot/ directory must
+be called "uImage" otherwise it will not be loaded by the system on boot.
 
     cp uImage /boot/uImage
 
@@ -339,12 +347,12 @@ The output of the above command should show the new image and the backed up
 original as per the following example (Note the file sizes may be slightly
 different in your case)
 
-    total 6729
+    total 6995
     drwx------ 2 root root   12288 Nov 17  2015 lost+found
-    -rw-r--r-- 1 root root 3857616 Sep  4 06:39 uImage
-    -rw-r--r-- 1 root root 2989612 Sep  4 06:35 uImage.old
+    -rw-r--r-- 1 root root 4129448 Sep 10 10:36 uImage
+    -rw-r--r-- 1 root root 2989612 Sep 10 10:36 uImage.orig
 
-#### OPTIONAL - Copy the kernel modules into place
+#### OPTIONAL - Copy kernel modules into place
 This step should only be performed if you have made your own custom changes
 to the procedure in order to build kernel modules. By default, no kernel
 modules need to be built or installed so this step can be skipped.
@@ -365,7 +373,7 @@ command.
 
      cp -r cross-mod/lib /
 
-There should be a new 5.x.x modules subdirectory on the unit alongside the 
+There should be a new 5.x.x-sc modules subdirectory on the unit alongside the 
 modules subdirectory for the original v2.6.35 kernel. The output of the 
 following command
 
@@ -374,7 +382,7 @@ following command
 should show an output similar to the following.
 
      drwxrwxr-x 4 root root 4096 Sep 17  2015 2.6.35.13-cavm1.whitney-econa.whitney-econa
-     drwxr-xr-x 3 root root 4096 Sep  4 07:08 5.14.0-sc
+     drwxr-xr-x 3 root root 4096 Sep 10 10:40 5.14.0-sc
      
 Finally remove the original "modules.dep" file in the new module 
 subdirectory. Removing this file will cause the unit to perform a
@@ -384,7 +392,7 @@ properly index them.
      rm /lib/modules/5.14.0-sc/modules.dep
      
 ### Reboot and confirm the upgrade    
-Finally we reboot the unit and confirm that the new kernel is
+Finally, we reboot the unit and confirm that the new kernel is
 operational.
 
 Rebooting the unit can be performed via the Seagate Central command
@@ -402,13 +410,12 @@ the unit has loaded the new kernel.
      uname -a
      
 The output should indicate that the version of the running kernel is now
-5.x.x and that SMP functionality is enabled, as per the following sample
+5.x.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-BERTO BERTO...SET THE SAME AS THE DOWNLOADABLE ONE
-     Linux NAS-X 5.14.0-rc5-sc+ #138 SMP Wed Sep 8 14:54:33 AEST 2021 armv6l GNU/Linux       
+     Linux NAS-1 5.14.0-sc #1 SMP Fri Sep 10 09:49:35 AEST 2021 armv6l GNU/Linux     
      
-Further confirm that the services you make use of on the Seagate Central
+Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
 
 * The Web Management interface
@@ -421,7 +428,7 @@ If the new kernel version is not performing as desired then there is always
 the option of reinstating the original version.
 
 If the procedure above has been followed then the sequence of
-commands below issued with root priviledges on the Seagate Central 
+commands below issued with root privileges on the Seagate Central 
 will restore the original kernel version.
 
 First, mount the correct kernel boot partition as per the instructions 
@@ -453,8 +460,8 @@ Reboot the unit with the reboot command
 
      reboot
 
-Confirm that the original kernel is back in place by issuing the "uname -a"
-command
+Once the unit has rebooted, log in via ssh and confirm that the original 
+kernel is back in place by issuing the "uname -a" command
 
      uname -a
      
@@ -476,16 +483,20 @@ Archive : https://archive.ph/3eOX0
 In essence the steps are
 
 1) Power down then power up the Seagate Central.
-2) Wait 20 or so seconds for the LED status light on top of the unit to turn from amber to flashing green.
-3) Execute first 2 steps again four times in a row.
-5) Power up the unit. It should now attempt to load the backup / alternate version of firmware
+2) Wait about 35 seconds for the LED status light on top of the unit to turn from solid amber to flashing green.
+3) Execute the first 2 steps at least four times in a row.
+4) Power up the unit and let it fully boot. It should now load the backup / alternate version of firmware
 
-If the unit is accessable via ssh then the best places to search for
+After the unit boots up with the alternate version of firmware take
+steps to mount the "failing" kernel boot partition and revert it back
+to the original kernel uImage.
+
+If the unit is accessible via ssh then the best places to search for
 troubleshooting data includes the system bootup log as displayed by
 the **dmesg** command and the system log stored at /var/log/syslog
 
 If some services are functional but others are not then check the 
-log files pertinant to the failing services as well as relevant messages
+log files pertinent to the failing services as well as relevant messages
 in the the above mentioned log files.
 
 * samba - /var/log/log.smbd  and /var/log/log.snmd
