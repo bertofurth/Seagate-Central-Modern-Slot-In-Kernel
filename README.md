@@ -1,8 +1,3 @@
-# BERTO BERTO BERTO THIS IS NOT FINISHED YET!!!
-
-# IF YOU CAN SEE THIS MESSAGE THEN THESE INSTRUCTIONS DON'T WORK YET!!!
-
-
 # Seagate Central Slot In v5.x Kernel
 A modern slot in Linux Kernel for the Seagate Central Single
 Drive NAS running stock Seagate Central firmware.
@@ -18,12 +13,11 @@ Windows style samba network file sharing to work then you must
 upgrade the samba service on the Seagate Central before, or at
 the same time as upgrading the Linux kernel.
 
-A pre-compiled Linux v5.4.X kernel based on the instructions
+A pre-compiled Linux v5.4.0 kernel based on the instructions
 in this guide is currently available at
 
-BERTO
-https://www.dropbox.com/s/wwesnz5cmc9hlcy/seagate-cxxxxxxxxxxx.tar.gz
-BERTO
+https://www.dropbox.com/s/u9u5t7s5b51k1gt/uImage.v5.14.0-sc
+md5sum : 4c27242167bee256ac13979f604080cd
 
 There are two sets of instructions included in this project.
 
@@ -428,17 +422,20 @@ this project.
 I acknowledge that I haven't done things in the most elegant manner with 
 these patches and code. For example, there are a lot of "#ifdef" statements
 introduced into some core kernel source files that get things working, but
-aren't necessarily very graceful. For these reasons I don't plan to make 
-any effort to submit these patches to the mainline Linux kernel. I'm also
-not in a position to be able to make any commitment to maintain this project
-going forward as future Linux versions beyond v5.x are released. That being
-said, please feel free to submit "Issues" and suggestions for improvement.
+aren't necessarily very graceful. 
 
 I confess that I haven't always fully comprehended every piece of code 
 I've ported over in order to get this project working. It may be that 
 there are flaws in the original code that I've blindly pulled over. It
 may be that there are flaws that I've created myself through lack of 
 understanding. As I mentioned, my goal was simply to "get things working".
+
+For these reasons I don't plan to make any effort to submit these patches
+to the mainline Linux kernel. I'm also not in a position to be able to make
+any commitment to maintain this project going forward as future Linux versions
+beyond v5.x are released. That being said, please feel free to submit
+"Issues" and suggestions for improvement. If you do submit an issue then
+please be prepared for "stupid" questions from me!!
 
 My main motivation for this project was that even though the Seagate
 Central is an "ancient" platform, it is still perfectly capable of being 
