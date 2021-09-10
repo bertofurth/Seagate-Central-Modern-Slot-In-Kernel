@@ -14,9 +14,11 @@ upgrade the samba service on the Seagate Central before, or at
 the same time as upgrading the Linux kernel.
 
 A pre-compiled Linux v5.4.0 kernel based on the instructions
-in this guide is currently available at
+in this guide is currently available in the "Releases" section
+of this project at
 
-https://www.dropbox.com/s/u9u5t7s5b51k1gt/uImage.v5.14.0-sc
+https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases/download/v1.0/uImage.v5.14.0-sc
+
 md5sum : 4c27242167bee256ac13979f604080cd
 
 There are two sets of instructions included in this project.
