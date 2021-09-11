@@ -452,7 +452,6 @@ lots of new software and services including
 * Motion - Security camera analysis software
 * Up to date versions of linux command line tools
 * MiniDLNA - To replace the bloated and CPU guzzling Twonky DLNA server
-* Joplin server - An opensource note taking alternative to OneNote and Evernote
 
 Obviously since the unit isn't particularly fast it's better to make
 use of these services "one at a time" but thanks to the excessive 
