@@ -94,7 +94,7 @@ Seagate Central.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
-## Procedure
+## Build Procedure
 ### Workspace preparation
 If not already done, download the files in this project to a new
 directory on your build machine. 
