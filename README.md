@@ -49,11 +49,6 @@ services to their Seagate Central without having to go through the
 dangerous and tedious process of installing an entirely new operating 
 system.
 
-This is different to the Seagate_central_linux (Single Disk Version)
-project by KL-Yang (see Acknowledgements) which provides a kernel to
-be used as a part of a completely new operating system being installed
-on the Seagate Central.
-
 The main obstacle this project had to overcome was incorporating 
 support for 64K memory page sizes. This was required because the native
 disk format for the user Data partition on a Seagate Central uses 64K
@@ -416,12 +411,14 @@ am grateful to the Seagate corporation for dutifully publishing.
 https://www.seagate.com/gb/en/support/downloads/item/central-gpl-fw-master-dl/
 
 It is also based on the excellent work by KL-Yang in the 
-Seagate_central_linux (Single Disk Version) project.
+Seagate_central_linux (Single Disk Version) project which focuses on
+compilation of a new kernel as part of installing a new operating
+system on the Seagate Central.
 
 https://github.com/KL-Yang/seagate_central_linux
 
-The 64K memory page size work is largely based on the work by Gregory
-Clement from Bootlin.
+The 64K memory page size implementation is largely based on the work
+by Gregory Clement from Bootlin.
 
 https://lwn.net/Articles/822868/
 
