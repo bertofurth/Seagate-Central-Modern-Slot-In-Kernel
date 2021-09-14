@@ -2,8 +2,8 @@
 A modern slot in Linux Kernel for the Seagate Central Single
 Drive NAS running stock Seagate Central firmware.
 
-This accompanies the Seagate-Central-Samba project at the
-following link 
+This project accompanies the **Seagate-Central-Samba** project
+at the following link
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
@@ -12,6 +12,12 @@ a strongly recommended pre-requisite of this project. If you want
 Windows style samba network file sharing to work then you must 
 upgrade the samba service on the Seagate Central before, or at
 the same time as upgrading the Linux kernel.
+
+Additional servers and utilities for the Seagate Central may
+be found in the **Seagate-Central-Utils** project at the
+following link
+
+https://github.com/bertofurth/Seagate-Central-Utils
 
 A pre-compiled Linux v5.4.0 kernel based on the instructions
 in this guide is currently available in the "Releases" section
@@ -446,12 +452,13 @@ Central is an "ancient" platform, it is still perfectly capable of being
 useful in a modern home network. After making the upgrades in this guide 
 my Seagate Central is happily working as a file server, as a storage point 
 for half a dozen security cameras, and I have cross compiled and installed
-lots of new software and services including 
+lots of new software and services as documented by the 
+**Seagate-Central-Utils** project including 
 
 * Syncthing - Modern file synchronization server and client
 * Motion - Security camera analysis software
-* Up to date versions of linux command line tools
 * MiniDLNA - To replace the bloated and CPU guzzling Twonky DLNA server
+* Up to date versions of linux command line tools
 
 Obviously since the unit isn't particularly fast it's better to make
 use of these services "one at a time" but thanks to the excessive 
