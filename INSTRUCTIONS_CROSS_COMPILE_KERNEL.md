@@ -79,7 +79,7 @@ those models.
 
 ## Prerequisites
 ### Disk space
-This procedure will take up to a maximum of about 1.3GiB of disk space
+This procedure will take up to a maximum of about 1.7GiB of disk space
 on the building host. The generated kernel will only consume about
 4MB of storage space on the Seagate Central.
 
