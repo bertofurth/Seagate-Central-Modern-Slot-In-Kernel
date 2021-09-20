@@ -2,8 +2,8 @@
 A modern slot in Linux Kernel for the Seagate Central Single
 Drive NAS running stock Seagate Central firmware.
 
-This accompanies the Seagate-Central-Samba project at the
-following link 
+This project accompanies the **Seagate-Central-Samba** project
+at the following link
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
@@ -13,10 +13,18 @@ Windows style samba network file sharing to work then you must
 upgrade the samba service on the Seagate Central before, or at
 the same time as upgrading the Linux kernel.
 
-A pre-compiled Linux v5.4.0 kernel based on the instructions
-in this guide is currently available at
+Additional servers and utilities for the Seagate Central may
+be found in the **Seagate-Central-Utils** project at the
+following link
 
-https://www.dropbox.com/s/u9u5t7s5b51k1gt/uImage.v5.14.0-sc
+https://github.com/bertofurth/Seagate-Central-Utils
+
+A pre-compiled Linux v5.4.0 kernel based on the instructions
+in this guide is currently available in the "Releases" section
+of this project at
+
+https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases/download/v1.0/uImage.v5.14.0-sc
+
 md5sum : 4c27242167bee256ac13979f604080cd
 
 There are two sets of instructions included in this project.
@@ -41,11 +49,6 @@ services to their Seagate Central without having to go through the
 dangerous and tedious process of installing an entirely new operating 
 system.
 
-This is different to the Seagate_central_linux (Single Disk Version)
-project by KL-Yang (see Acknowledgements) which provides a kernel to
-be used as a part of a completely new operating system being installed
-on the Seagate Central.
-
 The main obstacle this project had to overcome was incorporating 
 support for 64K memory page sizes. This was required because the native
 disk format for the user Data partition on a Seagate Central uses 64K
@@ -53,7 +56,7 @@ pages. These are only supported natively by Linux when the memory pages
 are 64K or larger. This goal was largely achieved by drawing on the work
 of Gregory Clement (see Acknowledgements).
 
-The notable features that this project focused on include
+The other notable features that this project focused on include
 * USB support - Allows connection of external drives and other devices.
 * Symmetric Multiprocessing (SMP) - More efficient and faster processing.
 * IPv6 - The new standard for internet networking.
@@ -102,9 +105,6 @@ detail here in approximate order of importance. Only the first one
 involving the samba service is really necessary to pay strict
 attention to.
 
-
-BERTO TODO : PERFORMANCE. COMPARE NEW SAMBA WITH v2 and v4
-
 ### Samba - Needs to be upgraded. 
 The one major aspect that makes this kernel not quite "plug-in" as such
 is that the original custom version of the samba file serving software 
@@ -127,8 +127,10 @@ work.
 ### NTFS external drive "write" support (Soon to be fixed in kernel v5.15??)
 Initially, this project will only support "read" access to externally
 attached NTFS formatted drives. This is expected to be resolved with the 
-advent of the paragon read/write capable ntfs3 driver due to be released in
+advent of the Paragon read/write capable ntfs3 driver due to be released in
 Linux kernel v5.15 or soon after.
+
+https://www.paragon-software.com/home/ntfs3-driver-faq/
 
 NTFS is a commonly used filesystem for large hard drives formatted using 
 modern Windows operating systems.
@@ -297,20 +299,23 @@ not a feature that would get much use.
 
 #### 64K to 4K partition block size conversion procedure 
 This project supports the 64K block sizes on the Seagate Central data
-partition by introducing support for a non-standard memory page table
-size of 64K.
+partition by introducing support for a non-standard memory page size 
+of 64K.
 
-An alternative route would have been to create a guide for converting
-the user data volume in the Seagate Central from 64K block size to a 
-standard 4K block size. That way none of the 64K PAGE_SIZE work be 
-necessary, however that would have meant the kernel would not be 
-"slot-in" as such.
+While using 64K pages, as opposed to standard 4K pages, has a potential
+performance benefit, it means that the system is less memory efficient.
+
+One possibility might be to create a guide for converting the user data
+volume in the Seagate Central from 64K block size to a standard 4K block
+size. That way a standard memory page size of 4k could be used in the
+kernel which would be slightly more efficient in terms of memory and
+disk usage.
 
 #### Jumbo Ethernet Frames 
 Jumbo Ethernet frames allow devices to transmit frames that contain 
 more than the standard data payload of 1500 bytes. This is in order 
-to be able to reduce the packet header transmission and processing 
-overhead associated with each packet.
+to reduce the packet header processing overhead associated with 
+each packet.
 
 I have never come across any normal home or small enterprise networks
 that uses Jumbo Ethernet frames. One important reason for this is 
@@ -406,12 +411,14 @@ am grateful to the Seagate corporation for dutifully publishing.
 https://www.seagate.com/gb/en/support/downloads/item/central-gpl-fw-master-dl/
 
 It is also based on the excellent work by KL-Yang in the 
-Seagate_central_linux (Single Disk Version) project.
+Seagate_central_linux (Single Disk Version) project which focuses on
+compilation of a new kernel as part of installing a new operating
+system on the Seagate Central.
 
 https://github.com/KL-Yang/seagate_central_linux
 
-The 64K memory page size work is largely based on the work by Gregory
-Clement from Bootlin.
+The 64K memory page size implementation is largely based on the work
+by Gregory Clement from Bootlin.
 
 https://lwn.net/Articles/822868/
 
@@ -442,13 +449,13 @@ Central is an "ancient" platform, it is still perfectly capable of being
 useful in a modern home network. After making the upgrades in this guide 
 my Seagate Central is happily working as a file server, as a storage point 
 for half a dozen security cameras, and I have cross compiled and installed
-lots of new software and services including 
+lots of new software and services as documented by the 
+**Seagate-Central-Utils** project including 
 
 * Syncthing - Modern file synchronization server and client
 * Motion - Security camera analysis software
-* Up to date versions of linux command line tools
 * MiniDLNA - To replace the bloated and CPU guzzling Twonky DLNA server
-* Joplin server - An opensource note taking alternative to OneNote and Evernote
+* Up to date versions of linux command line tools
 
 Obviously since the unit isn't particularly fast it's better to make
 use of these services "one at a time" but thanks to the excessive 

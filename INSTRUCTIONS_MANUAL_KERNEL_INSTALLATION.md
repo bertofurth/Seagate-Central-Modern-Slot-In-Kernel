@@ -113,14 +113,13 @@ renamed to "uImage" at this point. For example
      mv uImage.v5.14.0-sc uImage
 
 Transfer this image to the Seagate Central. In this example we use 
-the scp command with the "admin" user to copy the kernel to the 
-user's home directory however any other means can be used. 
+the scp command however, any other means can be used. When using scp 
+you will need to substitute your own username and NAS IP address.
 
-    scp obj/arch/arm/boot/uImage admin@192.168.1.99:
+    scp obj/arch/arm/boot/uImage admin@192.0.2.99:
 
-When using scp you will need to substitute your own username and 
-NAS IP address. After executing the scp command you'll be prompted
-for the user's password.
+After executing the scp command you'll be prompted for the user's
+password.
 
 ### OPTIONAL - Transfer kernel modules to the Seagate Central
 The instructions in this project have been designed so that
@@ -136,7 +135,7 @@ transferring the archive to the Seagate Central as per the following
 example
 
      tar -caf cross-mod.tar.gz cross-mod/
-     scp cross-mod admin@192.168.1.99:
+     scp cross-mod admin@192.0.2.99:
 
 ### Transfer the config and script patches to the Seagate Central
 A number of configuration and script files need to be patched on
@@ -146,7 +145,7 @@ Relevant patch files are included in the base directory of this project
 and have a suffix of ".SC.patch". These files need to be tranferred to
 the Seagate Central. This can be done via scp as per the following example.
 
-     scp *.SC.patch admin@192.168.1.99:
+     scp *.SC.patch admin@192.0.2.99:
      
 ### Login to the Seagate Central 
 Establish an ssh session to the Seagate Central. All the commands

@@ -6,7 +6,54 @@ Linux kernel suitable for installation on a Seagate Central NAS device.
 Manual installation of the cross compiled kernel is covered by 
 **INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md**
 
-This procedure has been tested to work with Linux Kernel version
+## TLDNR
+On a build server with an appropriate cross compilation suite 
+installed run the following commands to download and compile
+Linux kernel v5.14.0.
+
+    # Download this project to the build host
+    git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
+    cd Seagate-Central-Slot-In-v5.x-Kernel
+    
+    # Download and extract Linux kernel v5.14.0 source code
+    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.14.tar.xz
+    tar -xf linux-5.14.tar.xz
+    cd linux-5.14
+     
+    # Apply Seagate Central patches to Linux (Make sure each one works)
+    patch -p1 < ../0001-linux-64K-Page-include.patch
+    patch -p1 < ../0002-linux-64K-Page-arm.patch
+    patch -p1 < ../0003-linux-64K-Page-mm.patch
+    patch -p1 < ../0004-linux-64K-Page-misc.patch
+    patch -p1 < ../0005-linux-CNS3XXX-arm.patch
+    patch -p1 < ../0006-linux-drivers.patch
+    patch -p1 < ../0007-linux-arm32.patch
+    
+    # Copy new Seagate Central source files into the Linux source tree
+    cp -r ../new-files/* .
+    
+    # Copy the kernel config file into the build directory
+    cp ../config-seagate-central-v5.14-all-in-one.txt ../obj/.config
+    
+    # Add the cross compilation suite directory to the PATH 
+    export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
+    
+    # Specify the name of the cross compilation suite prefix
+    export CROSS_COMPILE=arm-sc-linux-gnueabi-
+    
+    # Run "make menuconfig", exit then save the configuration
+    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make menuconfig
+    
+    # Build the kernel
+    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make -j4 uImage
+    
+The newly generated uImage kernel file is located under the build
+directory at ../obj/arch/arm/boot/uImage . This kernel image can be
+installed on the Seagate Central as per the instructions in 
+**INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md** .
+
+## Tested versions
+This procedure has been tested to work building Linux Kernel version
 5.14.
 
 TODO : Retest with v5.15 which should have ntfs3 support.
@@ -28,11 +75,11 @@ The target platform tested was a Seagate Central Single Drive NAS
 running firmware version 2015.0916.0008-F. I'm afraid I don't have
 access to the multi-drive / multi-LAN port versions of the Seagate
 Central so I'm unable to speak to whether this kernel will work on
-those other models.
+those models.
 
 ## Prerequisites
 ### Disk space
-This procedure will take up to a maximum of about 1.3GiB of disk space
+This procedure will take up to a maximum of about 1.7GiB of disk space
 on the building host. The generated kernel will only consume about
 4MB of storage space on the Seagate Central.
 
@@ -84,17 +131,17 @@ system.
 
 ### Samba version on the Seagate Central
 Although this is not strictly a pre-requisite of this kernel build 
-procedure it is worth reemphasizing here that the original samba file
+procedure it is worth emphasizing here that the original samba file
 server software on the Seagate Central will not work once the new
 kernel built with this procedure is installed on the Seagate Central.
 
 See the Seagate-Central-Samba project at the following link for more
 details and instructions on how to upgrade the samba service on the
-Seagate Central.
+Seagate Central to a compatible version.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
-## Procedure
+## Build Procedure
 ### Workspace preparation
 If not already done, download the files in this project to a new
 directory on your build machine. 
@@ -115,7 +162,7 @@ Seagate-Central-Slot-In-v5.x-Kernel-main
 Change into this new subdirectory. This will be referred to as 
 the base working directory going forward.
 
-     cd Seagate-Central-Slot-In-v5.x-Kernel
+    cd Seagate-Central-Slot-In-v5.x-Kernel
 
 ### Linux kernel source code download and extraction
 The next part of the procedure involves gathering the Linux kernel source
@@ -142,7 +189,9 @@ support becomes available (v5.15?)
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
 to the native Linux kernel source code. The following commands executed from the 
-Linux source code base directory will apply the patches
+Linux source code base directory will apply the patches. **Please make sure
+to execute these commands one at a time and carefully ensure that each
+command is successfull before proceeding to the next.**
 
      patch -p1 < ../0001-linux-64K-Page-include.patch
      patch -p1 < ../0002-linux-64K-Page-arm.patch
@@ -190,7 +239,7 @@ directory.
 
 From the Linux source code base directory run the command
 
-     cp ../config-seagate-central-v5.14-all-in-one.txt ../obj/.config
+    cp ../config-seagate-central-v5.14-all-in-one.txt ../obj/.config
      
 ### make menuconfig     
 The following step allows you to customize the kernel configuration by running 
@@ -283,7 +332,7 @@ The default kernel configuration file in this project generates a
 monolithic Linux kernel containing all the basic functionality required
 for the Seagate Central to operate as per the original kernel.
 
-If you wish to reduce the size of the kernel image, or to add new
+If you want to reduce the size of the kernel image, or to add new
 functionality to the kernel, then you may wish to generate kernel
 modules which can be installed alongside the new kernel.
 
@@ -314,7 +363,8 @@ Most problems will be due to
 * One of the new files not being copied into the kernel source tree.
 
 If the build component fails then it may be helpful to add the
-"-j1 V=1" options when running the make command as per the following example
+"-j1 V=1" options when running the make command as per the following
+example
 
      .... make -j1 V=1 uImage
 
@@ -322,8 +372,9 @@ These options make sure that only 1 cpu thread is active and that
 the make command outputs verbose details of what actions are being
 taken. This will make the nature of the issue clearer.
 
-If the kernel build configuration is modified to include new functionality,
-then be aware that many older system components have not received as much
-testing attention from the Linux community in conjunction with the arm32
-platform. It may be that some weird compilation errors could occur that might
-require some minor source file modification.
+If the kernel build configuration is modified to include new 
+functionality, then be aware that many older system components have 
+not received as much testing attention from the Linux community in 
+conjunction with the arm32 platform. It may be that some weird 
+compilation errors could occur that might require some minor 
+source file modification.
