@@ -44,8 +44,12 @@ Linux kernel v5.14.0.
     # Run "make menuconfig", exit then save the configuration
     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make menuconfig
     
-    # Build the kernel
+    # Build the kernel (Set appropriate j flag)
     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make -j4 uImage
+    
+    # Optional - If modules have been configured (they aren't by default)
+    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make -j4 modules
+    KBUILD_OUTPUT=../obj INSTALL_MOD_PATH=../cross-mod make modules_install
     
 The newly generated uImage kernel file is located under the build
 directory at ../obj/arch/arm/boot/uImage . This kernel image can be
