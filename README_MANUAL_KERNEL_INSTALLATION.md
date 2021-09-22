@@ -357,20 +357,45 @@ to the procedure in order to build kernel modules. By default, no kernel
 modules need to be built or installed so this step can be skipped.
 
 If you have an archive of kernel modules associated with the newly installed
-uImage then extract it and check to make sure that the directory contents
-are as expected.
+uImage then copy it to the Seagate Central, extract it and check to make sure
+that the extracted directory contents are as expected. 
 
      tar -xf cross-mod.tar.gz
-     ls -laR cross-mod/
 
-After checking that the modules have been extracted as expected, copy the
-module tree into place as per the following example.
+Under the lib/modules subdirectory, there should be another directory 
+containing the modules for the kernel version being installed. Under
+that subdirectory there should be more module configuration files
+and a "kernel/" subdirectory containing the module tree. For example
+
+    #ls -p cross-mod/lib/modules/
+    5.14.0-sc/
+    #ls -p cross-mod/lib/modules/5.14.0-sc
+    build
+    kernel/
+    modules.alias
+    modules.alias.bin
+    modules.builtin
+    modules.builtin.alias.bin
+    modules.builtin.bin
+    modules.builtin.modinfo
+    modules.dep
+    modules.dep.bin
+    modules.devname
+    modules.order
+    modules.softdep
+    modules.symbols
+    modules.symbols.bin
+    source
+
+After checking that the modules have been extracted as expected, install
+the new modules by copying the module tree into place as per the following
+example.
 
 Note that this is a **very** dangerous part of the process so if you don't
 understand what you are doing here then do not proceed with the following
 command.
 
-     cp -r cross-mod/lib /
+     cp -r cross-mod/lib/modules* /lib/modules/
 
 There should be a new 5.x.x-sc modules subdirectory on the unit alongside the 
 modules subdirectory for the original v2.6.35 kernel. The output of the 
