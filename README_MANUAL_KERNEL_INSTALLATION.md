@@ -1,9 +1,9 @@
-# INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
+# README_MANUAL_KERNEL_INSTALLATION.md
 This is a guide that describes how to manually replace the original
 Linux v2.6.25 kernel on a Seagate Central NAS with a previously
 cross compiled modern, Linux v5.x kernel.
 
-Refer to the instructions in **INSTRUCTIONS_CROSS_COMPILE_KERNEL.md**
+Refer to the instructions in **README_CROSS_COMPILE_KERNEL.md**
 to cross compile a kernel for use in this procedure or refer to the
 **README.md** file for the location of a precompiled kernel binary.
 
