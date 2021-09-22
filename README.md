@@ -29,10 +29,10 @@ md5sum : 4c27242167bee256ac13979f604080cd
 
 There are two sets of instructions included in this project.
 
-### INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
+### README_CROSS_COMPILE_KERNEL.md
 Cross compile the new v5.x Linux kernel for Seagate Central from scratch.
 
-### INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
+### README_MANUAL_KERNEL_INSTALLATION.md
 Manually install the new Linux kernel onto the Seagate Central.
 
 ## Details
