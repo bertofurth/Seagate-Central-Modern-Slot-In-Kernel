@@ -331,8 +331,14 @@ Ideally the device will be recognized and a corresponding
 entry for it will appear in the "/sys/bus/usb/drivers" directory
 on the Seagate Central as per when it was connected to the PC.
 
-    # ls /sys/bus/usb/drivers
-    Philips webcam  hub  usb  usb-storage  usbfs  usbhid  usblp
+    NAS:# ls /sys/bus/usb/drivers
+    Philips webcam
+    hub
+    usb
+    usb-storage
+    usbfs
+    usbhid
+    usblp
 
 Running the "lsusb" command should show that the device is
 physically recognized by the Seagate Central but this does
@@ -340,11 +346,11 @@ not mean that the device's drivers have been loaded. Run
 the "lsmod" command to show that the required modules have been 
 loaded by the system. For example
 
-    # lsusb
+    NAS:~# lsusb
     Bus 002 Device 002: ID 046d:08b6 Logitech, Inc.
     Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
     Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-    # lsmod
+    NAS:~# lsmod
     Module                  Size  Used by
     pwc                   262144  0
     videobuf2_v4l2        262144  1 pwc
@@ -359,7 +365,7 @@ Additionally, most devices will have a corresponding entry
 appear in the "/dev" directory. In the example of the USB
 camera a new entry called "/dev/video0" will appear.
 
-    # ls /dev/video*
+    NAS:~# ls /dev/video*
     /dev/video0
     
 In some cases the device may be recognized and the system
