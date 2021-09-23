@@ -27,10 +27,15 @@ https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases/downl
 
 md5sum : 4c27242167bee256ac13979f604080cd
 
-There are two sets of instructions included in this project.
+There are three sets of instructions included in this project.
 
 ### README_CROSS_COMPILE_KERNEL.md
-Cross compile the new v5.x Linux kernel for Seagate Central from scratch.
+Cross compile the new v5.x Linux kernel for Seagate Central from 
+scratch.
+
+### README_USB_DEVICE_MODULES.md
+Modify the kernel configuration to add support for new USB devices
+such as a video camera.
 
 ### README_MANUAL_KERNEL_INSTALLATION.md
 Manually install the new Linux kernel onto the Seagate Central.
@@ -42,6 +47,7 @@ This project's main goals are
 * Make the installation as seamless as possible.
 * Allow users to keep using the existing 64K page formatted Data volume.
 * Allow users to continue using the Seagate supplied services.
+* Allow users to add new services to the Seagate Central.
 
 The hope is that by providing a modern kernel to replace the old 
 v2.6 native kernel, users will be able to add new modern software 
@@ -459,7 +465,8 @@ lots of new software and services as documented by the
 
 Obviously since the unit isn't particularly fast it's better to make
 use of these services "one at a time" but thanks to the excessive 
-swap space available on the platform it all seems to hang together well.
+swap space available on the platform, and thanks to the new SMP
+support, it all seems to hang together well.
 
 Hopefully these instructions can serve as a template for upgrading the 
 Linux kernel on other arm 32 based embedded NAS equipment. In particular 
