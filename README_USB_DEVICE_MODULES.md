@@ -30,16 +30,25 @@ https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_modules.html
 https://tldp.org/HOWTO/Module-HOWTO/
 
 ## TLDNR
-Figuring out what modules / drivers need to be installed on "embedded"
-Linux systems like the Seagate Central in order to support a new USB
-device is not a well defined process. The method we present in this
-document is an iterative process and goes as follows.
+Hosts with modern Linux distributions come with pre-built modules and 
+drivers catering for almost every device available. This is not the case 
+for "embedded" systems like the Seagate Central. Figuring out what 
+modules and drivers need to be installed on lower end Linux systems like
+the Seagate Central is not a well defined process.
+
+The most commonly used method is to simply build and install all the
+modules, then try them to see what happens. This can be difficult
+if storage space is limited.
+
+The method we present in this document tries to be more focused
+and attempts to build and install only the bare minimum required modules. 
+The process is summarized as follows.
 
 1) Plug the USB device into a PC / RPi running a full, up-to-date Linux distro.
 2) Observe what modules are needed for the new device on the PC.
 3) Reconfigure the target kernel with "make menuconfig" and add new modules.
 4) Rebuild the kernel and modules. (make uImage, make modules, make modules_install)
-5) Check to see what modules were built.
+5) Confirm that the required modules were built.
 6) If any required modules are missing then GOTO 3) .
 7) Install the new kernel and modules on the target (Seagate Central).
 8) Plug the new device into the target and see if it's recognized (lsusb / lsmod)
@@ -285,13 +294,16 @@ Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 After enabling all the required new options, save the configuration and
 exit "make menuconfig".
 
+BERTO uvcvideo
+
+
 ## Rebuild the kernel and modules. 
 Once the new kernel configuration has been saved, rebuild the Linux
 kernel for the target (Seagate Central) as per the instructions in
 the "Build the kernel" and "Build Linux modules" sections of
 **README_CROSS_COMPILE_KERNEL.md**
 
-## Check to see what modules were built.
+## Confirm that the required modules were built.
 After building the modules as per the instruction in 
 **README_CROSS_COMPILE_KERNEL.md**, there should be a module
 directory located under the "cross-mod" subdirectory of the
@@ -380,3 +392,25 @@ If a web search for the specific error message doesn't yield
 some guidance, then it may be a matter of searching the Linux
 source code for the mentioned symbols and module names to get a
 clue as to what components might be missing.
+
+Finally remember that it's ok to enable more modules than
+are needed. They can simply be deleted later!
+
+## Note about other types of USB cameras
+Although the example in this document focused on finding the
+right modules for the rare "pwc" type of USB camera, most other types
+of USB cameras can be installed in the same way by just replacing
+the "pwc" / "USB Philips Cameras" menu selection with whatever
+the correct option under the "Media USB Adapters" menu is.
+
+For example, one of the most common USB camera types is the
+"USB Video Class (UVC)" style which uses the "uvcvideo"
+module. Simply select the following configuration option
+instead 
+
+#### uvcvideo : USB Video Class driver
+CONFIG_USB_VIDEO_CLASS
+Device Drivers -> Multimedia support -> Media drivers 
+  -> Media USB Adapters -> USB Video Class (UVC)
+
+
