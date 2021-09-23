@@ -135,7 +135,7 @@ transferring the archive to the Seagate Central as per the following
 example
 
      tar -caf cross-mod.tar.gz cross-mod/
-     scp cross-mod admin@192.0.2.99:
+     scp cross-mod.tar.gz admin@192.0.2.99:
 
 ### Transfer the config and script patches to the Seagate Central
 A number of configuration and script files need to be patched on
