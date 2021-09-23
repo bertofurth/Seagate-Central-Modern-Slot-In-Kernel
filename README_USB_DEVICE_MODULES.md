@@ -18,8 +18,8 @@ Central is by referring to the other README files in this
 
 https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel
 
-This is by no means a definitive guide to Linux modules. For more
-information please refer to other more complete guides such as
+For more information about Linux modules please refer to other more
+complete guides such as
 
 * Kernel Modules - Linux Kernel Documentation
 
@@ -30,12 +30,13 @@ https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_modules.html
 https://tldp.org/HOWTO/Module-HOWTO/
 
 ## TLDNR
-Figuring out what modules / drivers need to be installed for "embedded"
-Linux devices like the Seagate Central is not a well defined process.
-In general it's an iterative process and goes as follows.
+Figuring out what modules / drivers need to be installed on "embedded"
+Linux systems like the Seagate Central in order to support a new USB
+device is not a well defined process. The method we present in this
+document is an iterative process and goes as follows.
 
-1) Plug the device into a PC / RPi running a full up-to-date Linux distro.
-2) Observe what modules are needed for a the new device.
+1) Plug the USB device into a PC / RPi running a full, up-to-date Linux distro.
+2) Observe what modules are needed for the new device on the PC.
 3) Reconfigure the target kernel with "make menuconfig" and add new modules.
 4) Rebuild the kernel and modules. (make uImage, make modules, make modules_install)
 5) Check to see what modules were built.
@@ -47,12 +48,7 @@ In general it's an iterative process and goes as follows.
 Each of these steps is detailed below using the example of 
 connecting a USB video camera to the Seagate Central.
 
-An alternative approach which can replace steps 1) and 2) is to use
-something like the Linux Kernel Drivers Database.
-
-https://cateee.net/lkddb/
-
-## Plug the device into a PC / RPi running a full up-to-date Linux distro.
+## Plug the device into a PC running Linux
 Unfortunately, there isn't an elegant means to discover all the
 drivers / kernel modules required for most USB devices. 
 
@@ -78,20 +74,23 @@ If you don't have a Linux machine, then consider building a
 "virtual" Linux machine using one of the many free "virtualization 
 software" tools available.
 
-## Observe what modules are needed for a the new device.
+## Observe what modules are needed for the new device.
 Once the USB device is connected to the PC, navigate to the 
-"/sys/bus/usb/drivers" folder. From there issue the "ls -p" command
+"/sys/bus/usb/drivers" folder. From there issue the "ls" command
 to see the directory name that corresponds to the newly plugged in
 device.
 
 For example, I have a USB camera that is labelled as a "Cisco" brand
 device. The documentation for the device says it's a "Logitech" style
 camera however the camera is actually recognized as "Philips webcam"
-by the host! For example
+by the host! 
 
     # cd /sys/bus/usb/drivers
-    # ls -p
-    Philips webcam/ hub/  usb/  usb-storage/  usbfs/  usbhid/  usblp/
+    # ls 
+    hub
+    Philips webcam
+    usb
+    usbfs
      
 To find the name of the main driver/Linux module used by this device,
 change into the device directory then issue the "readlink module" 
@@ -109,11 +108,12 @@ This can be done by running "lsmod | grep" command for the module
 name as per the following example.
 
     # lsmod | grep pwc
-    pwc                   262144  0
-    videobuf2_v4l2        262144  1 pwc
-    videobuf2_vmalloc     327680  1 pwc
-    videobuf2_common      262144  4 pwc,videobuf2_v4l2,videobuf2_vmalloc,videobuf2_memops
-    videodev              393216  3 pwc,videobuf2_v4l2,videobuf2_common
+    pwc                    94208  0
+    videobuf2_vmalloc      20480  1 pwc
+    videobuf2_v4l2         28672  1 pwc
+    videobuf2_common       57344  2 videobuf2_v4l2,pwc
+    videodev              241664  3 videobuf2_v4l2,pwc,videobuf2_common
+    usbcore               311296  6 ehci_pci,snd_usb_audio,snd_usbmidi_lib,pwc,ehci_hcd,uhci_hcd
 
 On the left hand side of the "lsmod" command output we can see the
 names of secondary modules that the main module depends on. On the
@@ -122,6 +122,10 @@ module listed on the left. In the above example we see that
 "videobuf2_v4l2", "videobuf2_vmalloc", "videobuf2_common" and 
 "videodev" are being used by the main driver module "pwc".
 
+Note that the "usbcore" module shown above is embedded in the
+Seagate Central monolithic kernel by default so we don't need
+to worry about that module.
+
 To be very thorough, we now need to look at what modules these
 secondary modules depend on by running the same style of "lsmod | grep"
 command again. Since all of the secondary module names start with the
@@ -129,23 +133,26 @@ text "video" we can grep for them all at once as per the following
 example.
 
     # lsmod | grep video
-    videobuf2_v4l2        262144  1 pwc
-    videobuf2_vmalloc     327680  1 pwc
-    videobuf2_memops      327680  1 videobuf2_vmalloc
-    videobuf2_common      262144  4 pwc,videobuf2_v4l2,videobuf2_vmalloc,videobuf2_memops
-    videodev              393216  3 pwc,videobuf2_v4l2,videobuf2_common
-    mc                    327680  3 videobuf2_v4l2,videobuf2_common,videodev
+    videobuf2_vmalloc      20480  1 pwc
+    videobuf2_memops       20480  1 videobuf2_vmalloc
+    videobuf2_v4l2         28672  1 pwc
+    videobuf2_common       57344  2 videobuf2_v4l2,pwc
+    videodev              241664  3 videobuf2_v4l2,pwc,videobuf2_common
+    mc                     57344  4 videodev,snd_usb_audio,videobuf2_v4l2,videobuf2_common
+    video                  53248  3 dell_wmi,dell_laptop,i915
 
-We see that another module "mc" is being used by the secondary modules.
+We see that another module "mc" is being used by the secondary modules. 
+The listed "video" module isn't being used by any of the modules
+we're concerned about so we can ignore it.
 
 To continue the above example, we run "lsmod | grep" for "mc" and see that 
 there are no other modules that "mc" depends on.
 
     # lsmod | grep mc
-    mc                    327680  3 videobuf2_v4l2,videobuf2_common,videodev
+    mc                     57344  4 videodev,snd_usb_audio,videobuf2_v4l2,videobuf2_common
 
-Finally, we have the full list of the required modules/drivers to 
-support the USB device. In this case it is pwc, videobuf2_v4l2, 
+We now have the full list of the required modules/drivers to 
+support the new USB device. In this case it is pwc, videobuf2_v4l2, 
 videobuf2_vmalloc, videobuf2_memops, videobuf2_common, videodev and mc .
 
 The next step is to get the text description of each of the above 
@@ -168,7 +175,7 @@ Continuing with the example above we have
     # modinfo -F description mc
     Device node registration for media drivers
 
-## Reconfigure the target kernel with "make menuconfig" and add new modules.
+## Reconfigure the target kernel and add new modules.
 We now need to reconfigure the Linux kernel build parameters to include the
 necessary drivers, modules and components that are required to support the 
 new device.
@@ -177,24 +184,21 @@ The easiest way to reconfigure the Linux kernel build parameters is to use
 the "make menuconfig" command which invokes a user friendly, text based menu
 where options can be easily enabled and disabled.
 
-Invoke the "make menuconfig" command using the same format as seen in the 
-**README_CROSS_COMPILE_KERNEL.md** instructions in this project. That is,
-make sure to specify all the required environment variables and the
+Run the "make menuconfig" command from the Linux source tree base 
+directory using the same command format as seen in the
+**README_CROSS_COMPILE_KERNEL.md** instructions. That is, make
+sure to specify all the required environment variables and the
 location of the kernel build directory. For example
 
     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make menuconfig
 
-We now need to navigate through the presented configuration menus searching
-for the features listed above in the output of the "modinfo -F description"
-commands and enable them. The problem is, that the menu options presented
-in the "make menuconfig" display are not always exactly the same as the
-descriptions output in the "modinfo" command.
+We now need to navigate through the presented configuration menus 
+searching for the modules listed above and enable them. The problem is, 
+that the menu options presented in the "make menuconfig" display are
+not always exactly the same as the descriptions output in the
+"modinfo" command.
 
-Search through options in "make menuconfig" by using the "/" command
-and typing the description of what's being searched for. The results
-should display the menus that need to be navigated to find each item.
-
-Another more deterministic way of finding out which kernel configuration
+A more deterministic way of finding out which kernel configuration
 options need to be enabled for each module is to search through the 
 Linux kernel source code for "Makefile" files containing the kernel module
 name followed by ".o" . In these we can see the CONFIG_ option that
@@ -226,15 +230,23 @@ using both - and _ . For example, for the "videobuf2_common" module
 We see that the "videobuf2_common" module corresponds to the 
 CONFIG_VIDEOBUF2_CORE option.
 
+Search through options in "make menuconfig" by using the "/" command
+and searching for the CONFIG_ option corresponding to the desired
+modules and components. The results should display a description
+that broadly corresponds with the output of the "modinfo" command
+and the menus that need to be navigated to find each item.
+
 In "make menuconfig" navigate to each required item and use the "space"
-key to mark it as either "M" meaning that the item will be built as a kernel
-module, or as "*" meaning that the item will be built in to the monolithinc
+key to mark it as either "M", meaning that the item will be built as a kernel
+module, or as "*", meaning that the item will be built in to the monolithinc
 kernel uImage.
 
 Note that sometimes enabling one required option, will automatically 
 enable another. Also note that sometimes, one option depends on another
 being enabled before it will even appear as a menu item in "make menuconfig".
-This means you might have to enable options out of order.
+This means you might have to enable options out of order. I'ts not 
+always easy to know in advance which options need to be configured
+first, so try to "loop" through the list of required options.
 
 Here are the menu items and CONFIG variables that correspond to the
 modules listed in our example of a Cisco brand USB Camera.
@@ -306,16 +318,50 @@ modules to the Seagate Central.
 Once the Seagate Central has booted using the new kernel image
 try to connect the USB device to the system and monitor the
 system logs using the "dmesg" command and the "/var/log/syslog"
-file.
+file. For example,
+
+    [ 183.060000] mc: Linux media interface: v0.10
+    [ 183.120000] videodev: Linux video capture interface: v2.00
+    [ 183.220000] pwc: Logitech/Cisco VT Camera webcam detected.
+    [ 183.430000] pwc: Registered as video0.
+    [ 183.450000] input: PWC snapshot button as /devices/platform/ohci-platform.0/usb2/2-1/input/input0
+    [ 183.460000] usbcore: registered new interface driver Philips webcam
 
 Ideally the device will be recognized and a corresponding
 entry for it will appear in the "/sys/bus/usb/drivers" directory
 on the Seagate Central as per when it was connected to the PC.
 
+    # ls /sys/bus/usb/drivers
+    Philips webcam  hub  usb  usb-storage  usbfs  usbhid  usblp
+
+Running the "lsusb" command should show that the device is
+physically recognized by the Seagate Central but this does
+not mean that the device's drivers have been loaded. Run
+the "lsmod" command to show that the required modules have been 
+loaded by the system. For example
+
+    # lsusb
+    Bus 002 Device 002: ID 046d:08b6 Logitech, Inc.
+    Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+    Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+    # lsmod
+    Module                  Size  Used by
+    pwc                   262144  0
+    videobuf2_v4l2        262144  1 pwc
+    videobuf2_vmalloc     327680  1 pwc
+    videobuf2_memops      327680  1 videobuf2_vmalloc
+    videobuf2_common      262144  4 pwc,videobuf2_v4l2,videobuf2_vmalloc,videobuf2_memops
+    videodev              393216  3 pwc,videobuf2_v4l2,videobuf2_common
+    mc                    327680  3 videobuf2_v4l2,videobuf2_common,videodev
+
+    
 Additionally, most devices will have a corresponding entry
 appear in the "/dev" directory. In the example of the USB
 camera a new entry called "/dev/video0" will appear.
 
+    # ls /dev/video*
+    /dev/video0
+    
 In some cases the device may be recognized and the system
 will go through the process of loading modules, however
 errors complaining of "unresolved symbols" or
