@@ -34,7 +34,7 @@ Figuring out what modules / drivers need to be installed for "embedded"
 Linux devices like the Seagate Central is not a well defined process.
 In general it's an iterative process and goes as follows.
 
-1) Plug the device into a PC/RPi running a full up-to-date Linux distro.
+1) Plug the device into a PC / RPi running a full up-to-date Linux distro.
 2) Observe what modules are needed for a the new device.
 3) Reconfigure the target kernel with "make menuconfig" and add new modules.
 4) Rebuild the kernel and modules. (make uImage, make modules, make modules_install)
@@ -52,10 +52,11 @@ something like the Linux Kernel Drivers Database.
 
 https://cateee.net/lkddb/
 
-## Plug the device into a PC/RPi running a full up-to-date Linux distro.
-Unfortunately there isn't an elegant means to discover all the
-drivers / kernel modules required for most USB devices. Many
-device manufacturers do not take Linux into account in their
+## Plug the device into a PC / RPi running a full up-to-date Linux distro.
+Unfortunately, there isn't an elegant means to discover all the
+drivers / kernel modules required for most USB devices. 
+
+Many device manufacturers do not take Linux into account in their
 documentation. In addition, many devices are simply "rebadged"
 versions of other vendor's equipment. This means that while a
 USB device might be labelled on the outside as being a particular
@@ -225,7 +226,7 @@ using both - and _ . For example, for the "videobuf2_common" module
 We see that the "videobuf2_common" module corresponds to the 
 CONFIG_VIDEOBUF2_CORE option.
 
-In "make menuconfig" navgiate to each required item and use the "space"
+In "make menuconfig" navigate to each required item and use the "space"
 key to mark it as either "M" meaning that the item will be built as a kernel
 module, or as "*" meaning that the item will be built in to the monolithinc
 kernel uImage.
@@ -233,6 +234,7 @@ kernel uImage.
 Note that sometimes enabling one required option, will automatically 
 enable another. Also note that sometimes, one option depends on another
 being enabled before it will even appear as a menu item in "make menuconfig".
+This means you might have to enable options out of order.
 
 Here are the menu items and CONFIG variables that correspond to the
 modules listed in our example of a Cisco brand USB Camera.
@@ -249,71 +251,80 @@ Then under "Media USB Adapters" enable "USB Philips Cameras" (M)
 
 #### videodev : Video4Linux2 core driver
 CONFIG_VIDEO_V4L2
-Automatically selected by enabling MEDIA_SUPPORT and USB_PWC
+Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_common : Media buffer core framework
 CONFIG_VIDEOBUF2_CORE
-Automatically selected by enabling MEDIA_SUPPORT and USB_PWC
+Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_memops : common memory handling routines for videobuf2
 CONFIG_VIDEOBUF2_MEMOPS
-Automatically selected by enabling MEDIA_SUPPORT and USB_PWC
+Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_vmalloc : vmalloc memory handling routines for videobuf2
 CONFIG_VIDEOBUF2_VMALLOC
-Automatically selected by enabling MEDIA_SUPPORT and USB_PWC
+Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_v4l2 : Driver helper framework for Video for Linux 2
 CONFIG_VIDEOBUF2_V4L2
-Automatically selected by enabling  MEDIA_SUPPORT and USB_PWC
+Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
       
+After enabling all the required new options, save the configuration and
+exit "make menuconfig".
 
+## Rebuild the kernel and modules. 
+Once the new kernel configuration has been saved, rebuild the Linux
+kernel for the target (Seagate Central) as per the instructions in
+the "Build the kernel" and "Build Linux modules" sections of
+**README_CROSS_COMPILE_KERNEL.md**
 
+## Check to see what modules were built.
+After building the modules as per the instruction in 
+**README_CROSS_COMPILE_KERNEL.md**, there should be a module
+directory located under the "cross-mod" subdirectory of the
+base working directory. Check within that directory to confirm
+that all the expected modules have been built. Module files
+are named with the ".ko" suffix. For example
 
+    # ls -laR cross-mod/lib/modules/5.14.0-sc/kernel/
 
+You may notice that some extra modules have been built. It doesn't
+hurt to have extra modules because if they don't turn out to be
+necessary then they can be deleted later.
 
+If some of the expected modules have not been built then go
+back to the "make menuconfig" step and try to find out what
+extra kernel configuration options need to be selected.
 
+## Install the new kernel and modules on the target (Seagate Central).
+See the **README_MANUAL_KERNEL_INSTALLATION.md** document for
+details on how to transfer and install the kernel image and
+modules to the Seagate Central.
 
+## Plug the new device into the target and see if it's recognized 
+Once the Seagate Central has booted using the new kernel image
+try to connect the USB device to the system and monitor the
+system logs using the "dmesg" command and the "/var/log/syslog"
+file.
 
-4) Rebuild the kernel and modules. (make uImage, make modules, make modules_install)
-5) Check to see what modules were built.
-6) If any required modules are missing then GOTO 3) .
-7) Install the new kernel and modules on the target (Seagate Central).
-8) Plug the new device into the target and see if it's recognized (lsusb / lsmod)
-9) If there are "unresolved symbol" or "could not find module" errors (dmesg) then GOTO 3)
+Ideally the device will be recognized and a corresponding
+entry for it will appear in the "/sys/bus/usb/drivers" directory
+on the Seagate Central as per when it was connected to the PC.
 
-#### Reconfiguring the Linux kernel
+Additionally, most devices will have a corresponding entry
+appear in the "/dev" directory. In the example of the USB
+camera a new entry called "/dev/video0" will appear.
 
+In some cases the device may be recognized and the system
+will go through the process of loading modules, however
+errors complaining of "unresolved symbols" or
+"could not find module". If these errors are seen then it 
+indicates that something is missing and the process of
+configuring the kernel needs to be restarted to add the
+missing components.
 
-
-configure the kernel, build the kernel and modules, check to see what modules
-were built, and then if any modules were missing go back to the start and try again.
-    
-
-
-On a "full" Linux distribution running on a device like a PC or Raspberry PI,
-this isn't necessary because most "full" Linux distributions come with 
-all the modules and components pre-built and available "out of the box".
-
-This isn't the case for the Seagate Central, because there's no "Seagate
-Central" Linux distribution that has automatically pre-built all the
-modules and drivers for every device in the world!!
-
-    
-
-
-Remember, it doesn't hurt to enable the building of extra modules. You can
-always delete them later!!
-
-#### Building kernel modules
-The following instructions should be read in conjunction with the instructions
-in the above mentioned **Seagate-Central-Slot-In-v5.x-Kernel** project.
-
-     
-     
-     lsusb
-     
-The out    
-
-It's difficult to provide a guide
+If a web search for the specific error message doesn't yield
+some guidance, then it may be a matter of searching the Linux
+source code for the mentioned symbols and module names to get a
+clue as to what components might be missing.
