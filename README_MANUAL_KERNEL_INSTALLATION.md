@@ -167,16 +167,16 @@ following link for details.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
-### NTFS/exFAT USB insertion
+### Optional - NTFS/exFAT USB insertion (Recommended)
 In order to take advantage of the new exFAT and NTFS file system
 support in the Linux kernel the following patch must be applied
 to one of the scripts that controls automatic mounting of newly
-inserted USB devices.
+inserted USB devices. FAT32 USB drives will still work regardless
+of whether this patch is applied.
 
 The script should first be backed up. Next it should be patched using
 the "usbshare.py.SC.patch" patch file that was transferred to the
 Seagate Central in a previous step.
-
 
      cp /usr/lib/python2.6/site-packages/shares/usbshare.py /usr/lib/python2.6/site-packages/shares/usbshare.py.old
      patch -i usbshare.py.SC.patch /usr/lib/python2.6/site-packages/shares/usbshare.py
