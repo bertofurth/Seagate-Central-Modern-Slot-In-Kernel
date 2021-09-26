@@ -154,12 +154,12 @@ Central to seamlessly interact with any attached NTFS formatted USB drives.
 
 Unfortunately the v5.x slot in kernel is not able to make use of this
 proprietary driver as it was designed for use with the original custom
-Seagate Central v2.6.35 based Linux kernel.
+Seagate Central based Linux v2.6.35 kernel.
 
 Linux does currently include support for a read-only version of the NTFS
 file system however it is reportedly quite slow. This is the version of NTFS
-support enabled in the v5.14 release of linux that these instructions are 
-currently based one.
+support enabled in Linux v5.14 that these instructions are currently based 
+on.
 
 There is a soon to be released new, much faster and reportedly more reliable
 read and write capable NTFS driver called ntfs3 by paragon software. I have
