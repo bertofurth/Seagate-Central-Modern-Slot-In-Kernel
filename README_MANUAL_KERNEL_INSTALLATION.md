@@ -523,6 +523,6 @@ If some services are functional but others are not then check the
 log files pertinent to the failing services as well as relevant messages
 in the the above mentioned log files.
 
-* samba - /var/log/log.smbd  and /var/log/log.snmd
+* samba - /var/log/log.smbd  and /var/log/log.nmbd
 * FTP/SFTP - /var/log/vsftpd.log
 * Web Management Interface - /var/log/user.log
