@@ -120,8 +120,8 @@ attention to.
 
 ### Samba - Needs to be upgraded. 
 The one major aspect that makes this kernel not quite "plug-in" as such
-is that the original custom version of the samba file serving software 
-running on the Seagate Central (v3.5.16) needs to be upgraded to a modern
+is that the original custom version of the samba v3.5.16 file serving 
+software running on the Seagate Central needs to be upgraded to a modern
 version in order to work with the new kernel.
 
 The associated project **Seagate-Central-Samba** explains why this is 
