@@ -40,6 +40,13 @@ such as a video camera.
 ### README_MANUAL_KERNEL_INSTALLATION.md
 Manually install the new Linux kernel onto the Seagate Central.
 
+Also note that the **Seagate-Central-Samba** project has a component 
+that allows the easy upgrade of the system's samba software via the
+Web Interface controlled firmware upgrade process. This can also be
+used to upgrade the Linux kernel on a Seagate Central. See
+
+https://github.com/bertofurth/Seagate-Central-Samba/blob/main/README_FIRMWARE_UPGRADE_METHOD.md
+
 ## Details
 This project's main goals are
 
@@ -399,14 +406,6 @@ Central does not make use of all of these.
 
 I've focused my efforts on only porting over support for the hardware 
 components that are present on the Seagate Central Single Hard Drive NAS. 
-
-#### Incorporate Linux kernel upgrade into Firmware Upgrade procedure
-The Seagate-Central-Samba project has a component that allows the easy
-upgrade of the system's samba software via the Web Interface controlled
-firmware upgrade process. Ideally the same kind of process should be available
-for upgrading the kernel, however since the kernel upgrade procedure is
-more likely to be subject to unanticpated problems that require manual
-intervention, manually instaling the kernel is the best route to take.
 
 ## Acknowledgements
 I am very grateful to the following sources who I've based this project on.
