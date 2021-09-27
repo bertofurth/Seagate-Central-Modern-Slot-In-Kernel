@@ -1,8 +1,8 @@
 # README_USB_DEVICE_MODULES.md
-This is a very brief and incomplete guide to identifying the Linux
-drivers / modules that need to be compiled along with the Linux
-kernel in order to support attaching new USB devices to the Seagate 
-Central.
+This is a very brief guide to identifying the Linux drivers /
+modules that need to be compiled along with the Linux kernel 
+in order to support attaching new USB devices to the Seagate 
+Central. This guide focuses on the example of USB Cameras.
 
 By default, the Seagate Central does not support a large range
 of connected USB devices. If you wish to connect anything beyond
@@ -29,22 +29,29 @@ https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_modules.html
 
 https://tldp.org/HOWTO/Module-HOWTO/
 
-## TLDNR
+## TLDNR 1
+If you just want USB Video Camera support then all modules for every
+natively supported USB camera can be built by using the included
+**config-sc-all-usb-cam-modules.txt** kernel configuration file
+and building all USB camera modules as per the 
+**README_CROSS_COMPILE_KERNEL.md** instructions in this project.
+
+## TLDNR 2
 Hosts with modern Linux distributions come with pre-built modules and 
 drivers catering for almost every device available. This is not the case 
 for "embedded" systems like the Seagate Central. Figuring out what 
 modules and drivers need to be installed on lower end Linux systems like
 the Seagate Central is not a well defined process.
 
-The most commonly used method is to simply build and install all the
-modules, then try them to see what happens. This can be difficult
-if storage space is limited.
+The most commonly used method is to simply build and install **all the
+modules**, see which ones are used and then delete the ones that are not
+used. This can be difficult if storage space is limited.
 
 The method we present in this document tries to be more focused
 and attempts to build and install only the bare minimum required modules. 
 The process is summarized as follows.
 
-1) Plug the USB device into a PC / RPi running a full, up-to-date Linux distro.
+1) Plug the new USB device into a PC / RPi running a full, up-to-date Linux distro.
 2) Observe what modules are needed for the new device on the PC.
 3) Reconfigure the target kernel with "make menuconfig" and add new modules.
 4) Rebuild the kernel and modules. (make uImage, make modules, make modules_install)
@@ -57,7 +64,7 @@ The process is summarized as follows.
 Each of these steps is detailed below using the example of 
 connecting a USB video camera to the Seagate Central.
 
-## Plug the device into a PC running Linux
+## Plug the new device into a PC running Linux
 Unfortunately, there isn't an elegant means to discover all the
 drivers / kernel modules required for most USB devices. 
 
@@ -290,12 +297,8 @@ Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 CONFIG_VIDEOBUF2_V4L2
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
-      
 After enabling all the required new options, save the configuration and
 exit "make menuconfig".
-
-BERTO uvcvideo
-
 
 ## Rebuild the kernel and modules. 
 Once the new kernel configuration has been saved, rebuild the Linux
