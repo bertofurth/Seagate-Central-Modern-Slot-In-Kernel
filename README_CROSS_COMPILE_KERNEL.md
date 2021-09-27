@@ -1,10 +1,10 @@
-# INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
+# README_CROSS_COMPILE_KERNEL.md
 ## Summary
 This is a guide that describes how to cross compile a replacement
 Linux kernel suitable for installation on a Seagate Central NAS device.
 
 Manual installation of the cross compiled kernel is covered by 
-**INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md**
+**README_MANUAL_KERNEL_INSTALLATION.md**
 
 ## TLDNR
 On a build server with an appropriate cross compilation suite 

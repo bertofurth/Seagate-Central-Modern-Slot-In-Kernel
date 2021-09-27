@@ -1,9 +1,9 @@
-# INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
+# README_MANUAL_KERNEL_INSTALLATION.md
 This is a guide that describes how to manually replace the original
 Linux v2.6.25 kernel on a Seagate Central NAS with a previously
 cross compiled modern, Linux v5.x kernel.
 
-Refer to the instructions in **INSTRUCTIONS_CROSS_COMPILE_KERNEL.md**
+Refer to the instructions in **README_CROSS_COMPILE_KERNEL.md**
 to cross compile a kernel for use in this procedure or refer to the
 **README.md** file for the location of a precompiled kernel binary.
 
@@ -135,7 +135,7 @@ transferring the archive to the Seagate Central as per the following
 example
 
      tar -caf cross-mod.tar.gz cross-mod/
-     scp cross-mod admin@192.0.2.99:
+     scp cross-mod.tar.gz admin@192.0.2.99:
 
 ### Transfer the config and script patches to the Seagate Central
 A number of configuration and script files need to be patched on
@@ -167,16 +167,16 @@ following link for details.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
-### NTFS/exFAT USB insertion
+### Optional - NTFS/exFAT USB insertion (Recommended)
 In order to take advantage of the new exFAT and NTFS file system
 support in the Linux kernel the following patch must be applied
 to one of the scripts that controls automatic mounting of newly
-inserted USB devices.
+inserted USB devices. FAT32 USB drives will still work regardless
+of whether this patch is applied.
 
 The script should first be backed up. Next it should be patched using
 the "usbshare.py.SC.patch" patch file that was transferred to the
 Seagate Central in a previous step.
-
 
      cp /usr/lib/python2.6/site-packages/shares/usbshare.py /usr/lib/python2.6/site-packages/shares/usbshare.py.old
      patch -i usbshare.py.SC.patch /usr/lib/python2.6/site-packages/shares/usbshare.py
@@ -357,20 +357,45 @@ to the procedure in order to build kernel modules. By default, no kernel
 modules need to be built or installed so this step can be skipped.
 
 If you have an archive of kernel modules associated with the newly installed
-uImage then extract it and check to make sure that the directory contents
-are as expected.
+uImage then copy it to the Seagate Central, extract it and check to make sure
+that the extracted directory contents are as expected. 
 
      tar -xf cross-mod.tar.gz
-     ls -laR cross-mod/
 
-After checking that the modules have been extracted as expected, copy the
-module tree into place as per the following example.
+Under the lib/modules subdirectory, there should be another directory 
+containing the modules for the kernel version being installed. Under
+that subdirectory there should be more module configuration files
+and a "kernel/" subdirectory containing the module tree. For example
+
+    #ls -p cross-mod/lib/modules/
+    5.14.0-sc/
+    #ls -p cross-mod/lib/modules/5.14.0-sc
+    build
+    kernel/
+    modules.alias
+    modules.alias.bin
+    modules.builtin
+    modules.builtin.alias.bin
+    modules.builtin.bin
+    modules.builtin.modinfo
+    modules.dep
+    modules.dep.bin
+    modules.devname
+    modules.order
+    modules.softdep
+    modules.symbols
+    modules.symbols.bin
+    source
+
+After checking that the modules have been extracted as expected, install
+the new modules by copying the module tree into place as per the following
+example.
 
 Note that this is a **very** dangerous part of the process so if you don't
 understand what you are doing here then do not proceed with the following
 command.
 
-     cp -r cross-mod/lib /
+     cp -r cross-mod/lib/modules* /lib/modules/
 
 There should be a new 5.x.x-sc modules subdirectory on the unit alongside the 
 modules subdirectory for the original v2.6.35 kernel. The output of the 
@@ -498,6 +523,6 @@ If some services are functional but others are not then check the
 log files pertinent to the failing services as well as relevant messages
 in the the above mentioned log files.
 
-* samba - /var/log/log.smbd  and /var/log/log.snmd
+* samba - /var/log/log.smbd  and /var/log/log.nmbd
 * FTP/SFTP - /var/log/vsftpd.log
 * Web Management Interface - /var/log/user.log

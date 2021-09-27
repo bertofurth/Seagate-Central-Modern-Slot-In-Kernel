@@ -27,13 +27,25 @@ https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases/downl
 
 md5sum : 4c27242167bee256ac13979f604080cd
 
-There are two sets of instructions included in this project.
+There are three sets of instructions included in this project.
 
-### INSTRUCTIONS_CROSS_COMPILE_KERNEL.md
-Cross compile the new v5.x Linux kernel for Seagate Central from scratch.
+### README_CROSS_COMPILE_KERNEL.md
+Cross compile the new v5.x Linux kernel for Seagate Central from 
+scratch.
 
-### INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md
+### README_USB_DEVICE_MODULES.md
+Modify the kernel configuration to add support for new USB devices
+such as a video camera.
+
+### README_MANUAL_KERNEL_INSTALLATION.md
 Manually install the new Linux kernel onto the Seagate Central.
+
+Also note that the **Seagate-Central-Samba** project has a component 
+that allows the easy upgrade of the system's samba software via the
+Web Interface controlled firmware upgrade process. This can also be
+used to upgrade the Linux kernel on a Seagate Central. See
+
+https://github.com/bertofurth/Seagate-Central-Samba/blob/main/README_FIRMWARE_UPGRADE_METHOD.md
 
 ## Details
 This project's main goals are
@@ -42,6 +54,7 @@ This project's main goals are
 * Make the installation as seamless as possible.
 * Allow users to keep using the existing 64K page formatted Data volume.
 * Allow users to continue using the Seagate supplied services.
+* Allow users to add new services to the Seagate Central.
 
 The hope is that by providing a modern kernel to replace the old 
 v2.6 native kernel, users will be able to add new modern software 
@@ -107,8 +120,8 @@ attention to.
 
 ### Samba - Needs to be upgraded. 
 The one major aspect that makes this kernel not quite "plug-in" as such
-is that the original custom version of the samba file serving software 
-running on the Seagate Central (v3.5.16) needs to be upgraded to a modern
+is that the original custom version of the samba v3.5.16 file serving 
+software running on the Seagate Central needs to be upgraded to a modern
 version in order to work with the new kernel.
 
 The associated project **Seagate-Central-Samba** explains why this is 
@@ -141,12 +154,12 @@ Central to seamlessly interact with any attached NTFS formatted USB drives.
 
 Unfortunately the v5.x slot in kernel is not able to make use of this
 proprietary driver as it was designed for use with the original custom
-Seagate Central v2.6.35 based Linux kernel.
+Seagate Central based Linux v2.6.35 kernel.
 
 Linux does currently include support for a read-only version of the NTFS
 file system however it is reportedly quite slow. This is the version of NTFS
-support enabled in the v5.14 release of linux that these instructions are 
-currently based one.
+support enabled in Linux v5.14 that these instructions are currently based 
+on.
 
 There is a soon to be released new, much faster and reportedly more reliable
 read and write capable NTFS driver called ntfs3 by paragon software. I have
@@ -394,14 +407,6 @@ Central does not make use of all of these.
 I've focused my efforts on only porting over support for the hardware 
 components that are present on the Seagate Central Single Hard Drive NAS. 
 
-#### Incorporate Linux kernel upgrade into Firmware Upgrade procedure
-The Seagate-Central-Samba project has a component that allows the easy
-upgrade of the system's samba software via the Web Interface controlled
-firmware upgrade process. Ideally the same kind of process should be available
-for upgrading the kernel, however since the kernel upgrade procedure is
-more likely to be subject to unanticpated problems that require manual
-intervention, manually instaling the kernel is the best route to take.
-
 ## Acknowledgements
 I am very grateful to the following sources who I've based this project on.
 
@@ -459,7 +464,8 @@ lots of new software and services as documented by the
 
 Obviously since the unit isn't particularly fast it's better to make
 use of these services "one at a time" but thanks to the excessive 
-swap space available on the platform it all seems to hang together well.
+swap space available on the platform, and thanks to the new SMP
+support, it all seems to hang together well.
 
 Hopefully these instructions can serve as a template for upgrading the 
 Linux kernel on other arm 32 based embedded NAS equipment. In particular 
