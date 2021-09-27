@@ -243,8 +243,13 @@ directory.
 
 From the Linux source code base directory run the command
 
+    mkdir -p ../obj
     cp ../config-seagate-central-v5.14-all-in-one.txt ../obj/.config
      
+N.B. There is another example configuration file in this project called
+**config-sc-all-usb-cam-modules.txt** that can be used instead if you wish to
+build modules supporting USB Video cameras.
+
 ### make menuconfig     
 The following step allows you to customize the kernel configuration by running 
 the **make menuconfig** dialog. This dialog presents a user friendly menu driven
