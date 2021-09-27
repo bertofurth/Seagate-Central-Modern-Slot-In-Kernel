@@ -338,7 +338,9 @@ for the Seagate Central to operate as per the original kernel.
 
 If you want to reduce the size of the kernel image, or to add new
 functionality to the kernel, then you may wish to generate kernel
-modules which can be installed alongside the new kernel.
+modules which can be installed alongside the new kernel. See the
+**README_USB_DEVICE_MODULES.md** file in this project for 
+instructions on adding module support for USB devices.
 
 After making the appropriate kernel configuration changes using
 a tool such as the "make menuconfig" dialog, build the kernel
