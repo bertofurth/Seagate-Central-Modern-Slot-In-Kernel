@@ -395,7 +395,7 @@ Note that this is a **very** dangerous part of the process so if you don't
 understand what you are doing here then do not proceed with the following
 command.
 
-     cp -r cross-mod/lib/modules* /lib/modules/
+     cp -r cross-mod/lib/modules/* /lib/modules/
 
 There should be a new 5.x.x-sc modules subdirectory on the unit alongside the 
 modules subdirectory for the original v2.6.35 kernel. The output of the 
