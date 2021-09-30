@@ -269,33 +269,40 @@ Here are the menu items and CONFIG variables that correspond to the
 modules listed in our example of a Cisco brand USB Camera.
 
 #### mc : Device node registration for media drivers
-CONFIG_MEDIA_SUPPORT
+CONFIG_MEDIA_SUPPORT 
+
 Device Drivers -> Multimedia Support (M)
 
 #### pwc : Philips & OEM USB webcam driver
 CONFIG_USB_PWC
+
 Device Drivers -> Multimedia Support -> Media Drivers -> Media USB Adapters (*)
 
 Then under "Media USB Adapters" enable "USB Philips Cameras" (M)
 
 #### videodev : Video4Linux2 core driver
 CONFIG_VIDEO_V4L2
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_common : Media buffer core framework
 CONFIG_VIDEOBUF2_CORE
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_memops : common memory handling routines for videobuf2
 CONFIG_VIDEOBUF2_MEMOPS
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_vmalloc : vmalloc memory handling routines for videobuf2
 CONFIG_VIDEOBUF2_VMALLOC
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_v4l2 : Driver helper framework for Video for Linux 2
 CONFIG_VIDEOBUF2_V4L2
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 After enabling all the required new options, save the configuration and
@@ -414,6 +421,7 @@ instead
 
 #### uvcvideo : USB Video Class driver
 CONFIG_USB_VIDEO_CLASS
+
 Device Drivers -> Multimedia support -> Media drivers 
   -> Media USB Adapters -> USB Video Class (UVC)
 
