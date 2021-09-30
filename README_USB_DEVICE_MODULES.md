@@ -427,6 +427,7 @@ Device Drivers -> Multimedia support -> Media drivers
 
 ### Further information
 The Webcam HOWTO (old but still mostly useful)
+
 https://tldp.org/HOWTO/html_single/Webcam-HOWTO/
 
 
