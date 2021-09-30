@@ -31,10 +31,10 @@ https://tldp.org/HOWTO/Module-HOWTO/
 
 ## TLDNR 1
 If you just want USB Video Camera support then all modules for every
-natively supported USB camera can be built by using the included
-**config-sc-all-usb-cam-modules.txt** kernel configuration file
-which builds **all** available USB camera modules. Simply copy
-this configuration file to the build directory ( obj/.config ) as per the 
+USB camera natively supported in Linux can be built by using the included
+**config-sc-all-usb-cam-modules.txt** kernel configuration file. Simply
+copy this configuration file to the build directory ( obj/.config ) before
+compiling your kernel and modules as per the
 **README_CROSS_COMPILE_KERNEL.md** instructions in this project.
 
 ## TLDNR 2
@@ -73,7 +73,7 @@ Many device manufacturers do not take Linux into account in their
 documentation. In addition, many devices are simply "rebadged"
 versions of other vendor's equipment. This means that while a
 USB device might be labelled on the outside as being a particular
-make and model, it may be that from the USB hosts's (computer's)
+make and model, it may be that from the USB host's (computer's)
 perspective it's actually recognized as something different.
 This in turn means that it's not always obvious what the names
 of the required drivers / modules are.
@@ -221,7 +221,7 @@ Linux kernel source code for "Makefile" files containing the kernel module
 name followed by ".o" . In these we can see the CONFIG_ option that
 needs to be enabled to build the module.
 
-Refering back to the example of the USB camera, we can search for the
+Referring back to the example of the USB camera, we can search for the
 "videodev" module as follows from the top of the kernel source code tree.
 (Note the space before the module name in the grep command helps eliminate 
 false hits.)
@@ -255,13 +255,13 @@ and the menus that need to be navigated to find each item.
 
 In "make menuconfig" navigate to each required item and use the "space"
 key to mark it as either "M", meaning that the item will be built as a kernel
-module, or as "*", meaning that the item will be built in to the monolithinc
+module, or as "*", meaning that the item will be built in to the monolithic
 kernel uImage.
 
 Note that sometimes enabling one required option, will automatically 
 enable another. Also note that sometimes, one option depends on another
 being enabled before it will even appear as a menu item in "make menuconfig".
-This means you might have to enable options out of order. I'ts not 
+This means you might have to enable options out of order. It's not 
 always easy to know in advance which options need to be configured
 first, so try to "loop" through the list of required options.
 
@@ -416,5 +416,9 @@ instead
 CONFIG_USB_VIDEO_CLASS
 Device Drivers -> Multimedia support -> Media drivers 
   -> Media USB Adapters -> USB Video Class (UVC)
+
+### Further information
+The Webcam HOWTO (old but still mostly useful)
+https://tldp.org/HOWTO/html_single/Webcam-HOWTO/
 
 
