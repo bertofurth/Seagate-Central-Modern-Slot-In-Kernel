@@ -232,7 +232,7 @@ Modify the permissions of the script to ensure it is executable.
 Create a link to the script that causes it to be executed on system
 bootup
 
-    ln -s ../init.d/ipv6_bounce /etc/rcS.d/S44ipv6_bounce
+    ln -s ../init.d/ipv6_bounce /etc/rcS.d/S90ipv6_bounce
     
 Note that this script must be numerically ordered to execute after
 the /etc/rcS.d/S41blackarmor-network startup script which starts the
