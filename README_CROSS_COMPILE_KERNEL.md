@@ -9,7 +9,7 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v5.14.0.
+Linux kernel v5.14.0. 
 
     # Download this project to the build host
     git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
@@ -58,9 +58,11 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-5.14.
+5.14. Other reasonably close versions of the Linux kernel should also
+work but may require some tweaking, especially at the point where the
+kernel source tree needs to be patched.
 
-TODO : Retest with v5.15 which should have ntfs3 support.
+TODO : Retest with v5.16 which should have ntfs3 support.
 
 This procedure has been tested to work on the following building
 platforms
@@ -133,15 +135,16 @@ system.
 * git (to download this project)
 * gcc-arm-none-eabi (If no self built cross compiler)
 
-### Samba version on the Seagate Central
-Although this is not strictly a pre-requisite of this kernel build 
-procedure it is worth emphasizing here that the original samba file
-server software on the Seagate Central will not work once the new
-kernel built with this procedure is installed on the Seagate Central.
+### Warning : Samba version on the Seagate Central
+The original samba file server software on the Seagate Central
+**will not work** once a new kernel is installed on the Seagate Central.
+You can, however, upgrade the samba file server software to a
+compatible version.
 
-See the Seagate-Central-Samba project at the following link for more
+See the **Seagate-Central-Samba** project at the following link for more
 details and instructions on how to upgrade the samba service on the
-Seagate Central to a compatible version.
+Seagate Central to a modern version that will work properly with the
+new kernel.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
