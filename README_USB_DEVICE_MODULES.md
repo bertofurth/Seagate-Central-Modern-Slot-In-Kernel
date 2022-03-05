@@ -231,10 +231,10 @@ false hits.)
     drivers/media/v4l2-core/Makefile:obj-$(CONFIG_VIDEO_V4L2) += videodev.o
 
 We see that for the "videodev" module we need to enable the
-CONFIG_MEDIA_SUPPORT option. We can now search for this option using the "/"
+CONFIG_VIDEO_V4L2 option. We can now search for this option using the "/"
 search dialog in "make menuconfig" in order to find and enable it.
 
-Note that the hyphen (-) and the underscore (_) are **interchangeable**
+Note that the hyphen (-) and the underscore (_) are **interchangeable** 
 in Linux kernel module names so you may have to search for modules names
 using both - and _ . For example, for the "videobuf2_common" module
 
