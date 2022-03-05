@@ -10,7 +10,7 @@
 +        # identification tools.
 +
 +        syslog.syslog(syslog.LOG_INFO,'Automount attempt 1 (ntfs3)')
-+        proc = subprocess.Popen("/bin/mount -t ntfs3 -o force,acl,nls=utf8,uid=%s,gid=%s %s %s" % 
++        proc = subprocess.Popen("/bin/mount -t ntfs3 -o force,acl,uid=%s,gid=%s %s %s" % 
 +            (nobodyuid, nobodygid, self.mdname, sharedir),
 +            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 +        proc.wait()
