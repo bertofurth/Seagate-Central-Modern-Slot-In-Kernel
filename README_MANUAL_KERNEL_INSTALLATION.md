@@ -182,16 +182,22 @@ Seagate Central in a previous step.
      patch -i usbshare.py.SC.patch /usr/lib/python2.6/site-packages/shares/usbshare.py
 
 ### Optional - IPv6
-The original Seagate v2.6.35 kernel did not support IPv6 at all
-and so many components of the system are not, by default, configured 
-to properly operate in an IPv6 environment.
+The original Seagate v2.6.35 kernel did not support IPv6 at all 
+so many components of the Seagate Central system are not, by
+default, configured to properly operate in an IPv6 environment.
 
 If you would like to take full advantage of IPv6 functionality 
 in the new kernel then a number of service startup and
-configuration files need to be modified. If you would prefer 
-to keep using only IPv4 as per the original Seagate Central
-firmware then there's no need to complete the steps in this
-section.
+configuration files need to be modified. 
+
+If you would prefer to keep using only IPv4 as per the original 
+Seagate Central firmware, or if you have no need for or 
+understanding of IPv6 functionality then it's not necessary to
+complete the steps in this section.
+
+If you're not sure about whether you want to implement IPv6 on
+the Seagate Central, then you can skip this section for the moment 
+and try it later after you've successfully upgraded the kernel.
 
 #### Bounce IPv6 on eth0 at startup
 The Seagate "networklan" daemon is in charge of monitoring the
@@ -332,10 +338,12 @@ should be located and create a backup copy of the original kernel.
     cp /boot/uImage /boot/uImage.old
      
 #### Copy the new kernel into place
-Copy the new kernel uImage into place so that on next boot it will be loaded
-by the system. Note that the active kernel image in the /boot/ directory must
-be called "uImage" otherwise it will not be loaded by the system on boot.
+Remove the old kernel uImage then copy the new kernel uImage into place so
+that on next boot it will be loaded by the system. Note that the active kernel
+image in the /boot/ directory must be called "uImage" otherwise it will not
+be loaded by the system on boot.
 
+    rm -f /boot/uImage
     cp uImage /boot/uImage
 
 Confirm that the new uImage file is in place
