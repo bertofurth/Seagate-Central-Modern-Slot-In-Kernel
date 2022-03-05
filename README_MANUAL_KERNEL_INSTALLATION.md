@@ -232,7 +232,7 @@ Modify the permissions of the script to ensure it is executable.
 Create a link to the script that causes it to be executed on system
 bootup
 
-    ln -s ../init.d/ipv6_bounce /etc/rcS.d/S44ipv6_bounce
+    ln -s ../init.d/ipv6_bounce /etc/rcS.d/S90ipv6_bounce
     
 Note that this script must be numerically ordered to execute after
 the /etc/rcS.d/S41blackarmor-network startup script which starts the
@@ -395,7 +395,7 @@ Note that this is a **very** dangerous part of the process so if you don't
 understand what you are doing here then do not proceed with the following
 command.
 
-     cp -r cross-mod/lib/modules* /lib/modules/
+     cp -r cross-mod/lib/modules/* /lib/modules/
 
 There should be a new 5.x.x-sc modules subdirectory on the unit alongside the 
 modules subdirectory for the original v2.6.35 kernel. The output of the 

@@ -1,8 +1,8 @@
 # README_USB_DEVICE_MODULES.md
-This is a very brief and incomplete guide to identifying the Linux
-drivers / modules that need to be compiled along with the Linux
-kernel in order to support attaching new USB devices to the Seagate 
-Central.
+This is a very brief guide to identifying the Linux drivers /
+modules that need to be compiled along with the Linux kernel 
+in order to support attaching new USB devices to the Seagate 
+Central. This guide focuses on the example of USB Cameras.
 
 By default, the Seagate Central does not support a large range
 of connected USB devices. If you wish to connect anything beyond
@@ -29,22 +29,30 @@ https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_modules.html
 
 https://tldp.org/HOWTO/Module-HOWTO/
 
-## TLDNR
+## TLDNR 1
+If you just want USB Video Camera support then all modules for every
+USB camera natively supported in Linux can be built by using the included
+**config-sc-all-usb-cam-modules.txt** kernel configuration file. Simply
+copy this configuration file to the build directory ( obj/.config ) before
+compiling your kernel and modules as per the
+**README_CROSS_COMPILE_KERNEL.md** instructions in this project.
+
+## TLDNR 2
 Hosts with modern Linux distributions come with pre-built modules and 
 drivers catering for almost every device available. This is not the case 
 for "embedded" systems like the Seagate Central. Figuring out what 
 modules and drivers need to be installed on lower end Linux systems like
 the Seagate Central is not a well defined process.
 
-The most commonly used method is to simply build and install all the
-modules, then try them to see what happens. This can be difficult
-if storage space is limited.
+The most commonly used method is to simply build and install **all the
+modules**, see which ones are used and then delete the ones that are not
+used. This can be difficult if storage space is limited.
 
 The method we present in this document tries to be more focused
 and attempts to build and install only the bare minimum required modules. 
 The process is summarized as follows.
 
-1) Plug the USB device into a PC / RPi running a full, up-to-date Linux distro.
+1) Plug the new USB device into a PC / RPi running a full, up-to-date Linux distro.
 2) Observe what modules are needed for the new device on the PC.
 3) Reconfigure the target kernel with "make menuconfig" and add new modules.
 4) Rebuild the kernel and modules. (make uImage, make modules, make modules_install)
@@ -57,7 +65,7 @@ The process is summarized as follows.
 Each of these steps is detailed below using the example of 
 connecting a USB video camera to the Seagate Central.
 
-## Plug the device into a PC running Linux
+## Plug the new device into a PC running Linux
 Unfortunately, there isn't an elegant means to discover all the
 drivers / kernel modules required for most USB devices. 
 
@@ -65,7 +73,7 @@ Many device manufacturers do not take Linux into account in their
 documentation. In addition, many devices are simply "rebadged"
 versions of other vendor's equipment. This means that while a
 USB device might be labelled on the outside as being a particular
-make and model, it may be that from the USB hosts's (computer's)
+make and model, it may be that from the USB host's (computer's)
 perspective it's actually recognized as something different.
 This in turn means that it's not always obvious what the names
 of the required drivers / modules are.
@@ -213,7 +221,7 @@ Linux kernel source code for "Makefile" files containing the kernel module
 name followed by ".o" . In these we can see the CONFIG_ option that
 needs to be enabled to build the module.
 
-Refering back to the example of the USB camera, we can search for the
+Referring back to the example of the USB camera, we can search for the
 "videodev" module as follows from the top of the kernel source code tree.
 (Note the space before the module name in the grep command helps eliminate 
 false hits.)
@@ -247,13 +255,13 @@ and the menus that need to be navigated to find each item.
 
 In "make menuconfig" navigate to each required item and use the "space"
 key to mark it as either "M", meaning that the item will be built as a kernel
-module, or as "*", meaning that the item will be built in to the monolithinc
+module, or as "*", meaning that the item will be built in to the monolithic
 kernel uImage.
 
 Note that sometimes enabling one required option, will automatically 
 enable another. Also note that sometimes, one option depends on another
 being enabled before it will even appear as a menu item in "make menuconfig".
-This means you might have to enable options out of order. I'ts not 
+This means you might have to enable options out of order. It's not 
 always easy to know in advance which options need to be configured
 first, so try to "loop" through the list of required options.
 
@@ -261,41 +269,44 @@ Here are the menu items and CONFIG variables that correspond to the
 modules listed in our example of a Cisco brand USB Camera.
 
 #### mc : Device node registration for media drivers
-CONFIG_MEDIA_SUPPORT
+CONFIG_MEDIA_SUPPORT 
+
 Device Drivers -> Multimedia Support (M)
 
 #### pwc : Philips & OEM USB webcam driver
 CONFIG_USB_PWC
+
 Device Drivers -> Multimedia Support -> Media Drivers -> Media USB Adapters (*)
 
 Then under "Media USB Adapters" enable "USB Philips Cameras" (M)
 
 #### videodev : Video4Linux2 core driver
 CONFIG_VIDEO_V4L2
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_common : Media buffer core framework
 CONFIG_VIDEOBUF2_CORE
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_memops : common memory handling routines for videobuf2
 CONFIG_VIDEOBUF2_MEMOPS
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_vmalloc : vmalloc memory handling routines for videobuf2
 CONFIG_VIDEOBUF2_VMALLOC
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
 #### videobuf2_v4l2 : Driver helper framework for Video for Linux 2
 CONFIG_VIDEOBUF2_V4L2
+
 Automatically selected by enabling CONFIG_MEDIA_SUPPORT and CONFIG_USB_PWC
 
-      
 After enabling all the required new options, save the configuration and
 exit "make menuconfig".
-
-BERTO uvcvideo
-
 
 ## Rebuild the kernel and modules. 
 Once the new kernel configuration has been saved, rebuild the Linux
@@ -410,7 +421,13 @@ instead
 
 #### uvcvideo : USB Video Class driver
 CONFIG_USB_VIDEO_CLASS
+
 Device Drivers -> Multimedia support -> Media drivers 
   -> Media USB Adapters -> USB Video Class (UVC)
+
+### Further information
+The Webcam HOWTO (old but still mostly useful)
+
+https://tldp.org/HOWTO/html_single/Webcam-HOWTO/
 
 
