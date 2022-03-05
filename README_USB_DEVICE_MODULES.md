@@ -97,10 +97,10 @@ Once the USB device is connected to the PC, navigate to the
 to see the directory name that corresponds to the newly plugged in
 device.
 
-For example, I have a USB camera that is labelled as a "Cisco" brand
-device. The documentation for the device says it's a "Logitech" style
-camera however the camera is actually recognized as "Philips webcam"
-by the host! 
+For example, I have a USB camera that is labelled on the case as a
+"Cisco" brand device. The documentation for the device says it's a 
+"Logitech" style camera however the camera is actually recognized 
+as "Philips webcam" by the host! 
 
     # cd /sys/bus/usb/drivers
     # ls 
