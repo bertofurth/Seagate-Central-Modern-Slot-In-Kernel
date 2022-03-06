@@ -26,15 +26,18 @@ line.
 If you are especially adept with a soldering iron and have the right 
 equipment then you could get serial console access but this is quite
 difficult and is **not required**. There are some very brief details 
-of the connections required at
+of how to attach a serial console at
 
 http://seagate-central.blogspot.com/2014/01/blog-post.html
 
 Archive : https://archive.ph/ONi4l
 
-That being said, if you are interested in doing further development of
-this kernel then having console access is invaluable for the purposes
-of troubleshooting problems during kernel boot.
+That being said, if you are interested in doing any software development
+or experimentation with the kernel then having console access is invaluable 
+for the purposes of troubleshooting problems during kernel boot. I would 
+suggest keeping all the cables coming from the circuit board as short
+as possible and to expect a number of distortions in the serial interface
+output.
 
 ### su/root access on the Seagate Central.
 Make sure that you can establish an ssh session to the Seagate Central
