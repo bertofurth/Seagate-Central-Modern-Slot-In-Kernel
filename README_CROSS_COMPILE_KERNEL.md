@@ -233,7 +233,7 @@ From the Linux source code base directory run the command
     cp ../config-seagate-central-v5.16.12-all-in-one.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
-**config-sc-all-usb-cam-modules.txt** that can be copied into place
+**config-sc-v5.16.12-all-usb-cam-modules.txt** that can be copied into place
 instead of the above mentioned one if you wish to build modules supporting
 USB Video cameras. (See **README_USB_DEVICE_MODULES.md**)
 
