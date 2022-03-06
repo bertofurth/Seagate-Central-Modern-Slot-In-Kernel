@@ -377,8 +377,8 @@ that subdirectory there should be more module configuration files
 and a "kernel/" subdirectory containing the module tree. For example
 
     #ls -p cross-mod/lib/modules/
-    5.14.0-sc/
-    #ls -p cross-mod/lib/modules/5.14.0-sc
+    5.16.12-sc/
+    #ls -p cross-mod/lib/modules/5.16.12-sc
     build
     kernel/
     modules.alias
@@ -415,14 +415,14 @@ following command
 should show an output similar to the following.
 
      drwxrwxr-x 4 root root 4096 Sep 17  2015 2.6.35.13-cavm1.whitney-econa.whitney-econa
-     drwxr-xr-x 3 root root 4096 Sep 10 10:40 5.14.0-sc
+     drwxr-xr-x 3 root root 4096 Mar  6 14:47 5.16.12-sc
      
 Finally remove the original "modules.dep" file in the new module 
 subdirectory. Removing this file will cause the unit to perform a
 "depmod" for the newly installed modules on next boot which will
 properly index them.
 
-     rm /lib/modules/5.14.0-sc/modules.dep
+     rm /lib/modules/5.16.12-sc/modules.dep
      
 ### Reboot and confirm the upgrade    
 Finally, we reboot the unit and confirm that the new kernel is
@@ -446,7 +446,7 @@ The output should indicate that the version of the running kernel is now
 5.x.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-     Linux NAS-1 5.16.12-sc #1 SMP Sun Mar 6 13:33:32 AEDT 2022 armv6l GNU/Linux    
+     Linux NAS-X 5.16.12-sc #1 SMP Sun Mar 6 13:33:32 AEDT 2022 armv6l GNU/Linux    
      
 Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
