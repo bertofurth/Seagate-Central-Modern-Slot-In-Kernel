@@ -19,13 +19,12 @@ following link
 
 https://github.com/bertofurth/Seagate-Central-Utils
 
-A pre-compiled Linux v5.4.0 kernel based on the instructions
+A pre-compiled Linux v5.16.12 kernel based on the instructions
 in this guide is currently available in the "Releases" section
 of this project at
 
+UPDATE UPDATE UPDATE
 https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases/download/v1.0/uImage.v5.14.0-sc
-
-md5sum : 4c27242167bee256ac13979f604080cd
 
 There are three sets of instructions included in this project.
 
@@ -137,40 +136,28 @@ services on the Seagate Central, such as the web management interface,
 the ssh/sftp/ftp servers and the Twonky DLNA media server, will still 
 work.
 
-### NTFS external drive "write" support (Soon to be fixed in kernel v5.15??)
-Initially, this project will only support "read" access to externally
-attached NTFS formatted drives. This is expected to be resolved with the 
-advent of the Paragon read/write capable ntfs3 driver due to be released in
-Linux kernel v5.15 or soon after.
-
-https://www.paragon-software.com/home/ntfs3-driver-faq/
-
+### NTFS formatted external drives
 NTFS is a commonly used filesystem for large hard drives formatted using 
 modern Windows operating systems.
 
 The original Seagate Central firmware uses a proprietary driver module, 
-called ufsd, to mount USB attached NTFS drives. This allowed the Seagate
-Central to seamlessly interact with any attached NTFS formatted USB drives.
+called ufsd, to mount and interact with USB attached NTFS drives. 
 
 Unfortunately the v5.x slot in kernel is not able to make use of this
-proprietary driver as it was designed for use with the original custom
-Seagate Central based Linux v2.6.35 kernel.
+proprietary driver as it was designed for exclusive use with only the original
+custom Seagate Central based Linux v2.6.35 kernel.
 
-Linux does currently include support for a read-only version of the NTFS
-file system however it is reportedly quite slow. This is the version of NTFS
-support enabled in Linux v5.14 that these instructions are currently based 
-on.
+Since v5.15.x, Linux includes native support for a new read and write
+capable NTFS driver called ntfs3 by Paragon Software. My own brief tests 
+indicate that this driver works well however this driver is quite new and may
+well still have some issues. See the following link for more details
 
-There is a soon to be released new, much faster and reportedly more reliable
-read and write capable NTFS driver called ntfs3 by paragon software. I have
-successfully tested a beta version of this driver on the Seagate Central by 
-using the pre-release linux kernel available at
-
-https://github.com/Paragon-Software-Group/linux-ntfs3
+https://www.paragon-software.com/home/ntfs3-driver-faq/
 
 My suggestion is to format externally attached drives as FAT32, or very 
 large drives as exFAT, rather than using NTFS. This ensures that your drive 
-will be compatible with the largest range of devices as possible.
+will be using reliable and well tested drivers. In addition it means that 
+your compatible with the largest range of devices as possible.
 
 Please refer to the following links that go into much more detail.
 
@@ -402,10 +389,11 @@ how you got it to work.
 #### PCI, SDHCI, XHCI, and other hardware components not used by the Seagate Central
 The Cavium CNS3420 CPU, which the Seagate Central is based on, supports
 a range of different hardware bus types and devices however the Seagate
-Central does not make use of all of these.
+Central only makes use of a subset of these.
 
 I've focused my efforts on only porting over support for the hardware 
-components that are present on the Seagate Central Single Hard Drive NAS. 
+components that are used and present on the Seagate Central Single Hard Drive 
+NAS. 
 
 ## Acknowledgements
 I am very grateful to the following sources who I've based this project on.
