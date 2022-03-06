@@ -32,9 +32,9 @@ https://tldp.org/HOWTO/Module-HOWTO/
 ## TLDNR 1
 If you just want USB Video Camera support then all modules for every
 USB camera natively supported in Linux can be built by using the included
-**config-sc-all-usb-cam-modules.txt** kernel configuration file. Simply
-copy this configuration file to the build directory ( obj/.config ) before
-compiling your kernel and modules as per the
+**config-sc-v5.16.12-all-usb-cam-modules.txt** kernel configuration file. 
+Simply copy this configuration file to the build directory ( obj/.config )
+before compiling your kernel and modules as per the
 **README_CROSS_COMPILE_KERNEL.md** instructions in this project.
 
 ## TLDNR 2
