@@ -20,7 +20,7 @@ Linux kernel v5.14.0.
     tar -xf linux-5.14.tar.xz
     cd linux-5.14
      
-    # Apply Seagate Central patches to Linux (Make sure each one works)
+    # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
     patch -p1 < ../0001-linux-64K-Page-include.patch
     patch -p1 < ../0002-linux-64K-Page-arm.patch
     patch -p1 < ../0003-linux-64K-Page-mm.patch
@@ -208,9 +208,8 @@ command is successfull before proceeding to the next.**
      patch -p1 < ../0006-linux-drivers.patch
      patch -p1 < ../0007-linux-arm32.patch
      
-If a version of Linux other than v5.14 is being patched then make careful note
-of any failure messages. You may need to manually edit kernel source files where
-patches have failed.
+Make careful note of any Hunk FAILED messages. You may need to manually edit kernel 
+source files where patches have failed.
 
 TODO : If the version of Linux you are using has support for the NTFS3 file 
 system then one more patch *may* need to be applied. This document will be 
