@@ -14,7 +14,7 @@
  13 files changed, 111 insertions(+)
 
 diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
-index fab571016adf..96760dcfaef6 100644
+index 60d9374c7..f4ade2ebb 100644
 --- a/drivers/gpio/Kconfig
 +++ b/drivers/gpio/Kconfig
 @@ -112,6 +112,13 @@ config GPIO_MAX730X
@@ -32,7 +32,7 @@ index fab571016adf..96760dcfaef6 100644
  	tristate "GPIO driver for 74xx-ICs with MMIO access"
  	depends on OF_GPIO
 diff --git a/drivers/gpio/Makefile b/drivers/gpio/Makefile
-index 32a32659866a..d1360114be32 100644
+index 71ee9fc2f..ee8fc96cb 100644
 --- a/drivers/gpio/Makefile
 +++ b/drivers/gpio/Makefile
 @@ -46,6 +46,7 @@ obj-$(CONFIG_GPIO_BRCMSTB)		+= gpio-brcmstb.o
@@ -44,10 +44,10 @@ index 32a32659866a..d1360114be32 100644
  obj-$(CONFIG_GPIO_CRYSTAL_COVE)		+= gpio-crystalcove.o
  obj-$(CONFIG_GPIO_CS5535)		+= gpio-cs5535.o
 diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-index d329ec3d64d8..d50e825e4b12 100644
+index b8bb46c65..77a205ed0 100644
 --- a/drivers/irqchip/irq-gic.c
 +++ b/drivers/irqchip/irq-gic.c
-@@ -1101,6 +1101,7 @@ static const struct irq_domain_ops gic_irq_domain_hierarchy_ops = {
+@@ -1125,6 +1125,7 @@ static const struct irq_domain_ops gic_irq_domain_hierarchy_ops = {
  static const struct irq_domain_ops gic_irq_domain_ops = {
  	.map = gic_irq_domain_map,
  	.unmap = gic_irq_domain_unmap,
@@ -56,10 +56,10 @@ index d329ec3d64d8..d50e825e4b12 100644
  
  static void gic_init_chip(struct gic_chip_data *gic, struct device *dev,
 diff --git a/drivers/leds/Kconfig b/drivers/leds/Kconfig
-index bdf16180f5ff..b218586013c2 100644
+index ed800f5da..590238ff8 100644
 --- a/drivers/leds/Kconfig
 +++ b/drivers/leds/Kconfig
-@@ -141,6 +141,15 @@ config LEDS_BCM6358
+@@ -122,6 +122,15 @@ config LEDS_BCM6358
  	  This option enables support for LEDs connected to the BCM6358
  	  LED HW controller accessed via MMIO registers.
  
@@ -76,10 +76,10 @@ index bdf16180f5ff..b218586013c2 100644
  	tristate "LED Support for Motorola CPCAP"
  	depends on LEDS_CLASS
 diff --git a/drivers/leds/Makefile b/drivers/leds/Makefile
-index 7e604d3028c8..70b0bdce7dcb 100644
+index c636ec069..4f2fb0597 100644
 --- a/drivers/leds/Makefile
 +++ b/drivers/leds/Makefile
-@@ -23,6 +23,7 @@ obj-$(CONFIG_LEDS_BCM6358)		+= leds-bcm6358.o
+@@ -21,6 +21,7 @@ obj-$(CONFIG_LEDS_BCM6358)		+= leds-bcm6358.o
  obj-$(CONFIG_LEDS_BD2802)		+= leds-bd2802.o
  obj-$(CONFIG_LEDS_BLINKM)		+= leds-blinkm.o
  obj-$(CONFIG_LEDS_CLEVO_MAIL)		+= leds-clevo-mail.o
@@ -88,7 +88,7 @@ index 7e604d3028c8..70b0bdce7dcb 100644
  obj-$(CONFIG_LEDS_COBALT_RAQ)		+= leds-cobalt-raq.o
  obj-$(CONFIG_LEDS_CPCAP)		+= leds-cpcap.o
 diff --git a/drivers/mtd/devices/Kconfig b/drivers/mtd/devices/Kconfig
-index 79cb981ececc..1d2f144ce6c8 100644
+index 79cb981ec..1d2f144ce 100644
 --- a/drivers/mtd/devices/Kconfig
 +++ b/drivers/mtd/devices/Kconfig
 @@ -95,6 +95,15 @@ config MTD_MCHP48L640
@@ -108,7 +108,7 @@ index 79cb981ececc..1d2f144ce6c8 100644
  	tristate "SPEAR MTD NOR Support through SMI controller"
  	depends on PLAT_SPEAR || COMPILE_TEST
 diff --git a/drivers/net/ethernet/cavium/Kconfig b/drivers/net/ethernet/cavium/Kconfig
-index 4875cdae622e..fa2573f99616 100644
+index 1c76c95b0..2061debb9 100644
 --- a/drivers/net/ethernet/cavium/Kconfig
 +++ b/drivers/net/ethernet/cavium/Kconfig
 @@ -13,6 +13,33 @@ config NET_VENDOR_CAVIUM
@@ -146,7 +146,7 @@ index 4875cdae622e..fa2573f99616 100644
  	tristate "Thunder Physical function driver"
  	depends on 64BIT && PCI
 diff --git a/drivers/net/ethernet/cavium/Makefile b/drivers/net/ethernet/cavium/Makefile
-index 5d32808210fb..915867e7999b 100644
+index 5d3280821..915867e79 100644
 --- a/drivers/net/ethernet/cavium/Makefile
 +++ b/drivers/net/ethernet/cavium/Makefile
 @@ -2,6 +2,7 @@
@@ -158,10 +158,10 @@ index 5d32808210fb..915867e7999b 100644
  obj-$(CONFIG_NET_VENDOR_CAVIUM) += thunder/
  obj-$(CONFIG_NET_VENDOR_CAVIUM) += liquidio/
 diff --git a/drivers/rtc/Kconfig b/drivers/rtc/Kconfig
-index 12153d5801ce..6cc10a75472c 100644
+index 058e56a10..43aa813b6 100644
 --- a/drivers/rtc/Kconfig
 +++ b/drivers/rtc/Kconfig
-@@ -1609,6 +1609,24 @@ config RTC_DRV_CADENCE
+@@ -1606,6 +1606,24 @@ config RTC_DRV_CADENCE
  	  To compile this driver as a module, choose M here: the
  	  module will be called rtc-cadence.
  
@@ -187,10 +187,10 @@ index 12153d5801ce..6cc10a75472c 100644
  	tristate "Faraday Technology FTRTC010 RTC"
  	depends on HAS_IOMEM
 diff --git a/drivers/rtc/Makefile b/drivers/rtc/Makefile
-index 2dd0dd956b0e..ed31c804eed0 100644
+index 678a8ef4a..bf69e6b50 100644
 --- a/drivers/rtc/Makefile
 +++ b/drivers/rtc/Makefile
-@@ -37,6 +37,8 @@ obj-$(CONFIG_RTC_DRV_BQ4802)	+= rtc-bq4802.o
+@@ -39,6 +39,8 @@ obj-$(CONFIG_RTC_DRV_BQ4802)	+= rtc-bq4802.o
  obj-$(CONFIG_RTC_DRV_BRCMSTB)	+= rtc-brcmstb-waketimer.o
  obj-$(CONFIG_RTC_DRV_CADENCE)	+= rtc-cadence.o
  obj-$(CONFIG_RTC_DRV_CMOS)	+= rtc-cmos.o
@@ -200,7 +200,7 @@ index 2dd0dd956b0e..ed31c804eed0 100644
  obj-$(CONFIG_RTC_DRV_CROS_EC)	+= rtc-cros-ec.o
  obj-$(CONFIG_RTC_DRV_DA9052)	+= rtc-da9052.o
 diff --git a/drivers/spi/Kconfig b/drivers/spi/Kconfig
-index e71a4c514f7b..bb21003e58a6 100644
+index 596705d24..f9a452ead 100644
 --- a/drivers/spi/Kconfig
 +++ b/drivers/spi/Kconfig
 @@ -36,6 +36,20 @@ config SPI_DEBUG
@@ -225,11 +225,11 @@ index e71a4c514f7b..bb21003e58a6 100644
  #	bool "SPI Master Support"
  	bool
 diff --git a/drivers/spi/Makefile b/drivers/spi/Makefile
-index 13e54c45e9df..ea5bf6777737 100644
+index dd7393a60..5fec66ea4 100644
 --- a/drivers/spi/Makefile
 +++ b/drivers/spi/Makefile
-@@ -36,6 +36,7 @@ obj-$(CONFIG_SPI_CADENCE)		+= spi-cadence.o
- obj-$(CONFIG_SPI_CADENCE_QUADSPI)	+= spi-cadence-quadspi.o
+@@ -37,6 +37,7 @@ obj-$(CONFIG_SPI_CADENCE_QUADSPI)	+= spi-cadence-quadspi.o
+ obj-$(CONFIG_SPI_CADENCE_XSPI)		+= spi-cadence-xspi.o
  obj-$(CONFIG_SPI_CLPS711X)		+= spi-clps711x.o
  obj-$(CONFIG_SPI_COLDFIRE_QSPI)		+= spi-coldfire-qspi.o
 +obj-$(CONFIG_SPI_CNS3XXX) 		+= spi-cns3xxx.o
@@ -237,10 +237,10 @@ index 13e54c45e9df..ea5bf6777737 100644
  obj-$(CONFIG_SPI_DLN2)			+= spi-dln2.o
  obj-$(CONFIG_SPI_DESIGNWARE)		+= spi-dw.o
 diff --git a/drivers/usb/host/ohci-hcd.c b/drivers/usb/host/ohci-hcd.c
-index 1f5e69314a17..b6089c27613f 100644
+index 666b1c665..9fc5c722a 100644
 --- a/drivers/usb/host/ohci-hcd.c
 +++ b/drivers/usb/host/ohci-hcd.c
-@@ -1271,6 +1271,11 @@ MODULE_LICENSE ("GPL");
+@@ -1270,6 +1270,11 @@ MODULE_LICENSE ("GPL");
  #define TMIO_OHCI_DRIVER	ohci_hcd_tmio_driver
  #endif
  
@@ -252,7 +252,7 @@ index 1f5e69314a17..b6089c27613f 100644
  static int __init ohci_hcd_mod_init(void)
  {
  	int retval = 0;
-@@ -1315,6 +1320,12 @@ static int __init ohci_hcd_mod_init(void)
+@@ -1314,6 +1319,12 @@ static int __init ohci_hcd_mod_init(void)
  		goto error_tmio;
  #endif
  
@@ -265,7 +265,7 @@ index 1f5e69314a17..b6089c27613f 100644
  	return retval;
  
  	/* Error path */
-@@ -1322,6 +1333,12 @@ static int __init ohci_hcd_mod_init(void)
+@@ -1321,6 +1332,12 @@ static int __init ohci_hcd_mod_init(void)
  	platform_driver_unregister(&TMIO_OHCI_DRIVER);
   error_tmio:
  #endif
@@ -278,7 +278,7 @@ index 1f5e69314a17..b6089c27613f 100644
  #ifdef SM501_OHCI_DRIVER
  	platform_driver_unregister(&SM501_OHCI_DRIVER);
   error_sm501:
-@@ -1351,6 +1368,9 @@ static void __exit ohci_hcd_mod_exit(void)
+@@ -1350,6 +1367,9 @@ static void __exit ohci_hcd_mod_exit(void)
  #ifdef TMIO_OHCI_DRIVER
  	platform_driver_unregister(&TMIO_OHCI_DRIVER);
  #endif

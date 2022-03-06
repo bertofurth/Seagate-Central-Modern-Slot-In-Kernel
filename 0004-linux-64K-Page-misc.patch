@@ -3,7 +3,7 @@
  2 files changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index e512630cb63e..af1644d77a70 100644
+index 3be9dd641..044d97fb9 100644
 --- a/fs/ext2/ext2.h
 +++ b/fs/ext2/ext2.h
 @@ -177,7 +177,11 @@ static inline struct ext2_sb_info *EXT2_SB(struct super_block *sb)
@@ -19,10 +19,10 @@ index e512630cb63e..af1644d77a70 100644
  #define EXT2_BLOCK_SIZE(s)		((s)->s_blocksize)
  #define	EXT2_ADDR_PER_BLOCK(s)		(EXT2_BLOCK_SIZE(s) / sizeof (__u32))
 diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index eb97468dfe4c..ca639b28802c 100644
+index cbb22354f..15acff365 100644
 --- a/fs/proc/task_mmu.c
 +++ b/fs/proc/task_mmu.c
-@@ -590,7 +590,11 @@ static int smaps_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
+@@ -615,7 +615,11 @@ static int smaps_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
  	 * in here.
  	 */
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -34,7 +34,7 @@ index eb97468dfe4c..ca639b28802c 100644
  		smaps_pte_entry(pte, addr, walk);
  	pte_unmap_unlock(pte - 1, ptl);
  out:
-@@ -1147,7 +1151,11 @@ static int clear_refs_pte_range(pmd_t *pmd, unsigned long addr,
+@@ -1168,7 +1172,11 @@ static int clear_refs_pte_range(pmd_t *pmd, unsigned long addr,
  		return 0;
  
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -46,7 +46,7 @@ index eb97468dfe4c..ca639b28802c 100644
  		ptent = *pte;
  
  		if (cp->type == CLEAR_REFS_SOFT_DIRTY) {
-@@ -1480,7 +1488,11 @@ static int pagemap_pmd_range(pmd_t *pmdp, unsigned long addr, unsigned long end,
+@@ -1505,7 +1513,11 @@ static int pagemap_pmd_range(pmd_t *pmdp, unsigned long addr, unsigned long end,
  	 * goes beyond vma->vm_end.
  	 */
  	orig_pte = pte = pte_offset_map_lock(walk->mm, pmdp, addr, &ptl);
@@ -58,7 +58,7 @@ index eb97468dfe4c..ca639b28802c 100644
  		pagemap_entry_t pme;
  
  		pme = pte_to_pagemap_entry(pm, vma, addr, *pte);
-@@ -1818,8 +1830,11 @@ static int gather_pte_stats(pmd_t *pmd, unsigned long addr,
+@@ -1843,8 +1855,11 @@ static int gather_pte_stats(pmd_t *pmd, unsigned long addr,
  		if (!page)
  			continue;
  		gather_stats(page, md, pte_dirty(*pte), 1);

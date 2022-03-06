@@ -2,10 +2,10 @@
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/fs/ntfs3/fslog.c b/fs/ntfs3/fslog.c
-index 397ba6a956e7..f2629a9f2499 100644
+index 06492f088..e16bf639f 100644
 --- a/fs/ntfs3/fslog.c
 +++ b/fs/ntfs3/fslog.c
-@@ -1181,8 +1181,9 @@ static int log_read_rst(struct ntfs_log *log, u32 l_size, bool first,
+@@ -1180,8 +1180,9 @@ static int log_read_rst(struct ntfs_log *log, u32 l_size, bool first,
  			struct restart_info *info)
  {
  	u32 skip, vbo;

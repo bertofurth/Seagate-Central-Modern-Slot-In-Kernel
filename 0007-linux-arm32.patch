@@ -3,7 +3,7 @@
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm/include/uapi/asm/setup.h b/arch/arm/include/uapi/asm/setup.h
-index 25ceda63b284..2fbb07175728 100644
+index 25ceda63b..2fbb07175 100644
 --- a/arch/arm/include/uapi/asm/setup.h
 +++ b/arch/arm/include/uapi/asm/setup.h
 @@ -124,7 +124,7 @@ struct tag_videolfb {
@@ -16,7 +16,7 @@ index 25ceda63b284..2fbb07175728 100644
  
  /* acorn RiscPC specific information */
 diff --git a/arch/arm/lib/copy_page.S b/arch/arm/lib/copy_page.S
-index 5db1a8ee3d9f..3aa85b2593e4 100644
+index 5db1a8ee3..3aa85b259 100644
 --- a/arch/arm/lib/copy_page.S
 +++ b/arch/arm/lib/copy_page.S
 @@ -25,7 +25,7 @@ ENTRY(copy_page)

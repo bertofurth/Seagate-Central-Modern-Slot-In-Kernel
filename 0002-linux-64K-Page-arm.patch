@@ -11,10 +11,10 @@
  10 files changed, 126 insertions(+), 16 deletions(-)
 
 diff --git a/arch/arm/kernel/entry-common.S b/arch/arm/kernel/entry-common.S
-index 7f0b7aba1498..d8c390f9cb11 100644
+index ac86c3468..eae907061 100644
 --- a/arch/arm/kernel/entry-common.S
 +++ b/arch/arm/kernel/entry-common.S
-@@ -410,8 +410,19 @@ ENDPROC(sys_fstatfs64_wrapper)
+@@ -403,8 +403,19 @@ ENDPROC(sys_fstatfs64_wrapper)
   * offset, we return EINVAL.
   */
  sys_mmap2:
@@ -35,10 +35,10 @@ index 7f0b7aba1498..d8c390f9cb11 100644
  
  #ifdef CONFIG_OABI_COMPAT
 diff --git a/arch/arm/kernel/traps.c b/arch/arm/kernel/traps.c
-index 64308e3a5d0c..bcf1f95677b5 100644
+index 195dff58b..8e332eaaa 100644
 --- a/arch/arm/kernel/traps.c
 +++ b/arch/arm/kernel/traps.c
-@@ -836,7 +836,11 @@ void __init early_trap_init(void *vectors_base)
+@@ -816,7 +816,11 @@ void __init early_trap_init(void *vectors_base)
  
  	kuser_init(vectors_base);
  
@@ -51,7 +51,7 @@ index 64308e3a5d0c..bcf1f95677b5 100644
  	/*
  	 * on V7-M there is no need to copy the vector table to a dedicated
 diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
-index 8355c3895894..99606b37e912 100644
+index 58afba346..54b4a8058 100644
 --- a/arch/arm/mm/Kconfig
 +++ b/arch/arm/mm/Kconfig
 @@ -973,6 +973,16 @@ config MIGHT_HAVE_CACHE_L2X0
@@ -72,7 +72,7 @@ index 8355c3895894..99606b37e912 100644
  	bool "Enable the L2x0 outer cache controller" if MIGHT_HAVE_CACHE_L2X0
  	default MIGHT_HAVE_CACHE_L2X0
 diff --git a/arch/arm/mm/copypage-v6.c b/arch/arm/mm/copypage-v6.c
-index d8a115de5507..562fcb1acff3 100644
+index d8a115de5..562fcb1ac 100644
 --- a/arch/arm/mm/copypage-v6.c
 +++ b/arch/arm/mm/copypage-v6.c
 @@ -17,10 +17,6 @@
@@ -87,7 +87,7 @@ index d8a115de5507..562fcb1acff3 100644
  
  /*
 diff --git a/arch/arm/mm/dump.c b/arch/arm/mm/dump.c
-index fb688003d156..ffe1ed764b7a 100644
+index fb688003d..ffe1ed764 100644
 --- a/arch/arm/mm/dump.c
 +++ b/arch/arm/mm/dump.c
 @@ -309,8 +309,11 @@ static void walk_pte(struct pg_state *st, pmd_t *pmd, unsigned long start,
@@ -104,7 +104,7 @@ index fb688003d156..ffe1ed764b7a 100644
  		note_page(st, addr, 5, pte_val(*pte), domain);
  	}
 diff --git a/arch/arm/mm/fault.c b/arch/arm/mm/fault.c
-index efa402025031..273c62ab7840 100644
+index bc8779d54..ab192f313 100644
 --- a/arch/arm/mm/fault.c
 +++ b/arch/arm/mm/fault.c
 @@ -26,6 +26,19 @@
@@ -127,7 +127,7 @@ index efa402025031..273c62ab7840 100644
  /*
   * This is useful to dump out the page tables associated with
   * 'addr' in mm 'mm'.
-@@ -87,9 +100,14 @@ void show_pte(const char *lvl, struct mm_struct *mm, unsigned long addr)
+@@ -86,9 +99,14 @@ void show_pte(const char *lvl, struct mm_struct *mm, unsigned long addr)
  		pte = pte_offset_map(pmd, addr);
  		pr_cont(", *pte=%08llx", (long long)pte_val(*pte));
  #ifndef CONFIG_ARM_LPAE
@@ -144,7 +144,7 @@ index efa402025031..273c62ab7840 100644
  	} while(0);
  
 diff --git a/arch/arm/mm/mmu.c b/arch/arm/mm/mmu.c
-index 7583bda5ea7d..ea21c589fca6 100644
+index 274e4f73f..4ef8b58a3 100644
 --- a/arch/arm/mm/mmu.c
 +++ b/arch/arm/mm/mmu.c
 @@ -346,7 +346,11 @@ static pte_t bm_pte[PTRS_PER_PTE + PTE_HWTABLE_PTRS]
@@ -224,7 +224,7 @@ index 7583bda5ea7d..ea21c589fca6 100644
  	/*
  	 * Ask the machine support to map in the statically mapped devices.
 diff --git a/arch/arm/mm/pgd.c b/arch/arm/mm/pgd.c
-index f8e9bc58a84f..d51b1e24498a 100644
+index f8e9bc58a..d51b1e244 100644
 --- a/arch/arm/mm/pgd.c
 +++ b/arch/arm/mm/pgd.c
 @@ -119,7 +119,9 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
@@ -238,10 +238,10 @@ index f8e9bc58a84f..d51b1e24498a 100644
  		pte_unmap(new_pte);
  	}
 diff --git a/arch/arm/mm/proc-macros.S b/arch/arm/mm/proc-macros.S
-index e2c743aa2eb2..f99d3b59124a 100644
+index fa6999e24..99acbcb02 100644
 --- a/arch/arm/mm/proc-macros.S
 +++ b/arch/arm/mm/proc-macros.S
-@@ -155,8 +155,16 @@
+@@ -154,8 +154,16 @@
  
  	bic	r3, r1, #0x000003fc
  	bic	r3, r3, #PTE_TYPE_MASK
@@ -259,7 +259,7 @@ index e2c743aa2eb2..f99d3b59124a 100644
  
  	adr	ip, \pfx\()_mt_table
  	and	r2, r1, #L_PTE_MT_MASK
-@@ -184,8 +192,28 @@
+@@ -183,8 +191,28 @@
  	tstne	r1, #L_PTE_NONE
  	movne	r3, #0
  
@@ -289,7 +289,7 @@ index e2c743aa2eb2..f99d3b59124a 100644
  
  
 diff --git a/arch/arm/mm/proc-v6.S b/arch/arm/mm/proc-v6.S
-index a0618f3e6836..1b5318394709 100644
+index a0618f3e6..1b5318394 100644
 --- a/arch/arm/mm/proc-v6.S
 +++ b/arch/arm/mm/proc-v6.S
 @@ -95,21 +95,31 @@ ENTRY(cpu_v6_dcache_clean_area)
