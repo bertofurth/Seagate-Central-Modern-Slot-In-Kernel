@@ -106,11 +106,12 @@ location relative to the base working directory.
 
     obj/arch/arm/boot/uImage
 
-If you have downloaded a pre-compiled kernel with a name like
-"uImage.v5.14.0-sc" then it is suggested that the file be
-renamed to "uImage" at this point. For example
+If you have downloaded a pre-compiled kernel from the releases
+section of this project with a name like "uImage.v5.16.12-sc"
+then it is suggested that the file be renamed to "uImage" at this
+point. For example
 
-     mv uImage.v5.14.0-sc uImage
+     mv uImage.v5.16.12-sc uImage
 
 Transfer this image to the Seagate Central. In this example we use 
 the scp command however, any other means can be used. When using scp 
@@ -445,7 +446,7 @@ The output should indicate that the version of the running kernel is now
 5.x.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-     Linux NAS-1 5.14.0-sc #1 SMP Fri Sep 10 09:49:35 AEST 2021 armv6l GNU/Linux     
+     Linux NAS-1 5.16.12-sc #1 SMP Sun Mar 6 13:33:32 AEDT 2022 armv6l GNU/Linux    
      
 Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
