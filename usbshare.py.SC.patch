@@ -1,6 +1,6 @@
---- usbshare.py	Fri Sep  3 20:58:26 2021
-+++ usbshare.py	Fri Sep  3 21:02:51 2021
-@@ -67,6 +67,49 @@
+--- usbshare.py.orig	Fri Sep  3 20:58:26 2021
++++ usbshare.py	Sun Mar  6 14:19:05 2022
+@@ -67,6 +67,40 @@
          nobodyuid = pwd.getpwnam('nobody').pw_uid
          nobodygid = grp.getgrnam('nogroup').gr_gid
  
@@ -18,17 +18,8 @@
 +            syslog.syslog(syslog.LOG_INFO,'mdname %s mounted using autodetect style 1 in %s' % (self.mdname, sharedir))
 +            filesystem = "mounted"
 +
-+        syslog.syslog(syslog.LOG_INFO,'Automount attempt 2 (ntfs)')
-+        proc = subprocess.Popen("/bin/mount -o force,acl,nls=utf8,uid=%s,gid=%s %s %s" % 
-+            (nobodyuid, nobodygid, self.mdname, sharedir),
-+            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-+        proc.wait()
-+        if proc.returncode == 0:
-+            syslog.syslog(syslog.LOG_INFO,'mdname %s mounted using autodetect style 2 in %s' % (self.mdname, sharedir))
-+            filesystem = "mounted"
-+
 +        if filesystem != "mounted":
-+            syslog.syslog(syslog.LOG_INFO,'Automount attempt 3 (hfsplus)')
++            syslog.syslog(syslog.LOG_INFO,'Automount attempt 2 (hfsplus)')
 +            proc = subprocess.Popen("/bin/mount -o force,nls=utf8,umask=0,uid=%s,gid=%s %s %s" %
 +                (nobodyuid, nobodygid, self.mdname, sharedir),
 +                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -38,7 +29,7 @@
 +                filesystem = "mounted"
 +
 +        if filesystem != "mounted":
-+            syslog.syslog(syslog.LOG_INFO,'Automount attempt 4 (hfs exfat msdos vfat)')
++            syslog.syslog(syslog.LOG_INFO,'Automount attempt 3 (hfs exfat msdos vfat)')
 +            proc = subprocess.Popen("/bin/mount -o umask=0,uid=%s,gid=%s %s %s" %
 +                (nobodyuid, nobodygid, self.mdname, sharedir),
 +                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -50,7 +41,7 @@
          if filesystem == "Error":
              syslog.syslog(syslog.LOG_INFO,'mdname %s Error returned in filesystem check' % (self.mdname))
              # try to recover from the initial failure of parted to discover the kind of
-@@ -98,17 +141,20 @@
+@@ -98,17 +132,20 @@
              % (self.mdname, sharedir))
              subprocess.Popen("chkhfs -a -f " + self.mdname, shell=True,
              stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
