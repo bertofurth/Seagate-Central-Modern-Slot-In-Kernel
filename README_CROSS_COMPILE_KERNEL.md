@@ -1,7 +1,8 @@
 # README_CROSS_COMPILE_KERNEL.md
 ## Summary
 This is a guide that describes how to cross compile a replacement
-Linux kernel suitable for installation on a Seagate Central NAS device.
+v5.x.x Linux kernel suitable for installation on a Seagate Central NAS 
+device.
 
 Manual installation of the cross compiled kernel is covered by 
 **README_MANUAL_KERNEL_INSTALLATION.md**
@@ -9,16 +10,16 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v5.14.0. 
+Linux kernel v5.16.12. 
 
     # Download this project to the build host
     git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
     cd Seagate-Central-Slot-In-v5.x-Kernel
     
-    # Download and extract Linux kernel v5.14.0 source code
-    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.14.tar.xz
-    tar -xf linux-5.14.tar.xz
-    cd linux-5.14
+    # Download and extract Linux kernel v5.16.12 source code
+    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.12.tar.xz
+    tar -xf linux-5.16.12.tar.xz
+    cd linux-5.16.12
      
     # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
     patch -p1 < ../0001-linux-64K-Page-include.patch
@@ -28,12 +29,13 @@ Linux kernel v5.14.0.
     patch -p1 < ../0005-linux-CNS3XXX-arm.patch
     patch -p1 < ../0006-linux-drivers.patch
     patch -p1 < ../0007-linux-arm32.patch
+    patch -p1 < ../0008-linux-ntfs3.patch 
     
     # Copy new Seagate Central source files into the Linux source tree
     cp -r ../new-files/* .
     
     # Copy the kernel config file into the build directory
-    cp ../config-seagate-central-v5.14-all-in-one.txt ../obj/.config
+    cp ../config-seagate-central-v5.16.12-all-in-one.txt ../obj/.config
     
     # Add the cross compilation suite directory to the PATH 
     export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
@@ -58,11 +60,9 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-5.14. Other reasonably close versions of the Linux kernel should also
-work but may require some tweaking, especially at the point where the
-kernel source tree needs to be patched.
-
-TODO : Retest with v5.16 which should have ntfs3 support.
+5.16.12 (latest at time of writing). Other reasonably close versions 
+of the Linux kernel should also work but may require some tweaking,
+especially at the point where the kernel source tree needs to be patched.
 
 This procedure has been tested to work on the following building
 platforms
@@ -139,7 +139,7 @@ system.
 The original samba file server software on the Seagate Central
 **will not work** once a new kernel is installed on the Seagate Central.
 You can, however, upgrade the samba file server software to a
-compatible version.
+newer compatible version.
 
 See the **Seagate-Central-Samba** project at the following link for more
 details and instructions on how to upgrade the samba service on the
@@ -177,21 +177,11 @@ code and extracting it.
 
 Download the required version of the Linux kernel into the working directory,
 extract it and then change into the newly created directory as per the
-following example which uses Linux v5.14.
+following example which uses Linux v5.16.12.
 
-     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.14.tar.xz
-     tar -xf linux-5.14.tar.xz
-     cd linux-5.14
-
-TODO : N.B. If ntfs3 functionality is desired, then as of writing there is a
-git repository at the following URL that contains pre-release source code
-supporting read and write support for NTFS volumes. Hopefully this
-functionality will be integrated into the mainline release (v5.15??) soon.
-
-https://github.com/Paragon-Software-Group/linux-ntfs3
-
-TODO : This document will be updated when a stable release of Linux with ntfs3
-support becomes available (v5.15?)
+     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.12.tar.xz
+     tar -xf linux-5.16.12.tar.xz
+     cd linux-5.16.12
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
@@ -207,15 +197,10 @@ command is successfull before proceeding to the next.**
      patch -p1 < ../0005-linux-CNS3XXX-arm.patch
      patch -p1 < ../0006-linux-drivers.patch
      patch -p1 < ../0007-linux-arm32.patch
+     patch -p1 < ../0008-linux-ntfs3.patch
      
 Make careful note of any Hunk FAILED messages. You may need to manually edit kernel 
 source files where patches have failed.
-
-TODO : If the version of Linux you are using has support for the NTFS3 file 
-system then one more patch *may* need to be applied. This document will be 
-updated when a stable release of Linux with NTFS3 support becomes available. 
-
-     patch -p1 < ../0008-linux-optional-ntfs3.patch
 
 ### Copy new files
 New source files need to be copied into the Linux source tree as follows.
@@ -233,20 +218,19 @@ impact.
 ### Kernel configuration file
 When building the Linux kernel it is important to use a valid configuration file.
 This project includes a kernel configuration file called
-**config-seagate-central-v5.14-all-in-one.txt** that will generate a kernel image
+**config-seagate-central-v5.16.12-all-in-one.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central in one monolithic kernel image without the need for any
 Linux modules.
 
-The first thing that needs to be done is for this configuration file to
-be copied to the build directory. In these instructions we assume that the
-build directory will simply be the "obj" subdirectory of the base working
-directory.
+This configuration file needs to be copied to the build directory. In these
+instructions we assume that the build directory will simply be the "obj"
+subdirectory of the base working directory.
 
 From the Linux source code base directory run the command
 
     mkdir -p ../obj
-    cp ../config-seagate-central-v5.14-all-in-one.txt ../obj/.config
+    cp ../config-seagate-central-v5.16.12-all-in-one.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
 **config-sc-all-usb-cam-modules.txt** that can be copied into place
@@ -330,13 +314,13 @@ Here is an example of the "make uImage" command being executed
 The process should complete with a message similar to the following
 
       UIMAGE  arch/arm/boot/uImage
-    Image Name:   Linux-5.14.0-sc
-    Created:      Fri Sep 10 09:58:52 2021
-    Image Type:   ARM Linux Kernel Image (uncompressed)
-    Data Size:    4129384 Bytes = 4032.60 KiB = 3.94 MiB
-    Load Address: 02000000
-    Entry Point:  02000000
-      Kernel: arch/arm/boot/uImage is ready
+     Image Name:   Linux-5.16.12-sc
+     Created:      Sat Mar  5 19:53:31 2022
+     Image Type:   ARM Linux Kernel Image (uncompressed)
+     Data Size:    4189952 Bytes = 4091.75 KiB = 4.00 MiB
+     Load Address: 02000000
+     Entry Point:  02000000
+       Kernel: arch/arm/boot/uImage is ready
       
 As per the message, the newly generated uImage kernel file is located
 under the build directory at ../obj/arch/arm/boot/uImage . This kernel
@@ -380,9 +364,8 @@ Most problems will be due to
 * One of the patches failing to be applied to the kernel source tree.
 * One of the new files not being copied into the kernel source tree.
 
-If the build component fails then it may be helpful to add the
-"-j1 V=1" options when running the make command as per the following
-example
+If the build fails then it may be helpful to add the "-j1 V=1" options 
+to the "make" commnd line as per the following example
 
      .... make -j1 V=1 uImage
 
