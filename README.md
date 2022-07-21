@@ -112,11 +112,9 @@ the course of developing or testing this procedure.
 ## Caveats
 There are some aspects of the Seagate Central that make it difficult
 to create a truly "plug-in" kernel replacement. They are listed in
-detail here in approximate order of importance. Only the first one
-involving the samba service is really necessary to pay strict
-attention to.
+detail here in approximate order of importance. 
 
-### Samba - Needs to be upgraded. 
+### Important : Samba - Needs to be upgraded. 
 The one major aspect that makes this kernel not quite "plug-in" as such
 is that the original custom version of the samba v3.5.16 file serving 
 software running on the Seagate Central needs to be upgraded to a modern
@@ -153,10 +151,10 @@ well still have some issues. See the following link for more details
 
 https://www.paragon-software.com/home/ntfs3-driver-faq/
 
-My suggestion is to format externally attached drives as FAT32, or very 
-large drives as exFAT, rather than using NTFS. This ensures that your drive 
-will be using reliable and well tested drivers. In addition it means that 
-your compatible with the largest range of devices as possible.
+My suggestion is to format externally attached drives using FAT32, or very 
+large drives using exFAT, rather than using NTFS. This ensures that your drive 
+will be using reliable and well tested kernel drivers. In addition it means that 
+your drive will be compatible with a larger range of other devices.
 
 Please refer to the following links that go into much more detail.
 
@@ -173,17 +171,28 @@ https://www.howtogeek.com/316977/how-to-format-usb-drives-larger-than-32gb-with-
 The issues below are unlikely to impact on the normal operation of the
 Seagate Central, however for completeness sake they are documented here.
 
-#### Ethernet reconfiguration and physical disconnect handling
+#### Potential Ethernet/Networking issues
 The Seagate Central uses a proprietary and closed source tool called
 "networklan" to manage the Ethernet interface. Unfortunately, this
-tool does not work seamlessly with the new kernel.
+tool does not work seamlessly with the new kernel and this may potentially
+cause some issues but in most cases there should not be any problems.
 
-For example, while running the new kernel, when the Ethernet cable is
-physically disconnected from the unit the "networklan" tool doesn't 
-properly recognize this event. Instead, the system will continue to
-act as if the Ethernet interface is still "up". After the unit is
-physically reconnected to the Ethernet LAN it will simply function
-as if nothing has happened. Normally this doesn't cause any problems.
+Some users have reported that after the kernel upgrade, the unit needs
+to be rebooted a few times before it will successfully aquire an IP
+address via DHCP. It's not yet clear why this is happening for some
+systems however if this is is case in your network then it may be best
+to assign a static IP address to your unit using the Web Management 
+interface under Settings -> Advanced -> LAN.
+
+Another scenario that may occur is that while running the new kernel,
+when the Ethernet cable is physically disconnected from the unit the
+"networklan" tool doesn't properly recognize this event. Instead,
+the system will continue to act as if the Ethernet interface is still 
+"up". After the unit is physically reconnected to the Ethernet LAN it
+will simply function as if nothing has happened. Normally this doesn't
+cause any problems. One very rare scenario where this might be an issue
+would be where a Seagate Central is moved from one physical subnet to
+another while still being powered on.
 
 Another scenario where a problem may sometimes occur is if the IP address
 configuration of the unit is modified via the Web Management interface.
@@ -191,8 +200,9 @@ After reconfiguration, IPv6 (which is a new capability of the new kernel)
 may not function properly.
 
 It may be that the best course of action is to manually reboot the unit
-after an IP address configuration change or if the unit is deliberately
-physically reconnected to a different LAN.
+after an IP address configuration change, if the unit is deliberately
+physically reconnected to a different LAN or if the underlying 
+configuration of the network the unit is connected to is changed.
 
 #### No red blinking LED status light for lost Ethernet connectivity
 When using native Seagate supplied stock firmware, if a Seagate Central
