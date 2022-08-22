@@ -10,7 +10,7 @@
 
 # Based on gcc's download_prerequisites script
 
-linux='https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.14.tar.xz'
+linux='https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.20.tar.xz'
 
 echo_archives() {
     echo "${linux}"
