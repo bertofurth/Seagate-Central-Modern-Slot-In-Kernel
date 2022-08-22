@@ -1,15 +1,15 @@
 # Seagate Central Slot In v5.x Kernel
 
 # WARNING : NOTICE 
-As of August 2022 I am reccommending AGAINST using this kernel.
+As of August 2022 I am recommending AGAINST using this kernel.
 
-I've found a number of performance and other issues. At the moment
-I would suggest sticking with the native Seagate Central kernel.
+I've found a number of performance and other issues, particuarly
+with networking. At the moment I would suggest sticking with the
+native Seagate Central kernel unless you'd like to do some
+experimentation.
 
 Feel free to upgrade to this kernel if you wish but note that you
-may encounter imparied performance and potentially some other
-issues, particularly with networking.
-
+should be prepared to revert back to the original/native kernel.
 
 # Summary
 
