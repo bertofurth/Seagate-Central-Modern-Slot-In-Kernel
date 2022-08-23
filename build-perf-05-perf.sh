@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Cross compile the "perf" tool as found in the linux
+# Build the "perf" tool as found in the linux
 # source tree.
 #
 
@@ -35,7 +35,7 @@ check_source_dir "linux"
 mkdir -p $OBJ/perf
 
 export NO_LIBELF=1
-export DESTDIR=$BUILDHOST_DEST
+export DESTDIR=$BUILDHOST_DEST/$PREFIX/
 make_it -C ./tools/perf O=$OBJ/perf install
 
 # Already installed
