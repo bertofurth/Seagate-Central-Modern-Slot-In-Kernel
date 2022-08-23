@@ -1,0 +1,205 @@
+#
+# This file should not be executed, instead it should be
+# sourced by each of the build scripts.
+
+# Please check each variable definition to make sure it aligns
+# with your needs. 
+
+#
+# Set the prefix name of the cross compiling toolkit. This
+# will likely be something like arm-XXX-linux-gnueabi-
+# Normally this will have a dash (-) at the end.
+#
+CROSS_COMPILE=arm-sc-linux-gnueabi-
+
+#
+# The location of the root of the cross compiling tool suite
+# on the compiling host (CROSS), the location of the
+# binaries (TOOLS) and the root libraries and includes
+# (SYSROOT)
+#
+# Make sure to use an absolute path and not the ~ or . symbols.
+#
+CROSS=$HOME/Seagate-Central-Toolchain/cross
+TOOLS=$CROSS/tools/bin
+SYSROOT=$CROSS/sysroot
+
+# *****************************************************
+# *****************************************************
+# It's not likely that any of the values below need to
+# be changed.
+# *****************************************************
+# *****************************************************
+
+# Number of threads to engage during build process.
+#
+# If not explicitly set then we use the total
+# number of CPUs available according to "nproc".
+#
+# Set environment variable J=1 for troubleshooting.
+#
+J=${J-$(nproc)}
+
+# The directory on the compiling host where binaries and
+# other generated files will be temporarily installed
+# before being copied to the Seagate Central.
+#
+# This is different to PREFIX and EXEC_PREFIX which are
+# where the generated files need to be copied to on the
+# Seagate Central.
+#
+BUILDHOST_DEST=$(pwd)/cross
+
+# The directory where the libraries and associated files
+# will be installed on the target device (i.e. on the
+# Seagate Central). Default value is "/usr/local" so as
+# to not overwrite any native libaries on the Seagate Central.
+#
+# Note 1 : This is NOT the place where the resultant binaries
+# and libraries will be temporarily copied to on the compiling
+# host (see BUILDHOST_DEST).
+#
+# Note 2: The main purpose of this variable is to set the
+# elf attribute DT_RPATH (set to $PREFIX/lib) in generated
+# binaries. This attribute lets the generated binaries know
+# where to access the shared libraries that we produce in this
+# project.
+#
+PREFIX=${PREFIX:-/usr/local}
+
+# The directory where executables will be installed on the
+# target device. Default value is "/usr/local" so as to not
+# overwrite the native binaries in "/usr".
+#
+EXEC_PREFIX=${EXEC_PREFIX:-/usr/local}
+
+# Sometimes it's easier to download pre-built libraries
+# from the target (Seagate Central) and link against
+# those instead of building them from scratch.
+#
+# Specify a directory on the building host containing the
+# tree of native library files and include headers as copied
+# from the Seagate Central.
+#
+# From the Seagate central copy /lib/* and /usr/lib/* to this
+# directory. Also copy /usr/include/* along with subdirectories.
+#
+# You may need to edit usr/lib/libc.so and
+# usr/lib/libpthread.so to remove absolute path names.
+#
+SEAGATE_LIBS_BASE=$(pwd)/sc-libs
+
+
+# *****************************************************
+# *****************************************************
+# Nothing below this point should normally need to be edited.
+# *****************************************************
+# *****************************************************
+
+#
+# Set the name of the individual cross compiling tools. 
+#
+export CC=$CROSS_COMPILE"gcc"
+export CPP=$CROSS_COMPILE"cpp"
+export LD=$CROSS_COMPILE"ld"
+export CXX=$CROSS_COMPILE"g++"
+export RANLIB=$CROSS_COMPILE"ranlib"
+export AR=$CROSS_COMPILE"ar"
+
+#
+# Ensure that the cross compiler tools being used are
+# in the PATH and get executed before any native tools.
+#
+export PATH=$TOOLS:$PATH
+
+# LDFLAGS sets parameters for the linker program. -L parameters tell
+# the linker where to find libraries while linking and the
+# -rpath-link parameters tells the linker where to search for
+# libraries that are needed by the other libraries that are linked
+# to.
+#
+export LDFLAGS="--sysroot=$SYSROOT \
+       -L$SYSROOT/lib -L$SYSROOT/usr/lib \
+       -L$BUILDHOST_DEST/$PREFIX/lib -L$SEAGATE_LIBS_BASE/lib \
+       -L$SEAGATE_LIBS_BASE/usr/lib \
+       -Wl,-rpath-link=$SYSROOT/lib \
+       -Wl,-rpath-link=$SYSROOT/usr/lib \
+       -Wl,-rpath-link=$BUILDHOST_DEST/$PREFIX/lib \
+       -Wl,-rpath-link=$SEAGATE_LIBS_BASE/lib  \
+       -Wl,-rpath-link=$SEAGATE_LIBS_BASE/usr/lib"
+
+# "rpath" lets binaries running on the target platform
+# know where to search for shared libraries that are
+# stored in places other than the "standard path" which
+# on the Seagate Central is just /lib and /usr/lib.
+# -rpath ensures that the specified rpath is explicitly
+# within binaries so that binaries running on the Seagate
+# Central know to search $PREFIX/lib for shared libaries.
+# This might be superflous for some software but others
+# don't automatically add it
+#
+export LDFLAGS=$LDFLAGS" -Wl,-rpath=$PREFIX/lib"
+
+#
+# Append the verbose flag to LDFLAGS if linker debugging
+# is required.
+#
+#export LDFLAGS="$LDFLAGS -Wl,--verbose"
+
+# 
+# We can add an option to the linker flags in order to
+# specify a location for the crt*.o files needed by the
+# linker, namely
+# crt1.o, crti.o, crtbegin.o, crtend.o and crtn.o
+#
+# See https://dev.gentoo.org/~vapier/crt.txt for the
+# significance of these files
+#
+# It's not likely that this is needed.
+#
+#export LDFLAGS=$LDFLAGS" -B$SEAGATE_LIBS_BASE/usr/lib"
+
+#
+# The Seagate Central uses a 64K (0x10000) page size which
+# differs from the typical case of 4K pages. Specifying the
+# following linker flags helps to optimize in this case.
+#
+# https://stackoverflow.com/questions/19651735/linux-application-get-killed
+#
+export LDFLAGS="$LDFLAGS -Wl,-z,max-page-size=0x10000 -Wl,-z,common-page-size=0x10000 -Wl,-Ttext-segment=0x10000"
+
+#
+# Locations of header files defining functions and other
+# parameters.
+#
+# Seagate Central specific : Make sure to rename or delete
+# $SEAGATE_LIBS_BASE/usr/include/md5
+#
+export NOSTDINC_FLAGS="--sysroot=$SYSROOT -I$SYSROOT/usr/include \
+       -I$BUILDHOST_DEST/$PREFIX/include \
+       -I$SEAGATE_LIBS_BASE/usr/include"
+
+#
+# For some configure scripts it's important to have access
+# to the pkg-config information for libraries. Note that
+# some packages also require a configure flag like
+# "--pkg-config=pkg-config" to point to a working version of 
+# pkg-config.
+#
+export PKG_CONFIG_PATH="$BUILDHOST_DEST/$PREFIX/lib/pkgconfig"
+
+#
+# The Seagate Central Cavium CNS3420 CPU uses the armv6k
+# arch and the mpcore cpu. There's no need to specify them
+# here when using the Seagate-Central-Toolchain cross compiler
+# however we document it here for completeness sake.
+#
+# Specify "-mfloat-abi=soft" to disable hard float.
+#
+# CPU_SPECIFIER="-mcpu=mpcore"
+# CPU_SPECIFIER="-mcpu=mpcore -mfloat-abi=soft"
+#
+export CFLAGS="$NOSTDINC_FLAGS $CPU_SPECIFIER"
+export CPPFLAGS=$CFLAGS
+export CXXFLAGS=$CFLAGS
+export ARCH=arm-linux

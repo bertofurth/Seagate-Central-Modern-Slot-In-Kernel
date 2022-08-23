@@ -1,0 +1,156 @@
+#
+# This file should not be executed, instead it should be
+# "source"d by each of the build scripts.
+#
+# Make sure that the file containing all the common variable
+# definitions have been sourced
+#
+export TOP=$(pwd)
+export OBJ=$TOP/obj
+export SRC=$TOP/src
+export LOG=$TOP/log
+ARGS=$@
+NAME=$(basename $0)
+
+set -o pipefail
+
+#
+# check_source_dir <source-name>
+#
+# Find the directory with the "latest" version of the
+# given project name in the current directory.
+#
+# Change into this directory to allow the main script
+# to perform any necessary modifications.
+# 
+check_source_dir()
+{
+        SECONDS=0
+	cd $SRC
+	# Automatically try to find a source directory
+	# that matches the parameter given
+        if [ -z $LIB_NAME ]; then
+	   LIB_NAME=$(ls -1drv $1*/ | cut -f1 -d'/' | head -1)
+        fi 
+	
+	if [ -z $LIB_NAME ]; then	
+	   echo
+	   echo Unable to find source directory for $1
+	   echo Has the source code been extracted\? \(tar -xf\)
+	   exit -1
+	fi
+
+        echo Using $LIB_NAME as source directory.
+	cd $SRC/$LIB_NAME
+}
+
+#
+# change_into_obj_directory 
+#
+# Create and change into the directory $OBJ/$LIB_NAME
+# where the project will be built.
+#
+change_into_obj_directory()
+{
+        cd $TOP
+        mkdir -p $OBJ/$LIB_NAME
+	cd $OBJ/$LIB_NAME
+	if [ $? -ne 0 ]; then
+	   echo
+	   echo Can\'t change to $OBJ/$LIB_NAME directory
+	   echo to compile library.
+	   exit -1
+	fi	
+}
+
+#
+# configure_it [configure-params]
+#
+# Run the configure step with the given parameters
+# and report on the status. Exit on fail.
+#
+configure_it()
+{
+
+	# Make sure the cross compilation suite
+	# is in place before starting this stage
+
+	if ! type $CC > /dev/null ; then
+	    echo
+	    echo "ERROR : Unable to find $CROSS_COMPILE toolchain"
+	    echo "Check CROSS_COMPILE and CROSS are set correctly"
+	    echo "in the build-common script"
+	    echo
+	    echo Exiting \($SECONDS seconds\)
+            exit -1
+	fi
+
+        mkdir -p $LOG
+	$SRC/$LIB_NAME/configure "$@" |& tee $LOG/"$NAME"_configure.log
+	if [ $? -ne 0 ]; then
+    	   echo   
+           echo configure for $LIB_NAME failed. See $LOG/"$NAME"_configure.log
+	   echo and config.log under $(pwd)
+	   echo Exiting \($SECONDS seconds\)
+	   exit -1
+	fi
+	echo configure for $LIB_NAME complete. See $LOG/"$NAME"_configure.log
+	echo and config.log under $(pwd)
+}
+#
+# make_it [make-params]
+#
+# Make the project with the given parameters and
+# report on the status. Exit on fail.
+#
+# Call with "-d V=1 -j1" for debugging.
+#
+make_it()
+{
+        mkdir -p $LOG	
+	make -j$J $@ $ARGS |& tee $LOG/"$NAME"_make.log
+	if [ $? -ne 0 ]; then
+    	   echo
+           echo make for $LIB_NAME failed. See $LOG/"$NAME"_make.log
+	   echo Exiting \($SECONDS seconds\)
+	   exit -1
+	fi
+	echo make for $LIB_NAME complete. See $LOG/"$NAME"_make.log
+}
+
+#
+# install_it()
+#
+# Call make install for the project and report on
+# the status. Exit on fail.
+#
+install_it()
+{
+        mkdir -p $LOG
+	make DESTDIR=$BUILDHOST_DEST install $@ |& tee $LOG/"$NAME"_install.log
+	if [ $? -ne 0 ]; then
+    	   echo   
+           echo make install of $LIB_NAME to $BUILDHOST_DEST Failed.
+	   echo See $LOG/"$NAME"_install.log
+	   echo Exiting \($SECONDS seconds\)
+	   exit -1
+	fi
+	echo make install for $LIB_NAME complete. See $LOG/"$NAME"_install.log	
+}
+
+#
+# finish_it()
+#
+# Generate a banner message reporting that the build
+# has finished.
+#
+finish_it()
+{
+        echo
+	echo "****************************************"
+	echo 
+	echo Success! $NAME finished installing $LIB_NAME to $BUILDHOST_DEST \($SECONDS seconds\)
+	echo
+	echo "****************************************"
+	echo
+}
