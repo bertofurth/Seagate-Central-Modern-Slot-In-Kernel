@@ -1,4 +1,7 @@
 # README_MANUAL_KERNEL_INSTALLATION.md
+
+TODO : Disable unneeded services.
+
 This is a guide that describes how to manually replace the original
 Linux v2.6.25 kernel on a Seagate Central NAS with a previously
 cross compiled modern, Linux v5.x kernel.
