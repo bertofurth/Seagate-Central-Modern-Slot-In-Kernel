@@ -34,9 +34,11 @@ check_source_dir "linux"
 #change_into_obj_directory
 mkdir -p $OBJ/perf
 
-export NO_LIBELF=1
 export DESTDIR=$BUILDHOST_DEST/$PREFIX/
-make_it -C ./tools/perf O=$OBJ/perf install
+export EXTRA_CFLAGS="$CFLAGS -DF_DUPFD_CLOEXEC=1030 -DO_CLOEXEC=02000000"
+#export FEATURE_CHECK_CFLAGS-all="$CFLAGS"
+#export FEATURE_CHECK_LDFLAGS-all="$LDFLAGS"
+make_it V=1 -C ./tools/perf O=$OBJ/perf install
 
 # Already installed
 # install_it
