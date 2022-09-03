@@ -7,7 +7,7 @@
 
 # Based on gcc's download_prerequisites script
 
-zlib='https://zlib.net/zlib-1.2.12.tar.xz'
+zlib='https://zlib.net/fossils/zlib-1.2.12.tar.gz'
 elfutils='https://sourceware.org/elfutils/ftp/0.187/elfutils-0.187.tar.bz2'
 libcap='https://mirrors.edge.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.65.tar.xz'
 
