@@ -1,7 +1,5 @@
 # README_MANUAL_KERNEL_INSTALLATION.md
 
-TODO : Disable unneeded services.
-
 This is a guide that describes how to manually replace the original
 Linux v2.6.25 kernel on a Seagate Central NAS with a previously
 cross compiled modern, Linux v5.x kernel.
@@ -164,6 +162,26 @@ The commands after this point in the procedure must be executed with
 root privileges on the Seagate Central. This can be done by either 
 prepending **sudo** to each command or by issuing the **su** command
 and becoming the root user.
+
+### Disable obselete Seagate Media Service
+The Seagate Media Service used to allow users to view content on a 
+Seagate Central remotely or using a special phone app by registering
+an account with Seagate. This service was discontinued as per the notice at
+
+https://www.seagate.com/us/en/support/downloads/seagate-media/
+
+Note, this is different to the Twonky DLNA service that provides access
+to media for player devices on your home network.
+
+The Seagate Media Service **must** be disabled before activating the new 
+kernel otherwise the unit will hang on boot.
+
+Run the following commands to disable the Media Server.
+
+    update-rc.d -f media_server_daemon remove
+    update-rc.d -f media_server_ui_daemon remove
+    update-rc.d -f media_server_allow_scan remove
+    update-rc.d -f media_server_default_start remove
 
 ### Samba
 If you wish to have a working Windows style samba file sharing service
