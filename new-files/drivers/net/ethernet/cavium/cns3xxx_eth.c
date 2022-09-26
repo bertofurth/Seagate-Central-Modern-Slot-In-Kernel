@@ -34,6 +34,7 @@
 
 #endif /* CONFIG_CNS3XXX_ETHADDR_IN_FLASH */
 
+// #define DEBUG_HW_CSUM
 #define CNS3XXX_ETH_PROC_NAME          "cns3xxx_eth"
 
 #define DRV_NAME "cns3xxx_eth"
@@ -818,7 +819,7 @@ static int eth_poll(struct napi_struct *napi, int budget)
 	unsigned int i = rx_ring->cur_index;
 	struct rx_desc *desc = &(rx_ring)->desc[i];
 	unsigned int alloc_count = rx_ring->alloc_count;
-#if DEBUG_HW_CSUM
+#ifdef DEBUG_HW_CSUM
 	static int count = 0;
 	static int count2 = 0;
 #endif	
@@ -873,7 +874,7 @@ static int eth_poll(struct napi_struct *napi, int budget)
 
 			dev->stats.rx_packets++;
 			dev->stats.rx_bytes += skb->len;
-#if DEBUG_HW_CSUM		
+#ifdef DEBUG_HW_CSUM		
 			count++;
 			if (count >= 10000) {
 				count = 0;
@@ -889,7 +890,9 @@ static int eth_poll(struct napi_struct *napi, int budget)
 #endif 			
 			/* RX Hardware checksum offload */
 			skb->ip_summed = CHECKSUM_NONE;
+#ifdef DEBUG_HW_CSUM								
 			count2++;
+#endif
 			switch (desc->prot) {
 				case 1:
 				case 2:
@@ -899,7 +902,7 @@ static int eth_poll(struct napi_struct *napi, int budget)
 				case 14:
 					if (!desc->l4f) {
 						skb->ip_summed = CHECKSUM_UNNECESSARY;
-#if DEBUG_HW_CSUM								
+#ifdef DEBUG_HW_CSUM								
 						if (count2 > 10000) {
 							printk("eth_poll RX : CHECKSUM_UNNECESSARY \n");
 							count2 = 0;
@@ -910,7 +913,7 @@ static int eth_poll(struct napi_struct *napi, int budget)
 					}
 					fallthrough;
 				default:
-#if DEBUG_HW_CSUM								
+#ifdef DEBUG_HW_CSUM								
 					if (count2 > 10000) {
 						printk("eth_poll RX : CHECKSUM_NONE \n");
 						count2 = 0;
@@ -988,7 +991,7 @@ static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
 	int len0;
 	int i;
 	u32 config0;
-#if DEBUG_HW_CSUM								
+#ifdef DEBUG_HW_CSUM								
 	static int count = 0;
 #endif
 
@@ -1019,7 +1022,7 @@ static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
 	config0 |= CNS3XXX_IP_CHECKSUM | UDP_CHECKSUM | TCP_CHECKSUM;  /* HERE - BERTO - IS THIS APPROPRIATE? */
 								       /* MAYBE PUT A DEBUG HERE TO SEE HOW MANY PACKETS ARE PARTIAL? */
 	len0 = skb->len;
-#if DEBUG_HW_CSUM								
+#ifdef DEBUG_HW_CSUM								
 	count++;
 	if (count >= 10000) {
 		count = 0;
