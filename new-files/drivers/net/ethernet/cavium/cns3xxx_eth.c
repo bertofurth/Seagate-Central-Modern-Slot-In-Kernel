@@ -1027,9 +1027,9 @@ static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
 		index = (index + 1) % TX_DESCS;
 
 		frag = &skb_shinfo(skb)->frags[i];
-		addr = page_address(skb_frag_page(frag)) + frag->bv_offset;
+		addr = page_address(skb_frag_page(frag)) + skb_frag_off(frag);
 
-		eth_set_desc(sw, tx_ring, index, index_last, addr, frag->bv_len,
+		eth_set_desc(sw, tx_ring, index, index_last, addr, skb_frag_size(frag),
 			     config0, pmap);
 	}
 
