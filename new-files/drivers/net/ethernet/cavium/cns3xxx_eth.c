@@ -818,9 +818,10 @@ static int eth_poll(struct napi_struct *napi, int budget)
 	unsigned int i = rx_ring->cur_index;
 	struct rx_desc *desc = &(rx_ring)->desc[i];
 	unsigned int alloc_count = rx_ring->alloc_count;
+#if DEBUG_HW_CSUM
 	static int count = 0;
 	static int count2 = 0;
-	
+#endif	
 	while (desc->cown && alloc_count + received < RX_DESCS - 1) {
 		struct sk_buff *skb;
 		int reserve = SKB_HEAD_ALIGN;
@@ -872,7 +873,7 @@ static int eth_poll(struct napi_struct *napi, int budget)
 
 			dev->stats.rx_packets++;
 			dev->stats.rx_bytes += skb->len;
-/* HERE BERTO - PUT A COUNTER DEBUG HERE FOR desc->l4f TO SEE IF PACKETS ARE BEING CHECK SUMED BY HW */
+#if DEBUG_HW_CSUM		
 			count++;
 			if (count >= 10000) {
 				count = 0;
@@ -885,7 +886,7 @@ static int eth_poll(struct napi_struct *napi, int budget)
  *	 CHECKSUM_PARTIAL        3
 */
 			}
-			
+#endif 			
 			/* RX Hardware checksum offload */
 			skb->ip_summed = CHECKSUM_NONE;
 			count2++;
@@ -898,19 +899,23 @@ static int eth_poll(struct napi_struct *napi, int budget)
 				case 14:
 					if (!desc->l4f) {
 						skb->ip_summed = CHECKSUM_UNNECESSARY;
+#if DEBUG_HW_CSUM								
 						if (count2 > 10000) {
 							printk("eth_poll RX : CHECKSUM_UNNECESSARY \n");
 							count2 = 0;
 						}
+#endif
 						napi_gro_receive(napi, skb);
 						break;
 					}
 					fallthrough;
 				default:
+#if DEBUG_HW_CSUM								
 					if (count2 > 10000) {
 						printk("eth_poll RX : CHECKSUM_NONE \n");
 						count2 = 0;
 					}
+#endif
 					netif_receive_skb(skb);
 					break;
 			}
@@ -983,7 +988,9 @@ static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
 	int len0;
 	int i;
 	u32 config0;
+#if DEBUG_HW_CSUM								
 	static int count = 0;
+#endif
 
 	if (pmap == 8)
 		pmap = (1 << 4);
@@ -1012,13 +1019,14 @@ static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
 	config0 |= CNS3XXX_IP_CHECKSUM | UDP_CHECKSUM | TCP_CHECKSUM;  /* HERE - BERTO - IS THIS APPROPRIATE? */
 								       /* MAYBE PUT A DEBUG HERE TO SEE HOW MANY PACKETS ARE PARTIAL? */
 	len0 = skb->len;
-
-	count++;  /* HERE BERTO - DEBUGS */
+#if DEBUG_HW_CSUM								
+	count++;
 	if (count >= 10000) {
 		count = 0;
 		printk("eth_xmit Point 2 TX : protocol = %d len = %d ip_summed = 0x%x nr_frags = %d \n",
 		       skb->protocol, skb->len, skb->ip_summed, nr_frags);
 	}
+#endif
 	/* fragments */
 	for (i = 0; i < nr_frags; i++) {
 		skb_frag_t *frag;
