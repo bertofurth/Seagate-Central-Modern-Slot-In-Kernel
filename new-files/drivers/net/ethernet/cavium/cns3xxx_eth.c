@@ -20,6 +20,7 @@
 #include <linux/kernel.h>
 #include <linux/phy.h>
 #include <linux/platform_device.h>
+#include <linux/proc_fs.h>
 #include <linux/platform_data/cns3xxx.h>
 #include <linux/skbuff.h>
 
@@ -33,10 +34,12 @@
 
 #endif /* CONFIG_CNS3XXX_ETHADDR_IN_FLASH */
 
-#define DRV_NAME "cns3xxx_eth"
+#define CNS3XXX_ETH_PROC_NAME          "cns3xxx_eth"
 
-#define RX_DESCS 256
-#define TX_DESCS 128
+#define DRV_NAME "cns3xxx_eth"
+#define DRV_VERSION "2022.09.21"
+#define RX_DESCS 1024
+#define TX_DESCS 1024
 #define TX_DESC_RESERVE	20
 
 #define RX_POOL_ALLOC_SIZE (sizeof(struct rx_desc) * RX_DESCS)
@@ -61,20 +64,28 @@
 #define MDIO_REG_OFFSET 8
 #define MDIO_VALUE_OFFSET 16
 
-/* Descritor Defines */
-#define END_OF_RING 0x40000000
-#define FIRST_SEGMENT 0x20000000
-#define LAST_SEGMENT 0x10000000
-#define FORCE_ROUTE 0x04000000
-#define UDP_CHECKSUM 0x00020000
-#define TCP_CHECKSUM 0x00010000
+/* Descriptor Defines */
+#define END_OF_RING    0x40000000
+#define FIRST_SEGMENT  0x20000000
+#define LAST_SEGMENT   0x10000000
+#define FORCE_ROUTE    0x04000000
+#define CNS3XXX_IP_CHECKSUM    0x00040000
+#define UDP_CHECKSUM   0x00020000
+#define TCP_CHECKSUM   0x00010000
 
 /* Port Config Defines */
-#define PORT_BP_ENABLE 0x00020000
-#define PORT_DISABLE 0x00040000
-#define PORT_LEARN_DIS 0x00080000
-#define PORT_BLOCK_STATE 0x00100000
-#define PORT_BLOCK_MODE 0x00200000
+#define PORT_LINK_UP       0x00000001
+#define PORT_SPEED_10      0x00000000
+#define PORT_SPEED_100     0x00000004
+#define PORT_SPEED_1000    0x00000008
+#define PORT_DUPLEX_FULL   0x00000010
+#define PORT_FLOW_CTL_RX   0x00000020
+#define PORT_FLOW_CTL_TX   0x00000040
+#define PORT_BP_ENABLE     0x00020000
+#define PORT_DISABLE       0x00040000
+#define PORT_LEARN_DIS     0x00080000
+#define PORT_BLOCK_STATE   0x00100000
+#define PORT_BLOCK_MODE    0x00200000
 
 #define PROMISC_OFFSET 29
 
@@ -321,6 +332,7 @@ struct port {
 	struct sw *sw;
 	int id;			/* logical port ID */
 	int speed, duplex;
+	u8 rx_en;
 };
 
 static spinlock_t mdio_lock;
@@ -330,6 +342,8 @@ struct mii_bus *mdio_bus;
 static int ports_open;
 static struct port *switch_port_tab[4];
 struct net_device *napi_dev;
+
+static struct proc_dir_entry *proc_cns3xxx_eth;
 
 #if defined (CONFIG_CNS3XXX_ETHADDR_IN_FLASH)
 
@@ -804,7 +818,9 @@ static int eth_poll(struct napi_struct *napi, int budget)
 	unsigned int i = rx_ring->cur_index;
 	struct rx_desc *desc = &(rx_ring)->desc[i];
 	unsigned int alloc_count = rx_ring->alloc_count;
-
+	static int count = 0;
+	static int count2 = 0;
+	
 	while (desc->cown && alloc_count + received < RX_DESCS - 1) {
 		struct sk_buff *skb;
 		int reserve = SKB_HEAD_ALIGN;
@@ -856,9 +872,23 @@ static int eth_poll(struct napi_struct *napi, int budget)
 
 			dev->stats.rx_packets++;
 			dev->stats.rx_bytes += skb->len;
+/* HERE BERTO - PUT A COUNTER DEBUG HERE FOR desc->l4f TO SEE IF PACKETS ARE BEING CHECK SUMED BY HW */
+			count++;
+			if (count >= 10000) {
+				count = 0;
+				printk("eth_poll Point 1 RX : skb->protocol = %d desc->prot %d desc->l4f = %d len = %d ip_summed = 0x%x \n",
+				       skb->protocol, desc->prot, desc->l4f, skb->len, skb->ip_summed);
 
+/* Note  CHECKSUM_NONE           0
+ *	 CHECKSUM_UNNECESSARY    1
+ *	 CHECKSUM_COMPLETE       2
+ *	 CHECKSUM_PARTIAL        3
+*/
+			}
+			
 			/* RX Hardware checksum offload */
 			skb->ip_summed = CHECKSUM_NONE;
+			count2++;
 			switch (desc->prot) {
 				case 1:
 				case 2:
@@ -868,11 +898,19 @@ static int eth_poll(struct napi_struct *napi, int budget)
 				case 14:
 					if (!desc->l4f) {
 						skb->ip_summed = CHECKSUM_UNNECESSARY;
+						if (count2 > 10000) {
+							printk("eth_poll RX : CHECKSUM_UNNECESSARY \n");
+							count2 = 0;
+						}
 						napi_gro_receive(napi, skb);
 						break;
 					}
 					fallthrough;
 				default:
+					if (count2 > 10000) {
+						printk("eth_poll RX : CHECKSUM_NONE \n");
+						count2 = 0;
+					}
 					netif_receive_skb(skb);
 					break;
 			}
@@ -945,6 +983,7 @@ static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
 	int len0;
 	int i;
 	u32 config0;
+	static int count = 0;
 
 	if (pmap == 8)
 		pmap = (1 << 4);
@@ -970,8 +1009,16 @@ static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
 	if (skb->ip_summed == CHECKSUM_PARTIAL)
 		config0 |= UDP_CHECKSUM | TCP_CHECKSUM;
 
+	config0 |= CNS3XXX_IP_CHECKSUM | UDP_CHECKSUM | TCP_CHECKSUM;  /* HERE - BERTO - IS THIS APPROPRIATE? */
+								       /* MAYBE PUT A DEBUG HERE TO SEE HOW MANY PACKETS ARE PARTIAL? */
 	len0 = skb->len;
 
+	count++;  /* HERE BERTO - DEBUGS */
+	if (count >= 10000) {
+		count = 0;
+		printk("eth_xmit Point 2 TX : protocol = %d len = %d ip_summed = 0x%x nr_frags = %d \n",
+		       skb->protocol, skb->len, skb->ip_summed, nr_frags);
+	}
 	/* fragments */
 	for (i = 0; i < nr_frags; i++) {
 		skb_frag_t *frag;
@@ -1030,7 +1077,74 @@ static void cns3xxx_get_drvinfo(struct net_device *dev,
 			       struct ethtool_drvinfo *info)
 {
 	strcpy(info->driver, DRV_NAME);
+	strcpy(info->version, DRV_VERSION);
+	strcpy(info->fw_version, "Seagate Central");
 	strcpy(info->bus_info, "internal");
+}
+
+static void cns3xxx_get_ringparam(struct net_device *netdev,
+				  struct ethtool_ringparam *ring)
+
+{
+	struct port *port = netdev_priv(netdev);
+	struct sw *sw = port->sw;
+	struct _rx_ring *rx_ring = &sw->rx_ring;
+	struct _tx_ring *tx_ring = &sw->tx_ring;
+	
+	ring->rx_max_pending = RX_DESCS;
+	ring->tx_max_pending = TX_DESCS;
+	ring->rx_pending = RX_DESCS;
+	ring->tx_pending = RX_DESCS;
+}
+
+static int cns3xxx_set_ringparam(struct net_device *netdev,
+				 struct ethtool_ringparam *ring)
+{
+#ifdef TODO_CNS3XXX_ETH
+
+	/*
+	 * It seems that this is hardcoded at the moment
+	 * to RX_DESCS / TX_DESCS but it would be possible
+	 * to change if required
+	 */
+	struct port *port = netdev_priv(netdev);
+	struct sw *sw = port->sw;
+	struct _rx_ring *rx_ring = &sw->rx_ring;
+	struct _tx_ring *tx_ring = &sw->tx_ring;
+	int stopped = 0;
+	
+	if (netif_running(netdev)) {
+		netdev->netdev_ops->ndo_stop(netdev);
+		stopped = 1;
+	}
+
+	port->rx_ring->ring_size = min(ring->rx_pending, rx_ring->max_ring_size);
+	port->tx_ring->ring_size = min(ring->tx_pending, tx_ring->max_ring_size);
+
+	if (stopped) {
+		dev->netdev_ops->ndo_open(dev);
+	}
+
+#endif  /* TODO_CNS3XXX_ETH */
+	return 0;
+} /* cns3xxx_set_ringparam() */
+
+static uint32_t cns3xxx_get_rx_csum(struct net_device *netdev)
+{
+	struct port *port = netdev_priv(netdev);
+
+	return port->rx_en;
+}
+
+static int cns3xxx_set_rx_csum(struct net_device *netdev, uint32_t data)
+{
+	struct port *port = netdev_priv(netdev);
+	if (data)
+		port->rx_en=1;
+	else
+		port->rx_en=0;
+
+	return 0; /* HERE BERTO - We haven't actually enabled anything */
 }
 
 static int cns3xxx_nway_reset(struct net_device *dev)
@@ -1041,6 +1155,10 @@ static int cns3xxx_nway_reset(struct net_device *dev)
 
 static struct ethtool_ops cns3xxx_ethtool_ops = {
 	.get_drvinfo = cns3xxx_get_drvinfo,
+	.get_ringparam = cns3xxx_get_ringparam,
+	.set_ringparam = cns3xxx_set_ringparam,
+//	.get_rx_csum = cns3xxx_get_rx_csum,
+//	.set_rx_csum = cns3xxx_set_rx_csum,
 	.get_link_ksettings = phy_ethtool_get_link_ksettings,
 	.set_link_ksettings = phy_ethtool_set_link_ksettings,
 	.nway_reset = cns3xxx_nway_reset,
@@ -1318,6 +1436,314 @@ static const struct net_device_ops cns3xxx_netdev_ops = {
 	.ndo_validate_addr = eth_validate_addr,
 };
 
+static int cns3xxx_eth_read_proc(struct seq_file *s, void *unused)
+{
+
+	/*
+	 * Values marked with a * are part of the "magic configuration"
+	 * settings as seen in eth_init_one().
+	 */
+	seq_printf(s,   "Register Base               0x%px\n",
+		   mdio_regs);
+	seq_printf(s,
+		   "Register Description      Value\n"
+		   "====================     ========\n");
+	seq_printf(s,
+		   "phy_control              %08x\n", 
+		   __raw_readl(&mdio_regs->phy_control));
+	seq_printf(s,
+		   "phy_auto_addr            %08x\n", 
+		   __raw_readl(&mdio_regs->phy_auto_addr));
+	seq_printf(s,
+		   "mac_glob_cfg             %08x\n", 
+		   __raw_readl(&mdio_regs->mac_glob_cfg));
+	seq_printf(s,
+		   "mac_cfg[0]*              %08x\n", 
+		   __raw_readl(&mdio_regs->mac_cfg[0]));
+	seq_printf(s,
+		   "mac_cfg[1]*              %08x\n", 
+		   __raw_readl(&mdio_regs->mac_cfg[1]));
+	seq_printf(s,
+		   "mac_cfg[2]               %08x\n", 
+		   __raw_readl(&mdio_regs->mac_cfg[2]));
+	seq_printf(s,
+		   "mac_cfg[3]*              %08x\n", 
+		   __raw_readl(&mdio_regs->mac_cfg[3]));
+	seq_printf(s,
+		   "mac_pri_ctrl[0]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_pri_ctrl[0]));
+	seq_printf(s,
+		   "mac_pri_ctrl[1]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_pri_ctrl[1]));
+	seq_printf(s,
+		   "mac_pri_ctrl[2]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_pri_ctrl[2]));
+	seq_printf(s,
+		   "mac_pri_ctrl[3]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_pri_ctrl[3]));
+	seq_printf(s,
+		   "mac_pri_ctrl[4]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_pri_ctrl[4]));
+	seq_printf(s,
+		   "__res                    %08x\n", 
+		   __raw_readl(&mdio_regs->__res));
+	seq_printf(s,
+		   "etype[0]                 %08x\n", 
+		   __raw_readl(&mdio_regs->etype[0]));
+	seq_printf(s,
+		   "etype[1]                 %08x\n", 
+		   __raw_readl(&mdio_regs->etype[1]));
+	seq_printf(s,
+		   "etype[2]                 %08x\n", 
+		   __raw_readl(&mdio_regs->etype[2]));
+	seq_printf(s,
+		   "udp_range[0]             %08x\n", 
+		   __raw_readl(&mdio_regs->udp_range[0]));
+	seq_printf(s,
+		   "udp_range[1]             %08x\n", 
+		   __raw_readl(&mdio_regs->udp_range[1]));
+	seq_printf(s,
+		   "udp_range[2]             %08x\n", 
+		   __raw_readl(&mdio_regs->udp_range[2]));
+	seq_printf(s,
+		   "udp_range[3]             %08x\n", 
+		   __raw_readl(&mdio_regs->udp_range[3]));
+	seq_printf(s,
+		   "prio_etype_udp           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_etype_udp));
+	seq_printf(s,
+		   "prio_ipdscp[0]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[0]));
+	seq_printf(s,
+		   "prio_ipdscp[1]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[1]));
+	seq_printf(s,
+		   "prio_ipdscp[2]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[2]));
+	seq_printf(s,
+		   "prio_ipdscp[3]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[3]));
+	seq_printf(s,
+		   "prio_ipdscp[4]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[4]));
+	seq_printf(s,
+		   "prio_ipdscp[5]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[5]));
+	seq_printf(s,
+		   "prio_ipdscp[6]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[6]));
+	seq_printf(s,
+		   "prio_ipdscp[7]           %08x\n", 
+		   __raw_readl(&mdio_regs->prio_ipdscp[7]));
+	seq_printf(s,
+		   "tc_ctrl                  %08x\n", 
+		   __raw_readl(&mdio_regs->tc_ctrl));
+	seq_printf(s,
+		   "rate_ctrl                %08x\n", 
+		   __raw_readl(&mdio_regs->rate_ctrl));
+	seq_printf(s,
+		   "fc_glob_thrs             %08x\n", 
+		   __raw_readl(&mdio_regs->fc_glob_thrs));
+	seq_printf(s,
+		   "fc_port_thrs             %08x\n", 
+		   __raw_readl(&mdio_regs->fc_port_thrs));
+	seq_printf(s,
+		   "mc_fc_glob_thrs          %08x\n", 
+		   __raw_readl(&mdio_regs->mc_fc_glob_thrs));
+	seq_printf(s,
+		   "dc_glob_thrs             %08x\n", 
+		   __raw_readl(&mdio_regs->dc_glob_thrs));
+	seq_printf(s,
+		   "arl_vlan_cmd*            %08x\n", 
+		   __raw_readl(&mdio_regs->arl_vlan_cmd));	
+	seq_printf(s,
+		   "arl_ctrl[0]              %08x\n", 
+		   __raw_readl(&mdio_regs->arl_ctrl[0]));
+	seq_printf(s,
+		   "arl_ctrl[1]              %08x\n", 
+		   __raw_readl(&mdio_regs->arl_ctrl[1]));		
+	seq_printf(s,
+		   "arl_ctrl[2]              %08x\n", 
+		   __raw_readl(&mdio_regs->arl_ctrl[2]));
+	seq_printf(s,
+		   "vlan_cfg                 %08x\n", 
+		   __raw_readl(&mdio_regs->vlan_cfg));
+	seq_printf(s,
+		   "pvid[0]*                 %08x\n", 
+		   __raw_readl(&mdio_regs->pvid[0]));
+	seq_printf(s,
+		   "pvid[1]*                 %08x\n", 
+		   __raw_readl(&mdio_regs->pvid[1]));
+	seq_printf(s,
+		   "vlan_ctrl[0]*            %08x\n", 
+		   __raw_readl(&mdio_regs->vlan_ctrl[0]));
+	seq_printf(s,
+		   "vlan_ctrl[1]*            %08x\n", 
+		   __raw_readl(&mdio_regs->vlan_ctrl[1]));
+	seq_printf(s,
+		   "vlan_ctrl[2]*            %08x\n", 
+		   __raw_readl(&mdio_regs->vlan_ctrl[2]));
+	seq_printf(s,
+		   "session_id[0]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[0]));
+	seq_printf(s,
+		   "session_id[1]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[1]));
+	seq_printf(s,
+		   "session_id[2]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[2]));	
+	seq_printf(s,
+		   "session_id[3]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[3]));
+	seq_printf(s,
+		   "session_id[4]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[4]));
+	seq_printf(s,
+		   "session_id[5]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[5]));
+	seq_printf(s,
+		   "session_id[6]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[6]));
+	seq_printf(s,
+		   "session_id[7]            %08x\n", 
+		   __raw_readl(&mdio_regs->session_id[7]));
+	seq_printf(s,
+		   "intr_stat                %08x\n", 
+		   __raw_readl(&mdio_regs->intr_stat));	
+	seq_printf(s,
+		   "intr_mask                %08x\n", 
+		   __raw_readl(&mdio_regs->intr_mask));		
+	seq_printf(s,
+		   "sram_test                %08x\n", 
+		   __raw_readl(&mdio_regs->sram_test));
+	seq_printf(s,
+		   "mem_queue                %08x\n", 
+		   __raw_readl(&mdio_regs->mem_queue));
+	seq_printf(s,
+		   "farl_ctrl                %08x\n", 
+		   __raw_readl(&mdio_regs->farl_ctrl));
+	seq_printf(s,
+		   "fc_input_thrs            %08x\n", 
+		   __raw_readl(&mdio_regs->fc_input_thrs));
+	seq_printf(s,
+		   "__res1[0]                %08x\n", 
+		   __raw_readl(&mdio_regs->__res1[0]));
+	seq_printf(s,
+		   "__res1[1]                %08x\n", 
+		   __raw_readl(&mdio_regs->__res1[1]));
+	seq_printf(s,
+		   "dma_ring_ctrl            %08x\n", 
+		   __raw_readl(&mdio_regs->dma_ring_ctrl));
+	seq_printf(s,
+		   "dma_auto_poll_cfg        %08x\n", 
+		   __raw_readl(&mdio_regs->dma_auto_poll_cfg));		
+	seq_printf(s,
+		   "delay_intr_cfg           %08x\n", 
+		   __raw_readl(&mdio_regs->delay_intr_cfg));
+	seq_printf(s,
+		   "__res3                   %08x\n", 
+		   __raw_readl(&mdio_regs->__res3));
+	seq_printf(s,
+		   "ts_dma_ctrl0             %08x\n", 
+		   __raw_readl(&mdio_regs->ts_dma_ctrl0));
+	seq_printf(s,
+		   "ts_desc_ptr0             %08x\n", 
+		   __raw_readl(&mdio_regs->ts_desc_ptr0));
+	seq_printf(s,
+		   "ts_desc_base_addr0       %08x\n", 
+		   __raw_readl(&mdio_regs->ts_desc_base_addr0));	
+	seq_printf(s,
+		   "__res4                   %08x\n", 
+		   __raw_readl(&mdio_regs->__res4));	
+	seq_printf(s,
+		   "fs_dma_ctrl0             %08x\n", 
+		   __raw_readl(&mdio_regs->fs_dma_ctrl0));
+	seq_printf(s,
+		   "fs_desc_ptr0             %08x\n", 
+		   __raw_readl(&mdio_regs->fs_desc_ptr0));
+	seq_printf(s,
+		   "fs_desc_base_addr0       %08x\n", 
+		   __raw_readl(&mdio_regs->fs_desc_base_addr0));
+	seq_printf(s,
+		   "__res5                   %08x\n", 
+		   __raw_readl(&mdio_regs->__res5));
+	seq_printf(s,
+		   "ts_dma_ctrl1             %08x\n", 
+		   __raw_readl(&mdio_regs->ts_dma_ctrl1));
+	seq_printf(s,
+		   "ts_desc_ptr1             %08x\n", 
+		   __raw_readl(&mdio_regs->ts_desc_ptr1));
+	seq_printf(s,
+		   "ts_desc_base_addr1       %08x\n", 
+		   __raw_readl(&mdio_regs->ts_desc_base_addr1));
+	seq_printf(s,
+		   "__res6                   %08x\n", 
+		   __raw_readl(&mdio_regs->__res6));	
+	seq_printf(s,
+		   "fs_dma_ctrl1             %08x\n", 
+		   __raw_readl(&mdio_regs->fs_dma_ctrl1));
+	seq_printf(s,
+		   "fs_desc_ptr1             %08x\n", 
+		   __raw_readl(&mdio_regs->fs_desc_ptr1));	
+	seq_printf(s,
+		   "fs_desc_base_addr1       %08x\n", 
+		   __raw_readl(&mdio_regs->fs_desc_base_addr1));
+	seq_printf(s,
+		   "mac_counter0[0]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[0]));	
+	seq_printf(s,
+		   "mac_counter0[1]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[1]));	
+	seq_printf(s,
+		   "mac_counter0[2]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[2]));
+	seq_printf(s,
+		   "mac_counter0[3]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[3]));
+	seq_printf(s,
+		   "mac_counter0[4]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[4]));
+	seq_printf(s,
+		   "mac_counter0[5]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[5]));
+	seq_printf(s,
+		   "mac_counter0[6]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[6]));
+	seq_printf(s,
+		   "mac_counter0[7]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[7]));
+	seq_printf(s,
+		   "mac_counter0[8]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[8]));
+	seq_printf(s,
+		   "mac_counter0[9]          %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[9]));
+	seq_printf(s,
+		   "mac_counter0[10]         %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[10]));
+	seq_printf(s,
+		   "mac_counter0[11]         %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[11]));
+	seq_printf(s,
+		   "mac_counter0[12]         %08x\n", 
+		   __raw_readl(&mdio_regs->mac_counter0[12]));
+	
+	return 0;
+} /* cns3xxx_eth_read_proc() */
+
+static int cns3xxx_eth_open_proc(struct inode *inode, struct file *file)
+{
+	return single_open(file, cns3xxx_eth_read_proc, &inode->i_private);
+}
+
+static const struct proc_ops cns3xxx_eth_fops = {
+	.proc_open           = cns3xxx_eth_open_proc,
+	.proc_read           = seq_read,
+	.proc_lseek          = seq_lseek,
+	.proc_release        = single_release,
+/*	.proc_write          = cns3xxx_eth_write_proc, */
+};
+
 static int eth_init_one(struct platform_device *pdev)
 {
 	int i;
@@ -1356,7 +1782,7 @@ static int eth_init_one(struct platform_device *pdev)
 
 	strcpy(napi_dev->name, "cns3xxx_eth");
 	napi_dev->features = NETIF_F_IP_CSUM | NETIF_F_SG | NETIF_F_FRAGLIST;
-
+	napi_dev->features |= NETIF_F_TSO; /* HERE BERTO - ANY MORE FEATURES? */
 	SET_NETDEV_DEV(napi_dev, &pdev->dev);
 	sw = netdev_priv(napi_dev);
 	memset(sw, 0, sizeof(struct sw));
@@ -1472,15 +1898,16 @@ static int eth_init_one(struct platform_device *pdev)
 	 */
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//The magic configuration values for Seagate Personal Cloud	
-	__raw_writel(0x5fbe79, regs+4*3);       //regs[3]
-	__raw_writel(0x47be7a, regs+4*4);
-	__raw_writel(0x47a516, regs+4*6);
-	__raw_writel(0x000203, regs+4*34);
-	__raw_writel(0x20001,  regs+4*39);
-	__raw_writel(0x30005,  regs+4*40);
-	__raw_writel(0x3e003e00, regs+4*41);
-	__raw_writel(0x3f, regs+4*42);
-	__raw_writel(0xffff0000, regs+4*43);
+	__raw_writel(0x5fbe79, regs+4*3);       // mac_cfg[0] - uboot 0043a619 / 0043a515
+	__raw_writel(0x47be7a, regs+4*4);       // mac_cfg[1] - uboot 0043a61a / 0043a516
+/*	__raw_writel(0x47a516, regs+4*6);       // mac_cfg[3] */
+	__raw_writel(0x47a516, regs+4*6);       // mac_cfg[3] - uboot 0047a516
+	__raw_writel(0x000203, regs+4*34);      // arl_vlan_cmd
+	__raw_writel(0x20001,  regs+4*39);      // pvid[0]
+	__raw_writel(0x30005,  regs+4*40);      // pvid[1]
+	__raw_writel(0x3e003e00, regs+4*41);    // vlan_ctrl[0]
+	__raw_writel(0x3f, regs+4*42);          // vlan_ctrl[1]
+	__raw_writel(0xffff0000, regs+4*43);    // vlan_ctrl[2]
 
 	//Those magic is from U-boot, the following is required!
 	temp = GMII_CLOCK_SKEW;
@@ -1489,6 +1916,12 @@ static int eth_init_one(struct platform_device *pdev)
 	temp = __raw_readl(&mdio_regs->phy_auto_addr);
 	temp |= MAC0_CLOCK_ENABLE;
 	__raw_writel(temp, &mdio_regs->phy_auto_addr);
+
+	if (cns3xxx_proc_dir) {
+		proc_cns3xxx_eth = proc_create(CNS3XXX_ETH_PROC_NAME, S_IFREG | S_IRUGO,
+						cns3xxx_proc_dir, &cns3xxx_eth_fops);
+	}
+	
 	
 	return 0;
 
@@ -1509,7 +1942,7 @@ err_free:
 err_remove_mdio:
 	cns3xxx_mdio_remove();
 	return err;
-}
+} /* eth_init_one() */
 
 static int eth_remove_one(struct platform_device *pdev)
 {
