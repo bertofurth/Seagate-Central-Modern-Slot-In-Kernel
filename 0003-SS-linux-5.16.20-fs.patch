@@ -1,12 +1,7 @@
- fs/ext2/ext2.h     |  4 ++++
- fs/proc/task_mmu.c | 17 ++++++++++++++++-
- 2 files changed, 20 insertions(+), 1 deletion(-)
-
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index 3be9dd641..044d97fb9 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -177,7 +177,11 @@ static inline struct ext2_sb_info *EXT2_SB(struct super_block *sb)
+diff -rup linux-5.16.20-orig/fs/ext2/ext2.h linux-5.16.20/fs/ext2/ext2.h
+--- linux-5.16.20-orig/fs/ext2/ext2.h	2022-09-27 21:23:38.330023874 +1000
++++ linux-5.16.20/fs/ext2/ext2.h	2022-09-27 21:24:30.918491562 +1000
+@@ -177,7 +177,11 @@ static inline struct ext2_sb_info *EXT2_
   * Macro-instructions used to manage several block sizes
   */
  #define EXT2_MIN_BLOCK_SIZE		1024
@@ -18,11 +13,25 @@ index 3be9dd641..044d97fb9 100644
  #define EXT2_MIN_BLOCK_LOG_SIZE		  10
  #define EXT2_BLOCK_SIZE(s)		((s)->s_blocksize)
  #define	EXT2_ADDR_PER_BLOCK(s)		(EXT2_BLOCK_SIZE(s) / sizeof (__u32))
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index cbb22354f..15acff365 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -615,7 +615,11 @@ static int smaps_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
+diff -rup linux-5.16.20-orig/fs/ntfs3/fslog.c linux-5.16.20/fs/ntfs3/fslog.c
+--- linux-5.16.20-orig/fs/ntfs3/fslog.c	2022-09-27 21:23:38.366024194 +1000
++++ linux-5.16.20/fs/ntfs3/fslog.c	2022-09-27 21:26:22.679485495 +1000
+@@ -1180,8 +1180,9 @@ static int log_read_rst(struct ntfs_log
+ 			struct restart_info *info)
+ {
+ 	u32 skip, vbo;
+-	struct RESTART_HDR *r_page = kmalloc(DefaultLogPageSize, GFP_NOFS);
+-
++        struct RESTART_HDR *r_page = kmalloc(PAGE_SIZE > DefaultLogPageSize ?
++						 PAGE_SIZE : DefaultLogPageSize,		
++						 GFP_NOFS);
+ 	if (!r_page)
+ 		return -ENOMEM;
+ 
+diff -rup linux-5.16.20-orig/fs/proc/task_mmu.c linux-5.16.20/fs/proc/task_mmu.c
+--- linux-5.16.20-orig/fs/proc/task_mmu.c	2022-09-27 21:23:38.374024265 +1000
++++ linux-5.16.20/fs/proc/task_mmu.c	2022-09-27 21:24:30.922491598 +1000
+@@ -615,7 +615,11 @@ static int smaps_pte_range(pmd_t *pmd, u
  	 * in here.
  	 */
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -34,7 +43,7 @@ index cbb22354f..15acff365 100644
  		smaps_pte_entry(pte, addr, walk);
  	pte_unmap_unlock(pte - 1, ptl);
  out:
-@@ -1168,7 +1172,11 @@ static int clear_refs_pte_range(pmd_t *pmd, unsigned long addr,
+@@ -1168,7 +1172,11 @@ out:
  		return 0;
  
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -46,7 +55,7 @@ index cbb22354f..15acff365 100644
  		ptent = *pte;
  
  		if (cp->type == CLEAR_REFS_SOFT_DIRTY) {
-@@ -1505,7 +1513,11 @@ static int pagemap_pmd_range(pmd_t *pmdp, unsigned long addr, unsigned long end,
+@@ -1505,7 +1513,11 @@ static int pagemap_pmd_range(pmd_t *pmdp
  	 * goes beyond vma->vm_end.
  	 */
  	orig_pte = pte = pte_offset_map_lock(walk->mm, pmdp, addr, &ptl);
@@ -58,7 +67,7 @@ index cbb22354f..15acff365 100644
  		pagemap_entry_t pme;
  
  		pme = pte_to_pagemap_entry(pm, vma, addr, *pte);
-@@ -1843,8 +1855,11 @@ static int gather_pte_stats(pmd_t *pmd, unsigned long addr,
+@@ -1844,8 +1856,11 @@ static int gather_pte_stats(pmd_t *pmd,
  		if (!page)
  			continue;
  		gather_stats(page, md, pte_dirty(*pte), 1);

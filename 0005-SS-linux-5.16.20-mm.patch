@@ -1,23 +1,7 @@
- mm/kasan/init.c      |  5 ++++-
- mm/madvise.c         |  8 ++++++++
- mm/memcontrol.c      | 12 ++++++++++--
- mm/memory.c          | 31 +++++++++++++++++++++++++++----
- mm/mempolicy.c       |  4 ++++
- mm/mlock.c           |  4 ++++
- mm/mprotect.c        |  4 ++++
- mm/mremap.c          |  5 +++++
- mm/page_vma_mapped.c |  4 ++++
- mm/pagewalk.c        |  4 ++++
- mm/swap_state.c      | 15 ++++++++++++++-
- mm/swapfile.c        |  4 ++++
- mm/vmalloc.c         | 13 ++++++++++++-
- 13 files changed, 104 insertions(+), 9 deletions(-)
-
-diff --git a/mm/kasan/init.c b/mm/kasan/init.c
-index cc64ed685..e7a7970c7 100644
---- a/mm/kasan/init.c
-+++ b/mm/kasan/init.c
-@@ -343,8 +343,11 @@ static void kasan_remove_pte_table(pte_t *pte, unsigned long addr,
+diff -rup linux-5.16.20-orig/mm/kasan/init.c linux-5.16.20/mm/kasan/init.c
+--- linux-5.16.20-orig/mm/kasan/init.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/kasan/init.c	2022-09-27 21:24:30.922491598 +1000
+@@ -343,8 +343,11 @@ static void kasan_remove_pte_table(pte_t
  				unsigned long end)
  {
  	unsigned long next;
@@ -30,11 +14,10 @@ index cc64ed685..e7a7970c7 100644
  		next = (addr + PAGE_SIZE) & PAGE_MASK;
  		if (next > end)
  			next = end;
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 8c927202b..1277c62ed 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -396,7 +396,11 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+diff -rup linux-5.16.20-orig/mm/madvise.c linux-5.16.20/mm/madvise.c
+--- linux-5.16.20-orig/mm/madvise.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/madvise.c	2022-09-27 21:24:30.922491598 +1000
+@@ -396,7 +396,11 @@ regular_page:
  	orig_pte = pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
  	flush_tlb_batched_pending(mm);
  	arch_enter_lazy_mmu_mode();
@@ -46,7 +29,7 @@ index 8c927202b..1277c62ed 100644
  		ptent = *pte;
  
  		if (pte_none(ptent))
-@@ -593,7 +597,11 @@ static int madvise_free_pte_range(pmd_t *pmd, unsigned long addr,
+@@ -593,7 +597,11 @@ static int madvise_free_pte_range(pmd_t
  	orig_pte = pte = pte_offset_map_lock(mm, pmd, addr, &ptl);
  	flush_tlb_batched_pending(mm);
  	arch_enter_lazy_mmu_mode();
@@ -58,11 +41,10 @@ index 8c927202b..1277c62ed 100644
  		ptent = *pte;
  
  		if (pte_none(ptent))
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e57b14f96..47aa7c19d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5796,7 +5796,11 @@ static int mem_cgroup_count_precharge_pte_range(pmd_t *pmd,
+diff -rup linux-5.16.20-orig/mm/memcontrol.c linux-5.16.20/mm/memcontrol.c
+--- linux-5.16.20-orig/mm/memcontrol.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/memcontrol.c	2022-09-27 21:24:30.926491633 +1000
+@@ -5796,7 +5796,11 @@ static int mem_cgroup_count_precharge_pt
  	if (pmd_trans_unstable(pmd))
  		return 0;
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -74,7 +56,7 @@ index e57b14f96..47aa7c19d 100644
  		if (get_mctgt_type(vma, addr, *pte, NULL))
  			mc.precharge++;	/* increment precharge temporarily */
  	pte_unmap_unlock(pte - 1, ptl);
-@@ -6016,10 +6020,14 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
+@@ -6016,10 +6020,14 @@ static int mem_cgroup_move_charge_pte_ra
  retry:
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
  	for (; addr != end; addr += PAGE_SIZE) {
@@ -91,11 +73,10 @@ index e57b14f96..47aa7c19d 100644
  		if (!mc.precharge)
  			break;
  
-diff --git a/mm/memory.c b/mm/memory.c
-index 8f1de811a..b1defc9f8 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -1089,8 +1089,11 @@ copy_pte_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
+diff -rup linux-5.16.20-orig/mm/memory.c linux-5.16.20/mm/memory.c
+--- linux-5.16.20-orig/mm/memory.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/memory.c	2022-09-27 21:24:30.934491705 +1000
+@@ -1089,8 +1089,11 @@ again:
  			prealloc = NULL;
  		}
  		progress += 8;
@@ -108,7 +89,7 @@ index 8f1de811a..b1defc9f8 100644
  	arch_leave_lazy_mmu_mode();
  	spin_unlock(src_ptl);
  	pte_unmap(orig_src_pte);
-@@ -1397,8 +1400,11 @@ static unsigned long zap_pte_range(struct mmu_gather *tlb,
+@@ -1433,8 +1436,11 @@ again:
  		if (unlikely(!free_swap_and_cache(entry)))
  			print_bad_pte(vma, addr, ptent, NULL);
  		pte_clear_not_present_full(mm, addr, pte, tlb->fullmm);
@@ -121,7 +102,7 @@ index 8f1de811a..b1defc9f8 100644
  	add_mm_rss_vec(mm, rss);
  	arch_leave_lazy_mmu_mode();
  
-@@ -1800,14 +1806,20 @@ static int insert_pages(struct vm_area_struct *vma, unsigned long addr,
+@@ -1836,14 +1842,20 @@ static int insert_pages(struct vm_area_s
  	unsigned long pages_to_write_in_pmd;
  	int ret;
  more:
@@ -143,7 +124,7 @@ index 8f1de811a..b1defc9f8 100644
  	/* Allocate the PTE if necessary; takes PMD lock once only. */
  	ret = -ENOMEM;
  	if (pte_alloc(mm, pmd))
-@@ -1818,7 +1830,11 @@ static int insert_pages(struct vm_area_struct *vma, unsigned long addr,
+@@ -1854,7 +1866,11 @@ more:
  		const int batch_size = min_t(int, pages_to_write_in_pmd, 8);
  
  		start_pte = pte_offset_map_lock(mm, pmd, addr, &pte_lock);
@@ -155,7 +136,7 @@ index 8f1de811a..b1defc9f8 100644
  			int err = insert_page_in_batch_locked(mm, pte,
  				addr, pages[curr_page_idx], prot);
  			if (unlikely(err)) {
-@@ -1863,7 +1879,6 @@ int vm_insert_pages(struct vm_area_struct *vma, unsigned long addr,
+@@ -1899,7 +1915,6 @@ int vm_insert_pages(struct vm_area_struc
  {
  #ifdef pte_index
  	const unsigned long end_addr = addr + (*num * PAGE_SIZE) - 1;
@@ -163,7 +144,7 @@ index 8f1de811a..b1defc9f8 100644
  	if (addr < vma->vm_start || end_addr >= vma->vm_end)
  		return -EFAULT;
  	if (!(vma->vm_flags & VM_MIXEDMAP)) {
-@@ -2280,7 +2295,11 @@ static int remap_pte_range(struct mm_struct *mm, pmd_t *pmd,
+@@ -2316,7 +2331,11 @@ static int remap_pte_range(struct mm_str
  		}
  		set_pte_at(mm, addr, pte, pte_mkspecial(pfn_pte(pfn, prot)));
  		pfn++;
@@ -175,7 +156,7 @@ index 8f1de811a..b1defc9f8 100644
  	arch_leave_lazy_mmu_mode();
  	pte_unmap_unlock(mapped_pte, ptl);
  	return err;
-@@ -2515,7 +2534,11 @@ static int apply_to_pte_range(struct mm_struct *mm, pmd_t *pmd,
+@@ -2551,7 +2570,11 @@ static int apply_to_pte_range(struct mm_
  	if (fn) {
  		do {
  			if (create || !pte_none(*pte)) {
@@ -187,11 +168,10 @@ index 8f1de811a..b1defc9f8 100644
  				if (err)
  					break;
  			}
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index f6248affa..c2e3211fd 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -521,7 +521,11 @@ static int queue_pages_pte_range(pmd_t *pmd, unsigned long addr,
+diff -rup linux-5.16.20-orig/mm/mempolicy.c linux-5.16.20/mm/mempolicy.c
+--- linux-5.16.20-orig/mm/mempolicy.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/mempolicy.c	2022-09-27 21:24:30.934491705 +1000
+@@ -521,7 +521,11 @@ static int queue_pages_pte_range(pmd_t *
  		return 0;
  
  	mapped_pte = pte = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
@@ -203,11 +183,10 @@ index f6248affa..c2e3211fd 100644
  		if (!pte_present(*pte))
  			continue;
  		page = vm_normal_page(vma, addr, *pte);
-diff --git a/mm/mlock.c b/mm/mlock.c
-index e263d62ae..996cb94fc 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -371,7 +371,11 @@ static unsigned long __munlock_pagevec_fill(struct pagevec *pvec,
+diff -rup linux-5.16.20-orig/mm/mlock.c linux-5.16.20/mm/mlock.c
+--- linux-5.16.20-orig/mm/mlock.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/mlock.c	2022-09-27 21:24:30.938491740 +1000
+@@ -371,7 +371,11 @@ static unsigned long __munlock_pagevec_f
  	start += PAGE_SIZE;
  	while (start < end) {
  		struct page *page = NULL;
@@ -219,11 +198,10 @@ index e263d62ae..996cb94fc 100644
  		if (pte_present(*pte))
  			page = vm_normal_page(vma, start, *pte);
  		/*
-diff --git a/mm/mprotect.c b/mm/mprotect.c
-index 02a11c49b..86be535a1 100644
---- a/mm/mprotect.c
-+++ b/mm/mprotect.c
-@@ -187,7 +187,11 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+diff -rup linux-5.16.20-orig/mm/mprotect.c linux-5.16.20/mm/mprotect.c
+--- linux-5.16.20-orig/mm/mprotect.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/mprotect.c	2022-09-27 21:24:30.938491740 +1000
+@@ -187,7 +187,11 @@ static unsigned long change_pte_range(st
  				pages++;
  			}
  		}
@@ -235,11 +213,10 @@ index 02a11c49b..86be535a1 100644
  	arch_leave_lazy_mmu_mode();
  	pte_unmap_unlock(pte - 1, ptl);
  
-diff --git a/mm/mremap.c b/mm/mremap.c
-index 002eec83e..06b5b9124 100644
---- a/mm/mremap.c
-+++ b/mm/mremap.c
-@@ -175,8 +175,13 @@ static void move_ptes(struct vm_area_struct *vma, pmd_t *old_pmd,
+diff -rup linux-5.16.20-orig/mm/mremap.c linux-5.16.20/mm/mremap.c
+--- linux-5.16.20-orig/mm/mremap.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/mremap.c	2022-09-27 21:24:30.938491740 +1000
+@@ -175,8 +175,13 @@ static void move_ptes(struct vm_area_str
  	flush_tlb_batched_pending(vma->vm_mm);
  	arch_enter_lazy_mmu_mode();
  
@@ -253,11 +230,10 @@ index 002eec83e..06b5b9124 100644
  		if (pte_none(*old_pte))
  			continue;
  
-diff --git a/mm/page_vma_mapped.c b/mm/page_vma_mapped.c
-index f7b331081..c1253a958 100644
---- a/mm/page_vma_mapped.c
-+++ b/mm/page_vma_mapped.c
-@@ -278,7 +278,11 @@ bool page_vma_mapped_walk(struct page_vma_mapped_walk *pvmw)
+diff -rup linux-5.16.20-orig/mm/page_vma_mapped.c linux-5.16.20/mm/page_vma_mapped.c
+--- linux-5.16.20-orig/mm/page_vma_mapped.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/page_vma_mapped.c	2022-09-27 21:24:30.938491740 +1000
+@@ -278,7 +278,11 @@ next_pte:
  				pvmw->pte = NULL;
  				goto restart;
  			}
@@ -269,11 +245,10 @@ index f7b331081..c1253a958 100644
  			if ((pvmw->flags & PVMW_SYNC) && !pvmw->ptl) {
  				pvmw->ptl = pte_lockptr(mm, pvmw->pmd);
  				spin_lock(pvmw->ptl);
-diff --git a/mm/pagewalk.c b/mm/pagewalk.c
-index 9b3db11a4..3a4a6baac 100644
---- a/mm/pagewalk.c
-+++ b/mm/pagewalk.c
-@@ -33,7 +33,11 @@ static int walk_pte_range_inner(pte_t *pte, unsigned long addr,
+diff -rup linux-5.16.20-orig/mm/pagewalk.c linux-5.16.20/mm/pagewalk.c
+--- linux-5.16.20-orig/mm/pagewalk.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/pagewalk.c	2022-09-27 21:24:30.942491776 +1000
+@@ -33,7 +33,11 @@ static int walk_pte_range_inner(pte_t *p
  		if (addr >= end - PAGE_SIZE)
  			break;
  		addr += PAGE_SIZE;
@@ -285,11 +260,25 @@ index 9b3db11a4..3a4a6baac 100644
  	}
  	return err;
  }
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 8d4104242..97a558ddf 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -765,8 +765,16 @@ static void swap_ra_info(struct vm_fault *vmf,
+diff -rup linux-5.16.20-orig/mm/swapfile.c linux-5.16.20/mm/swapfile.c
+--- linux-5.16.20-orig/mm/swapfile.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/swapfile.c	2022-09-27 21:24:30.942491776 +1000
+@@ -2000,7 +2000,11 @@ static int unuse_pte_range(struct vm_are
+ 		}
+ try_next:
+ 		pte = pte_offset_map(pmd, addr);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	pte_unmap(pte - 1);
+ 
+ 	ret = 0;
+diff -rup linux-5.16.20-orig/mm/swap_state.c linux-5.16.20/mm/swap_state.c
+--- linux-5.16.20-orig/mm/swap_state.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/swap_state.c	2022-09-27 21:24:30.946491812 +1000
+@@ -765,9 +765,17 @@ static void swap_ra_info(struct vm_fault
  	ra_info->ptes = pte;
  #else
  	tpte = ra_info->ptes;
@@ -302,12 +291,13 @@ index 8d4104242..97a558ddf 100644
 +		pte += PTE_STEP;
 +#else
  		*tpte++ = *pte++;
-+#endif
-+	}
  #endif
++	}
++#endif
  	pte_unmap(orig_pte);
  }
-@@ -804,8 +812,13 @@ static struct page *swap_vma_readahead(swp_entry_t fentry, gfp_t gfp_mask,
+ 
+@@ -804,8 +812,13 @@ static struct page *swap_vma_readahead(s
  		goto skip;
  
  	blk_start_plug(&plug);
@@ -321,27 +311,10 @@ index 8d4104242..97a558ddf 100644
  		pentry = *pte;
  		if (pte_none(pentry))
  			continue;
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index e59e08ef4..5aba188c8 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -2000,7 +2000,11 @@ static int unuse_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
- 		}
- try_next:
- 		pte = pte_offset_map(pmd, addr);
-+#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
-+	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
-+#else
- 	} while (pte++, addr += PAGE_SIZE, addr != end);
-+#endif
- 	pte_unmap(pte - 1);
- 
- 	ret = 0;
-diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index bf3c2fe8f..5896159dc 100644
---- a/mm/vmalloc.c
-+++ b/mm/vmalloc.c
-@@ -125,7 +125,11 @@ static int vmap_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
+diff -rup linux-5.16.20-orig/mm/vmalloc.c linux-5.16.20/mm/vmalloc.c
+--- linux-5.16.20-orig/mm/vmalloc.c	2022-09-27 21:23:38.518025545 +1000
++++ linux-5.16.20/mm/vmalloc.c	2022-09-27 21:24:30.946491812 +1000
+@@ -125,7 +125,11 @@ static int vmap_pte_range(pmd_t *pmd, un
  #endif
  		set_pte_at(&init_mm, addr, pte, pfn_pte(pfn, prot));
  		pfn++;
@@ -353,7 +326,7 @@ index bf3c2fe8f..5896159dc 100644
  	*mask |= PGTBL_PTE_MODIFIED;
  	return 0;
  }
-@@ -331,7 +335,11 @@ static void vunmap_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
+@@ -331,7 +335,11 @@ static void vunmap_pte_range(pmd_t *pmd,
  	do {
  		pte_t ptent = ptep_get_and_clear(&init_mm, addr, pte);
  		WARN_ON(!pte_none(ptent) && !pte_present(ptent));
@@ -365,7 +338,7 @@ index bf3c2fe8f..5896159dc 100644
  	*mask |= PGTBL_PTE_MODIFIED;
  }
  
-@@ -466,7 +474,6 @@ static int vmap_pages_pte_range(pmd_t *pmd, unsigned long addr,
+@@ -466,7 +474,6 @@ static int vmap_pages_pte_range(pmd_t *p
  	 * nr is a running index into the array which helps higher level
  	 * callers keep track of where we're up to.
  	 */
@@ -373,7 +346,7 @@ index bf3c2fe8f..5896159dc 100644
  	pte = pte_alloc_kernel_track(pmd, addr, mask);
  	if (!pte)
  		return -ENOMEM;
-@@ -479,7 +486,11 @@ static int vmap_pages_pte_range(pmd_t *pmd, unsigned long addr,
+@@ -479,7 +486,11 @@ static int vmap_pages_pte_range(pmd_t *p
  			return -ENOMEM;
  		set_pte_at(&init_mm, addr, pte, mk_pte(page, prot));
  		(*nr)++;
