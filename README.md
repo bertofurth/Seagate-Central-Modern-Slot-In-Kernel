@@ -1,16 +1,4 @@
 # Seagate Central Slot In v5.x Kernel
-
-# WARNING : NOTICE 
-As of August 2022 I am recommending AGAINST using this kernel.
-
-I've found a number of performance and other issues, particuarly
-with networking. At the moment I would suggest sticking with the
-native Seagate Central kernel unless you'd like to do some
-experimentation.
-
-Feel free to upgrade to this kernel if you wish but note that you
-should be prepared to revert back to the original/native kernel.
-
 # Summary
 
 A modern slot in Linux Kernel for the Seagate Central Single
@@ -33,10 +21,11 @@ following link
 
 https://github.com/bertofurth/Seagate-Central-Utils
 
-A pre-compiled Linux v5.16.12 kernel based on the instructions
+A pre-compiled Linux v5.16.20 kernel based on the instructions
 in this guide is currently available in the "Releases" section
 of this project at
 
+FIXME
 https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases/download/v1.1/uImage.v5.16.12-sc
 
 There are three sets of instructions included in this project.
@@ -105,8 +94,6 @@ It is worth noting that during the testing and development of this
 procedure I never encountered any problems involving data corruption 
 or abrupt loss of connectivity.
 
-In addition, I have never come close to "bricking" any Seagate Central!
-
 The Seagate Central version of the boot loader (u-boot) has a feature 
 where it automatically reverts to the previous version of firmware if
 it finds it is unable to successfully bootup the system after 4 consecutive
@@ -116,7 +103,9 @@ failure.
 In the absolute worst case where a Seagate Central were rendered totally
 inoperable there is always the option of physically opening the Seagate
 Central, removing the hard drive and mounting it on a different machine
-in order to resurrect it, and if necessary, retrieve any user data.
+in order to resurrect it, and if necessary, retrieve any user data. See
+
+https://github.com/bertofurth/Seagate-Central-Tips/blob/main/Unbrick-Replace-Reset-Hard-Drive.md
 
 Naturally the most prudent thing to do is to make a backup of the user
 Data on the Seagate Central before attempting this procedure, but I'll
