@@ -471,8 +471,7 @@ The output should indicate that the version of the running kernel is now
 5.x.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-FIXME
-     Linux NAS-X 5.16.20-sc #1 SMP Sun Mar 6 13:33:32 AEDT 2022 armv6l GNU/Linux    
+     Linux NAS-X 5.16.20-sc #1 SMP Wed Sep 28 16:43:29 AEST 2022 armv6l GNU/Linux   
      
 Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
