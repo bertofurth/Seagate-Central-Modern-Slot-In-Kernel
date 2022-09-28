@@ -25,8 +25,7 @@ A pre-compiled Linux v5.16.20 kernel based on the instructions
 in this guide is currently available in the "Releases" section
 of this project at
 
-FIXME
-https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases/download/v1.1/uImage.v5.16.12-sc
+https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases
 
 There are three sets of instructions included in this project.
 
