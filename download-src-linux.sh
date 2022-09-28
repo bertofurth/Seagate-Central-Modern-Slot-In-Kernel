@@ -10,20 +10,18 @@
 
 # Based on gcc's download_prerequisites script
 
-linux='https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.12.tar.xz'
+linux='https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.20.tar.xz'
 
 echo_archives() {
     echo "${linux}"
 }
 
 echo_patchnames() {
-    echo "../0001-linux-64K-Page-include.patch"
-    echo "../0002-linux-64K-Page-arm.patch"
-    echo "../0003-linux-64K-Page-mm.patch"
-    echo "../0004-linux-64K-Page-misc.patch"
-    echo "../0005-linux-CNS3XXX-arm.patch"
-    echo "../0006-linux-drivers.patch"
-    echo "../0007-linux-arm32.patch"
+    echo "../0001-SC-linux-5.16.20-arch.patch"
+    echo "../0002-SC-linux-5.16.20-drivers.patch"
+    echo "../0003-SC-linux-5.16.20-fs.patch"
+    echo "../0004-SC-linux-5.16.20-include.patch"
+    echo "../0005-SC-linux-5.16.20-mm.patch"
 }
 
 die() {
@@ -65,7 +63,7 @@ cp -r ../new-files/* .
 # Change back to base directory
 cd ..
 
-kernelconfigfile=$(ls -1rv config-seagate-central-* | cut -f1 -d'/' | head -1)
+kernelconfigfile=$(ls -1rv config-sc-*-basic.txt | cut -f1 -d'/' | head -1)
 if [ -z $kernelconfigfile ]; then
     echo
     echo Unable to find kernel config file. Exiting.
