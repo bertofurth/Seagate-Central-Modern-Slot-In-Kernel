@@ -115,7 +115,7 @@ section of this project with a name like "uImage.v5.16.12-sc"
 then it is suggested that the file be renamed to "uImage" at this
 point. For example
 
-     mv uImage.v5.16.12-sc uImage
+     mv uImage.v5.16.20-sc uImage
 
 Transfer this image to the Seagate Central. In this example we use 
 the scp command however, any other means can be used. When using scp 
@@ -163,18 +163,19 @@ root privileges on the Seagate Central. This can be done by either
 prepending **sudo** to each command or by issuing the **su** command
 and becoming the root user.
 
-### Disable obselete Seagate Media Service
-The Seagate Media Service used to allow users to view content on a 
-Seagate Central remotely or using a special phone app by registering
-an account with Seagate. This service was discontinued as per the notice at
+### IMPORTANT - Disable obselete Seagate Media Service
+The Seagate Media Service **must** be disabled before activating the new 
+kernel otherwise the unit will **hang on boot**.
+
+The Seagate Media Service is a defunct serivce that used to allow users
+to view content on a Seagate Central remotely or using a special phone 
+app by registering an account with Seagate. This service was 
+discontinued as per the notice at
 
 https://www.seagate.com/us/en/support/downloads/seagate-media/
 
 Note, this is different to the Twonky DLNA service that provides access
 to media for player devices on your home network.
-
-The Seagate Media Service **must** be disabled before activating the new 
-kernel otherwise the unit will hang on boot.
 
 Run the following commands to disable the Media Server.
 
@@ -401,8 +402,8 @@ that subdirectory there should be more module configuration files
 and a "kernel/" subdirectory containing the module tree. For example
 
     #ls -p cross-mod/lib/modules/
-    5.16.12-sc/
-    #ls -p cross-mod/lib/modules/5.16.12-sc
+    5.16.20-sc/
+    #ls -p cross-mod/lib/modules/5.16.20-sc
     build
     kernel/
     modules.alias
@@ -439,14 +440,14 @@ following command
 should show an output similar to the following.
 
      drwxrwxr-x 4 root root 4096 Sep 17  2015 2.6.35.13-cavm1.whitney-econa.whitney-econa
-     drwxr-xr-x 3 root root 4096 Mar  6 14:47 5.16.12-sc
+     drwxr-xr-x 3 root root 4096 Sep 28 14:47 5.16.20-sc
      
 Finally remove the original "modules.dep" file in the new module 
 subdirectory. Removing this file will cause the unit to perform a
 "depmod" for the newly installed modules on next boot which will
 properly index them.
 
-     rm /lib/modules/5.16.12-sc/modules.dep
+     rm /lib/modules/5.16.20-sc/modules.dep
      
 ### Reboot and confirm the upgrade    
 Finally, we reboot the unit and confirm that the new kernel is
@@ -470,7 +471,8 @@ The output should indicate that the version of the running kernel is now
 5.x.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-     Linux NAS-X 5.16.12-sc #1 SMP Sun Mar 6 13:33:32 AEDT 2022 armv6l GNU/Linux    
+FIXME
+     Linux NAS-X 5.16.20-sc #1 SMP Sun Mar 6 13:33:32 AEDT 2022 armv6l GNU/Linux    
      
 Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
