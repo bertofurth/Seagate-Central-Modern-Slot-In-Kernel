@@ -10,32 +10,29 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v5.16.12. 
+Linux kernel v5.16.20. 
 
     # Download this project to the build host
     git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
     cd Seagate-Central-Slot-In-v5.x-Kernel
     
-    # Download and extract Linux kernel v5.16.12 source code
-    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.12.tar.xz
-    tar -xf linux-5.16.12.tar.xz
-    cd linux-5.16.12
+    # Download and extract Linux kernel v5.16.20 source code
+    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.20.tar.xz
+    tar -xf linux-5.16.20.tar.xz
+    cd linux-5.16.20
      
     # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
-    patch -p1 < ../0001-linux-64K-Page-include.patch
-    patch -p1 < ../0002-linux-64K-Page-arm.patch
-    patch -p1 < ../0003-linux-64K-Page-mm.patch
-    patch -p1 < ../0004-linux-64K-Page-misc.patch
-    patch -p1 < ../0005-linux-CNS3XXX-arm.patch
-    patch -p1 < ../0006-linux-drivers.patch
-    patch -p1 < ../0007-linux-arm32.patch
-    patch -p1 < ../0008-linux-ntfs3.patch 
+    patch -p1 < ../0001-SC-linux-5.16.20-arch.patch
+    patch -p1 < ../0002-SC-linux-5.16.20-drivers.patch
+    patch -p1 < ../0003-SC-linux-5.16.20-fs.patch
+    patch -p1 < ../0004-SC-linux-5.16.20-include.patch
+    patch -p1 < ../0005-SC-linux-5.16.20-mm.patch
     
     # Copy new Seagate Central source files into the Linux source tree
     cp -r ../new-files/* .
     
     # Copy the kernel config file into the build directory
-    cp ../config-seagate-central-v5.16.12-all-in-one.txt ../obj/.config
+    cp ../config-sc-v5.16.20-basic.txt ../obj/.config
     
     # Add the cross compilation suite directory to the PATH 
     export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
@@ -60,9 +57,9 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-5.16.12 (latest at time of writing). Other reasonably close versions 
-of the Linux kernel should also work but may require some tweaking,
-especially at the point where the kernel source tree needs to be patched.
+5.16.20. Other reasonably close versions of the Linux kernel should also
+work but may require some tweaking, especially at the point where the
+kernel source tree needs to be patched.
 
 This procedure has been tested to work on the following building
 platforms
@@ -177,11 +174,11 @@ code and extracting it.
 
 Download the required version of the Linux kernel into the working directory,
 extract it and then change into the newly created directory as per the
-following example which uses Linux v5.16.12.
+following example which uses Linux v5.16.20.
 
-     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.12.tar.xz
-     tar -xf linux-5.16.12.tar.xz
-     cd linux-5.16.12
+     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.20.tar.xz
+     tar -xf linux-5.16.20.tar.xz
+     cd linux-5.16.20
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
@@ -190,17 +187,16 @@ Linux source code base directory will apply the patches. **Please make sure
 to execute these commands one at a time and carefully ensure that each
 command is successfull before proceeding to the next.**
 
-     patch -p1 < ../0001-linux-64K-Page-include.patch
-     patch -p1 < ../0002-linux-64K-Page-arm.patch
-     patch -p1 < ../0003-linux-64K-Page-mm.patch
-     patch -p1 < ../0004-linux-64K-Page-misc.patch
-     patch -p1 < ../0005-linux-CNS3XXX-arm.patch
-     patch -p1 < ../0006-linux-drivers.patch
-     patch -p1 < ../0007-linux-arm32.patch
-     patch -p1 < ../0008-linux-ntfs3.patch
+     patch -p1 < ../0001-SC-linux-5.16.20-arch.patch
+     patch -p1 < ../0002-SC-linux-5.16.20-drivers.patch
+     patch -p1 < ../0003-SC-linux-5.16.20-fs.patch
+     patch -p1 < ../0004-SC-linux-5.16.20-include.patch
+     patch -p1 < ../0005-SC-linux-5.16.20-mm.patch
      
 Make careful note of any Hunk FAILED messages. You may need to manually edit kernel 
-source files where patches have failed.
+source files where patches have failed. This will most likely happen if you use
+a version of the linux kernel that is different to the version that these patches
+were created using (v5.16.20)
 
 ### Copy new files
 New source files need to be copied into the Linux source tree as follows.
@@ -218,7 +214,7 @@ impact.
 ### Kernel configuration file
 When building the Linux kernel it is important to use a valid configuration file.
 This project includes a kernel configuration file called
-**config-seagate-central-v5.16.12-all-in-one.txt** that will generate a kernel image
+**config-sc-v5.16.20-basic.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central in one monolithic kernel image without the need for any
 Linux modules.
@@ -230,10 +226,10 @@ subdirectory of the base working directory.
 From the Linux source code base directory run the command
 
     mkdir -p ../obj
-    cp ../config-seagate-central-v5.16.12-all-in-one.txt ../obj/.config
+    cp ../config-sc-v5.16.20-basic.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
-**config-sc-v5.16.12-all-usb-cam-modules.txt** that can be copied into place
+**config-sc-v5.16.20-all-usb-cam-modules.txt** that can be copied into place
 instead of the above mentioned one if you wish to build modules supporting
 USB Video cameras. (See **README_USB_DEVICE_MODULES.md**)
 
@@ -313,11 +309,10 @@ Here is an example of the "make uImage" command being executed
     
 The process should complete with a message similar to the following
 
-      UIMAGE  arch/arm/boot/uImage
-     Image Name:   Linux-5.16.12-sc
-     Created:      Sat Mar  5 19:53:31 2022
+     Image Name:   Linux-5.16.20-sc
+     Created:      Wed Sep 28 15:22:44 2022
      Image Type:   ARM Linux Kernel Image (uncompressed)
-     Data Size:    4189952 Bytes = 4091.75 KiB = 4.00 MiB
+     Data Size:    4105608 Bytes = 4009.38 KiB = 3.92 MiB
      Load Address: 02000000
      Entry Point:  02000000
        Kernel: arch/arm/boot/uImage is ready
