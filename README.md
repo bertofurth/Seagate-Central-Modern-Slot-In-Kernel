@@ -163,11 +163,26 @@ after an IP address configuration change, if the unit is deliberately
 physically reconnected to a different LAN or if the underlying 
 configuration of the network the unit is connected to is changed.
 
+TODO : Modify the startup scripts so that if the unit detects that the
+ethernet hasn't aquired an IP address in a reasonable amount of time,
+we "bounce" the ethernet interface and try again.
+
+### Networking Performance
+TODO - Original Kernel has slightly faster raw networking performance 
+as revealed by iperf3 tests, however when transfering real files using
+SMB or SFTP the new kernel and the original kernel have compirable
+performance. 
+
+TODO : Add some iperf3, smb and sftp througput stats.
+
 ### Minor caveats
 The issues below are unlikely to impact on the normal operation of the
 Seagate Central, however for completeness sake they are documented here.
 
 ### NTFS formatted external drives
+Summary : We recommend using FAT32 or exFAT instead of NTFS for external
+USB drives.
+
 NTFS is a commonly used filesystem for large hard drives formatted using 
 modern Windows operating systems.
 
@@ -255,7 +270,8 @@ the bootup logs (dmesg) may reveal some warning messages and tracebacks.
 
 These messages do not impact on the main functionality of the unit.
 
-Some examples of these warning messages include
+Some examples of these warning messages, which are followed by backtrace
+stackdumps, include include
 
     WARNING: CPU: X PID: XX at mm/vmalloc.c:XXX vunmap_range_noflush+0xXX/0xXX
 
@@ -294,6 +310,18 @@ as the basis for a replacement led status monitor. Note that this
 script has not been thoroughly tested but might serve as the basis
 for future work.
 
+#### Implement a false sgnotify infrastructure
+The reason the unit running a new kernel will hang on boot if the
+defunct Seagate Media Service is not deconfigured is that one of the
+startus scripts (/etc/rc5.d/S98media_server_allow_scan) will hang
+when it tries to access kernel resources that the original
+Seagate supplied kernel provided but the new kernel does not.
+
+Ideally, for a truly "slot in" kernel we'd put some sham resources
+into the new kernel that would at least allow this startup script to
+not hang. For the moment though, it's easier to just make sure that
+the Seagate Media Service is completely disabled before upgrading.
+
 #### Power Management 
 In the new kernel there's no ability to suspend or to power down one of
 the CPUs during low CPU usage. Note that the old kernel had no such 
@@ -316,6 +344,10 @@ volume in the Seagate Central from 64K block size to a standard 4K block
 size. That way a standard memory page size of 4k could be used in the
 kernel which would be slightly more efficient in terms of memory and
 disk usage.
+
+It would also mean that the changes in this kernel would be much easier
+to port into future releases of Linux because one of the most complicated
+parts of implementing this project was getting 64K page support to work.
 
 #### Jumbo Ethernet Frames 
 Jumbo Ethernet frames allow devices to transmit frames that contain 
