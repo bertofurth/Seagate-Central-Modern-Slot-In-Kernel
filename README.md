@@ -137,7 +137,7 @@ tool does not work seamlessly with the new kernel and this may potentially
 cause some issues but in most cases there should not be any problems.
 
 Some users have reported that after the kernel upgrade, the unit needs
-to be rebooted a few times before it will successfully aquire an IP
+to be power cycled a few times before it will successfully aquire an IP
 address via DHCP. It's not yet clear why this is happening for some
 systems however if this is is case in your network then it may be best
 to assign a static IP address to your unit using the Web Management 
@@ -158,7 +158,7 @@ configuration of the unit is modified via the Web Management interface.
 After reconfiguration, IPv6 (which is a new capability of the new kernel)
 may not function properly.
 
-It may be that the best course of action is to manually reboot the unit
+It may be that the best course of action is to power cycle the unit
 after an IP address configuration change, if the unit is deliberately
 physically reconnected to a different LAN or if the underlying 
 configuration of the network the unit is connected to is changed.
