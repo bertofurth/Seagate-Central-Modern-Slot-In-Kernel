@@ -116,24 +116,56 @@ There are some aspects of the Seagate Central that make it difficult
 to create a truly "plug-in" kernel replacement. They are listed in
 detail here in approximate order of importance. 
 
-### Important : Samba - Needs to be upgraded. 
-The one major aspect that makes this kernel not quite "plug-in" as such
-is that the original custom version of the samba v3.5.16 file serving 
-software running on the Seagate Central needs to be upgraded to a modern
-version in order to work with the new kernel.
+### Important - Seagate Media Server must be disabled
+Seagate Media Server was a service which would allow you to view content 
+on your Seagate Central remotely or using your phone by registering an
+account with Seagate. This service was discontinued as per the notice at
 
-The associated project **Seagate-Central-Samba** explains why this is 
-necessary and describes in detail a number of ways that this goal
-can be accomplished.
+https://www.seagate.com/us/en/support/downloads/seagate-media/
 
-https://github.com/bertofurth/Seagate-Central-Samba
+Note, this is different to the Twonky DLNA service that provides access 
+to media for player devices on your home network.
 
-It is technically possible to try the new kernel on a Seagate Central 
-without upgrading the samba service however, it will simply mean that
-samba / Windows style file sharing will not operate! All of the other
-services on the Seagate Central, such as the web management interface,
-the ssh/sftp/ftp servers and the Twonky DLNA media server, will still 
-work.
+The Seagate Media Service must be completely disabled before upgrading
+the kernel otherwise the unit will hang on boot. Instructions on accomplishing
+this are given below.
+
+#### Potential Ethernet/Networking issues
+The Seagate Central uses a proprietary and closed source tool called
+"networklan" to manage the Ethernet interface. Unfortunately, this
+tool does not work seamlessly with the new kernel and this may potentially
+cause some issues but in most cases there should not be any problems.
+
+Some users have reported that after the kernel upgrade, the unit needs
+to be rebooted a few times before it will successfully aquire an IP
+address via DHCP. It's not yet clear why this is happening for some
+systems however if this is is case in your network then it may be best
+to assign a static IP address to your unit using the Web Management 
+interface under Settings -> Advanced -> LAN.
+
+Another scenario that may occur is that while running the new kernel,
+when the Ethernet cable is physically disconnected from the unit the
+"networklan" tool doesn't properly recognize this event. Instead,
+the system will continue to act as if the Ethernet interface is still 
+"up". After the unit is physically reconnected to the Ethernet LAN it
+will simply function as if nothing has happened. Normally this doesn't
+cause any problems. One very rare scenario where this might be an issue
+would be where a Seagate Central is moved from one physical subnet to
+another while still being powered on.
+
+Another scenario where a problem may sometimes occur is if the IP address
+configuration of the unit is modified via the Web Management interface.
+After reconfiguration, IPv6 (which is a new capability of the new kernel)
+may not function properly.
+
+It may be that the best course of action is to manually reboot the unit
+after an IP address configuration change, if the unit is deliberately
+physically reconnected to a different LAN or if the underlying 
+configuration of the network the unit is connected to is changed.
+
+### Minor caveats
+The issues below are unlikely to impact on the normal operation of the
+Seagate Central, however for completeness sake they are documented here.
 
 ### NTFS formatted external drives
 NTFS is a commonly used filesystem for large hard drives formatted using 
@@ -168,43 +200,6 @@ https://www.digitalcitizen.life/what-is-fat32-why-useful/
 
 * Format a drive with FAT32 greater than 32G (up to 8TB)
 https://www.howtogeek.com/316977/how-to-format-usb-drives-larger-than-32gb-with-fat32-on-windows/
-
-### Minor caveats
-The issues below are unlikely to impact on the normal operation of the
-Seagate Central, however for completeness sake they are documented here.
-
-#### Potential Ethernet/Networking issues
-The Seagate Central uses a proprietary and closed source tool called
-"networklan" to manage the Ethernet interface. Unfortunately, this
-tool does not work seamlessly with the new kernel and this may potentially
-cause some issues but in most cases there should not be any problems.
-
-Some users have reported that after the kernel upgrade, the unit needs
-to be rebooted a few times before it will successfully aquire an IP
-address via DHCP. It's not yet clear why this is happening for some
-systems however if this is is case in your network then it may be best
-to assign a static IP address to your unit using the Web Management 
-interface under Settings -> Advanced -> LAN.
-
-Another scenario that may occur is that while running the new kernel,
-when the Ethernet cable is physically disconnected from the unit the
-"networklan" tool doesn't properly recognize this event. Instead,
-the system will continue to act as if the Ethernet interface is still 
-"up". After the unit is physically reconnected to the Ethernet LAN it
-will simply function as if nothing has happened. Normally this doesn't
-cause any problems. One very rare scenario where this might be an issue
-would be where a Seagate Central is moved from one physical subnet to
-another while still being powered on.
-
-Another scenario where a problem may sometimes occur is if the IP address
-configuration of the unit is modified via the Web Management interface.
-After reconfiguration, IPv6 (which is a new capability of the new kernel)
-may not function properly.
-
-It may be that the best course of action is to manually reboot the unit
-after an IP address configuration change, if the unit is deliberately
-physically reconnected to a different LAN or if the underlying 
-configuration of the network the unit is connected to is changed.
 
 #### No red blinking LED status light for lost Ethernet connectivity
 When using native Seagate supplied stock firmware, if a Seagate Central
@@ -256,7 +251,7 @@ and "rare" features turned on as possible.
 #### Unusual tracebacks and warnings on bootup 
 Due to some minor incompatibilities between the new kernel and some of 
 the original software on the Seagate Central, a careful examination of 
-the bootup logs may reveal some warning messages and tracebacks. 
+the bootup logs (dmesg) may reveal some warning messages and tracebacks. 
 
 These messages do not impact on the main functionality of the unit.
 
