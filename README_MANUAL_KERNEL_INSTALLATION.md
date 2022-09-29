@@ -61,20 +61,15 @@ samba is not working to use FTP or SCP which should both still work.
 
 ### Samba version on the Seagate Central
 Although this is not strictly a pre-requisite of this kernel installation
-procedure it is worth reemphasising that the original samba file sharing 
-service on the Seagate Central will not work after the new kernel is
-installed unless it is upgraded to a modern version.
+procedure, the original samba file sharing service on the Seagate Central 
+will have imparied performance after the new kernel is installed. We suggest
+installing an up to date and modern version of samba. 
 
 See the Seagate-Central-Samba project at the following link for more
 details and instructions on how to upgrade the samba service on the
 Seagate Central.
 
 https://github.com/bertofurth/Seagate-Central-Samba
-
-That being said, it's possible to proceed past this point without updating
-the samba service if you just want to give the new kernel a quick test.
-You will still be able to access the unit via ssh and the web management 
-service.
 
 ## Procedure
 ### Workspace preparation
@@ -183,13 +178,6 @@ Run the following commands to disable the Media Server.
     update-rc.d -f media_server_ui_daemon remove
     update-rc.d -f media_server_allow_scan remove
     update-rc.d -f media_server_default_start remove
-
-### Samba
-If you wish to have a working Windows style samba file sharing service
-operational after the kernel upgrade then now is the point at which 
-the new samba software needs to be manually installed and activated.
-See the instructions in the Seagate-Central-Samba project at the
-following link for details.
 
 https://github.com/bertofurth/Seagate-Central-Samba
 
