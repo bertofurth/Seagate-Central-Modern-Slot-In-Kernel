@@ -28,6 +28,10 @@ Linux kernel v5.16.20.
     patch -p1 < ../0004-SC-linux-5.16.20-include.patch
     patch -p1 < ../0005-SC-linux-5.16.20-mm.patch
     
+    # Make sure that there are no .rej files indicating a failed patch
+    # If there are manually apply the indicated patches.
+    find -name *.rej
+    
     # Copy new Seagate Central source files into the Linux source tree
     cp -r ../new-files/* .
     
