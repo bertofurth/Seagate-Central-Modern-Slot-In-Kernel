@@ -1,6 +1,6 @@
 diff -rup linux-5.15.70-orig/fs/ext2/ext2.h linux-5.15.70/fs/ext2/ext2.h
 --- linux-5.15.70-orig/fs/ext2/ext2.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/fs/ext2/ext2.h	2022-09-30 10:22:15.387338035 +1000
++++ linux-5.15.70/fs/ext2/ext2.h	2022-10-04 19:26:32.879489252 +1100
 @@ -177,7 +177,11 @@ static inline struct ext2_sb_info *EXT2_
   * Macro-instructions used to manage several block sizes
   */
@@ -15,7 +15,7 @@ diff -rup linux-5.15.70-orig/fs/ext2/ext2.h linux-5.15.70/fs/ext2/ext2.h
  #define	EXT2_ADDR_PER_BLOCK(s)		(EXT2_BLOCK_SIZE(s) / sizeof (__u32))
 diff -rup linux-5.15.70-orig/fs/ntfs3/fslog.c linux-5.15.70/fs/ntfs3/fslog.c
 --- linux-5.15.70-orig/fs/ntfs3/fslog.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/fs/ntfs3/fslog.c	2022-09-30 10:22:15.391338069 +1000
++++ linux-5.15.70/fs/ntfs3/fslog.c	2022-10-04 19:26:32.883489286 +1100
 @@ -1180,8 +1180,9 @@ static int log_read_rst(struct ntfs_log
  			struct restart_info *info)
  {
@@ -30,7 +30,7 @@ diff -rup linux-5.15.70-orig/fs/ntfs3/fslog.c linux-5.15.70/fs/ntfs3/fslog.c
  
 diff -rup linux-5.15.70-orig/fs/proc/task_mmu.c linux-5.15.70/fs/proc/task_mmu.c
 --- linux-5.15.70-orig/fs/proc/task_mmu.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/fs/proc/task_mmu.c	2022-09-30 10:22:15.391338069 +1000
++++ linux-5.15.70/fs/proc/task_mmu.c	2022-10-04 19:26:32.883489286 +1100
 @@ -609,7 +609,11 @@ static int smaps_pte_range(pmd_t *pmd, u
  	 * in here.
  	 */
@@ -80,4 +80,3 @@ diff -rup linux-5.15.70-orig/fs/proc/task_mmu.c linux-5.15.70/fs/proc/task_mmu.c
  	pte_unmap_unlock(orig_pte, ptl);
  	cond_resched();
  	return 0;
-Only in linux-5.15.70/fs/proc: task_mmu.c.orig
