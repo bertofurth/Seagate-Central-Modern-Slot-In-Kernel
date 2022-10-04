@@ -21,6 +21,7 @@
 #include <linux/serial_core.h>
 #include <linux/serial_8250.h>
 #include <linux/platform_device.h>
+#include <linux/poll.h>
 #include <linux/proc_fs.h>
 #include <linux/memblock.h>
 #include <linux/mtd/mtd.h>
@@ -490,13 +491,219 @@ static const struct file_operations debug_fops = {
 
 static int __init cns3xxx_debugfs_init(void)
 {
-    // HERE
     cns3xxx_debugfs_dir = debugfs_create_dir("cns3xxx", NULL);
     debugfs_create_file("cns3xxx-dump", S_IRUGO, cns3xxx_debugfs_dir, NULL, &debug_fops);
     return 0;
 }
 
 #endif /* CONFIG_DEBUG_FS */
+
+#ifdef CONFIG_CNS3XXX_FAKE_SGNOTIFY_NODE
+/*
+ * Value below set as per original seagate firmware
+ */
+#define CNS3XXX_FAKE_SGNOTIFY_MAJOR  60
+
+// #define DEBUG_FAKE_SGNOTIFY
+//
+// Note : We'll probably get rid of these debugs
+// assuming nothing unexpected happens in the next
+// few years of running this feature
+
+static loff_t cns3xxx_fake_sgnotify_lseek(struct file *file,
+					  loff_t offset,
+					  int orig)
+{
+#ifdef DEBUG_FAKE_SGNOTIFY
+	static int debug_count = 0;
+
+	if (debug_count++ < 5) {
+		printk ("%s :\n", __FUNCTION__);
+	}
+	if (debug_count > 10000) {
+		debug_count = 0;
+	}
+#endif
+	return 0;
+}
+
+static ssize_t cns3xxx_fake_sgnotify_read(struct file *file,
+					  char __user *buf,
+					  size_t count,
+					  loff_t *ppos)
+{
+#ifdef DEBUG_FAKE_SGNOTIFY
+	static int debug_count = 0;
+
+	if (debug_count++ < 5) {
+		printk ("%s :\n", __FUNCTION__);
+	}
+	if (debug_count > 1000) {
+		debug_count = 0;
+	}
+#endif
+	return 0;
+}
+
+static ssize_t cns3xxx_fake_sgnotify_write(struct file *file,
+					   const char __user *buf,
+					   size_t count,
+					   loff_t *ppos)
+{
+#ifdef DEBUG_FAKE_SGNOTIFY
+	static int debug_count = 0;
+
+	if (debug_count++ < 20) {
+		printk ("%s count %d string %*s \n", __FUNCTION__, count, count, buf);
+	}
+	if (debug_count > 10000) {
+		debug_count = 0;
+	}
+#endif
+	return count;
+}
+int cns3xxx_fake_sgnotify_open(struct inode *inode, struct file *file)
+{
+#ifdef DEBUG_FAKE_SGNOTIFY
+	static int debug_count = 0;
+
+	if (debug_count++ < 40) {
+		printk ("%s  \n", __FUNCTION__);
+	}
+	if (debug_count > 1000) {
+		debug_count = 0;
+	}
+#endif
+	return 0;
+}
+
+static __poll_t
+cns3xxx_fake_sgnotify_poll(struct file *file, poll_table *wait)
+{
+#ifdef DEBUG_FAKE_SGNOTIFY
+	static int debug_count = 0;
+		
+	if (debug_count < 20) {
+		printk ("%s : Start \n", __FUNCTION__);
+	}
+
+	if (debug_count > 100) {
+		debug_count = 0;
+	}
+#endif
+	return (POLLOUT | POLLWRNORM);  // Ready for writing
+}
+
+/*
+ * Numbers taken from /media_server/runScannerDaemon.py
+ */
+#define SG_FS_NOTIFY_GET_INFO        0x5301
+#define SG_FS_NOTIFY_ACK             0x5302
+#define SG_FS_NOTIFY_SET_WATCH_DIR   0x5303
+#define SG_FS_NOTIFY_START_WATCH     0x5306
+#define SG_FS_NOTIFY_ADD_IGNORE_DIR  0x5308
+
+
+/*
+ * This set of data is meant to indicate that the sgnotify
+ * module has not detected any changes to the file systems.
+ * In reality files may have indeed changed but this fake
+ * module ignores them all.
+ */
+int cns3xxx_fake_sgnotify_info[16] = {0, 0, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0};
+
+
+/*
+ * cns3xxx_fake_sgnotify_ioctl()
+ * This ioctl handling function hopefully convinces the
+ * calling process that no changes have occured and so
+ * the Seagate Media Server doesn't need to do anything.
+ */
+long cns3xxx_fake_sgnotify_ioctl(struct file *file,
+		       unsigned int cmd, unsigned long arg)
+{
+	void __user *argp = (void __user *)arg;
+	int res;
+#ifdef DEBUG_FAKE_SGNOTIFY
+	unsigned char *cargp = argp;
+	static int debug_count = 0;
+
+	if (debug_count++ < 6) {
+		printk ("%s : count = %d cmd = 0x%x arg = %lu \n", __FUNCTION__, debug_count, cmd, arg);
+		printk ("%s : Data 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx\n",
+			__FUNCTION__,
+			cargp[0], cargp[1], cargp[2], cargp[3],
+			cargp[4], cargp[5], cargp[6], cargp[7]); 
+	}
+	if (debug_count > 10000) {
+		debug_count = 0;
+	}
+#endif
+	switch (cmd) {
+	case SG_FS_NOTIFY_GET_INFO:
+		res = copy_to_user(argp, &cns3xxx_fake_sgnotify_info,
+				   sizeof(cns3xxx_fake_sgnotify_info));
+		if (res) {
+			printk ("%s : Fault copying cns3xxx_fake_sgnotify_info \n",
+				__FUNCTION__);
+			return -EFAULT;
+		}
+		return 0;
+
+	case SG_FS_NOTIFY_ACK:
+		return 0;
+
+	case SG_FS_NOTIFY_START_WATCH:
+		/*
+		 * Normally invoked once as the server starts.
+		 */
+		return 0;
+		
+	default:
+#ifdef DEBUG_FAKE_SGNOTIFY
+		printk ("%s : UNEXPECTED IOCTL cmd = 0x%x arg = %lu \n", __FUNCTION__, cmd, arg);
+		printk ("%s : Data 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx 0x%hhx\n",
+			__FUNCTION__,
+			cargp[0], cargp[1], cargp[2], cargp[3],
+			cargp[4], cargp[5], cargp[6], cargp[7]);
+#endif
+		return 0;
+	}
+	return 0;
+}
+int cns3xxx_fake_sgnotify_release(struct inode *inode, struct file *file)
+{
+	return 0;
+}
+
+static const struct file_operations cns3xxx_fake_sgnotify_fops = {
+	.owner = THIS_MODULE,
+	.llseek = cns3xxx_fake_sgnotify_lseek,
+	.read = cns3xxx_fake_sgnotify_read,
+	.write = cns3xxx_fake_sgnotify_write,
+	.open = cns3xxx_fake_sgnotify_open,
+	.poll = cns3xxx_fake_sgnotify_poll,
+	.unlocked_ioctl = cns3xxx_fake_sgnotify_ioctl,
+	.compat_ioctl = cns3xxx_fake_sgnotify_ioctl,
+	.release = cns3xxx_fake_sgnotify_release,
+};
+
+static int __init cns3xxx_fake_sgnotify_init(void)
+{
+        int result;
+	result = register_chrdev(CNS3XXX_FAKE_SGNOTIFY_MAJOR, "sgfsnotify",
+				 &cns3xxx_fake_sgnotify_fops);
+	if (result < 0) {
+		printk(KERN_ERR "cns3xxx_fake_sgnotify: cannot register.\n");
+		return result;
+	}
+	return 0;
+} /* cns3xxx_fake_sgnotify_init() */
+
+#endif /* CONFIG_CNS3XXX_FAKE_SGNOTIFY_NODE */
 
 /*
  * Initialization
@@ -557,7 +764,10 @@ static void __init cns3420_init(void)
 #ifdef CONFIG_SPI_CNS3XXX
 	       "SPI, "
 #endif
-	       
+
+#ifdef CONFIG_CNS3XXX_FAKE_SGNOTIFY_NODE
+	       "Fake sgnotify, "
+#endif
 	       "\n");
 	
 	platform_add_devices(cns3420_pdevs, ARRAY_SIZE(cns3420_pdevs));
@@ -583,7 +793,9 @@ static void __init cns3420_init(void)
 	cns3xxx_debugfs_init();
 #endif /* CONFIG_DEBUG_FS */
 
-
+#ifdef CONFIG_CNS3XXX_FAKE_SGNOTIFY_NODE
+	cns3xxx_fake_sgnotify_init();
+#endif
 	
 }
 
