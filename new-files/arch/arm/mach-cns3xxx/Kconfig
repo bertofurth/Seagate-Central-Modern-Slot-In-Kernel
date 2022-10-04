@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
-menu "Cavium Networks CNS3XXX family"
+if ARCH_CNS3XXX
 
-depends on ARCH_CNS3XXX
+menu "Cavium Networks CNS3XXX family"
 
 config MACH_CNS3420VB
 	bool "Support for CNS3420 Validation Board"
@@ -47,3 +47,5 @@ config CNS3XXX_HIGH_PHYS_OFFSET
 	  by using the 0x20000000 high physical offset.
 	
 endmenu
+
+endif
