@@ -116,7 +116,7 @@ Transfer this image to the Seagate Central. In this example we use
 the scp command however, any other means can be used. When using scp 
 you will need to substitute your own username and NAS IP address.
 
-    scp obj/arch/arm/boot/uImage admin@192.0.2.99:
+    scp obj/arch/arm/boot/uImage admin@192.0.2.99:/Data/admin/
 
 After executing the scp command you'll be prompted for the user's
 password.
@@ -135,51 +135,57 @@ transferring the archive to the Seagate Central as per the following
 example
 
      tar -caf cross-mod.tar.gz cross-mod/
-     scp cross-mod.tar.gz admin@192.0.2.99:
+     scp cross-mod.tar.gz admin@192.0.2.99:/Data/admin/
 
 ### Transfer the config and script patches to the Seagate Central
 A number of configuration and script files need to be patched on
 the Seagate Central in order to cater for the new kernel's requirements.
 
-Relevant patch files are included in the base directory of this project 
-and have a suffix of ".SC.patch". These files need to be tranferred to
-the Seagate Central. This can be done via scp as per the following example.
+Relevant files are included in the base directory of this project 
+and have a suffix of ".SC.patch" and ".sh". These files need to be 
+transferred to the Seagate Central. This can be done via scp as per the 
+following example.
 
-     scp *.SC.patch admin@192.0.2.99:
+     scp *.SC.patch *.sh admin@192.0.2.99:/Data/admin/
      
 ### Login to the Seagate Central 
 Establish an ssh session to the Seagate Central. All the commands
 after this point in the procedure are executed on the Seagate
-Central.
+Central. Change to the directory where the patch and script files
+were copied to the unit in the previous step. For example
+
+    admin@NAS-X:~$ cd /Data/admin
+    admin@NAS-X:/Data/admin$
 
 ### Login as root or prepend sudo to further commands
 The commands after this point in the procedure must be executed with
 root privileges on the Seagate Central. This can be done by either 
 prepending **sudo** to each command or by issuing the **su** command
-and becoming the root user.
+and becoming the root user. For example
 
-### IMPORTANT - Disable obselete Seagate Media Service
-The Seagate Media Service **must** be disabled before activating the new 
-kernel otherwise the unit will **hang on boot**.
+    admin@NAS-X:/Data/admin$ su
+    Password: <Enter-Password>
+    root@NAS-X:/Data/admin#
+     
+### Optional - Disable obsolete services
+The Seagate Central comes with a number of services that have recently
+become obsolete and defunct. These include the "Seagate Media Service"
+and "Tappin Remote Access Service". These services consume a considerable
+amount of memory and CPU resources but do not provide any useful
+functionality.
 
-The Seagate Media Service is a defunct serivce that used to allow users
-to view content on a Seagate Central remotely or using a special phone 
-app by registering an account with Seagate. This service was 
-discontinued as per the notice at
-
-https://www.seagate.com/us/en/support/downloads/seagate-media/
-
-Note, this is different to the Twonky DLNA service that provides access
-to media for player devices on your home network.
-
-Run the following commands to disable the Media Server.
+We strongly suggest disabling these services by issuing the following
+commands as the root user on the Seagate Central.
 
     update-rc.d -f media_server_daemon remove
     update-rc.d -f media_server_ui_daemon remove
     update-rc.d -f media_server_allow_scan remove
     update-rc.d -f media_server_default_start remove
+    update-rc.d -f tappinAgent remove
 
-https://github.com/bertofurth/Seagate-Central-Samba
+See the following URL for more details
+
+https://github.com/bertofurth/Seagate-Central-Tips/blob/main/Disable_obsolete_services.md
 
 ### Optional - NTFS/exFAT USB insertion (Recommended)
 In order to take advantage of the new exFAT and NTFS file system
@@ -188,8 +194,8 @@ to one of the scripts that controls automatic mounting of newly
 inserted USB devices. FAT32 USB drives will still work regardless
 of whether this patch is applied.
 
-The script should first be backed up. Next it should be patched using
-the "usbshare.py.SC.patch" patch file that was transferred to the
+The original script should first be backed up. Next, it should be patched
+using the "usbshare.py.SC.patch" patch file that was transferred to the
 Seagate Central in a previous step.
 
      cp /usr/lib/python2.6/site-packages/shares/usbshare.py /usr/lib/python2.6/site-packages/shares/usbshare.py.old
@@ -220,39 +226,21 @@ tool deliberately removes IPv6 address configuration on the
 ethernet interface as the original Seagate Central firmware does
 not support IPv6.
 
-To overcome this, it is necessary to quickly turn IPv6 off then 
-back on for the ethernet interface after the networklan tool is
+To overcome this, it is necessary to turn IPv6 off then back on
+for the ethernet interface after the networklan tool is
 invoked.
 
-Create a new script called "/etc/init.d/ipv6_bounce" by either 
-copying it from the base directory of this project to the Seagate
-Central, or by using an editor like "nano" or "vi". The script's
-contents are as follows.
+The "ipv6_bounce.sh" script, which was copied to the Seagate Central in
+a previous step, needs to be installed as a startup script using the
+following commands.
 
-    #!/bin/sh
-    KERNEL_VERSION=$(uname -r)
-    KERNEL_VERSION_2=$(echo $KERNEL_VERSION | grep ^2\.)
-    if [ ! -z $KERNEL_VERSION_2 ]; then
-        exit 0
-    fi
-    
-    # Disable then re-enable IPv6 on eth0
-    sysctl -w net.ipv6.conf.eth0.disable_ipv6=1
-    sysctl -w net.ipv6.conf.eth0.disable_ipv6=0
-    
-This script simply disables then re-enables IPv6 on the eth0
-interface, but only if the new kernel is in operation. This
-means that this script is safe to leave in place even if the
-kernel is reverted back to the original version.
+    cp ipv6_bounce.sh /etc/init.d/
+    chmod 755 /etc/init.d/ipv6_bounce.sh
+    ln -s ../init.d/ipv6_bounce.sh /etc/rcS.d/S90ipv6_bounce.sh
 
-Modify the permissions of the script to ensure it is executable.
-
-     chmod 755 /etc/init.d/ipv6_bounce
-
-Create a link to the script that causes it to be executed on system
-bootup
-
-    ln -s ../init.d/ipv6_bounce /etc/rcS.d/S90ipv6_bounce
+These commands simply make sure the script is installed in the correct
+directory, is marked as executable and is listed as executing with
+priority "90". 
     
 Note that this script must be numerically ordered to execute after
 the /etc/rcS.d/S41blackarmor-network startup script which starts the
@@ -320,7 +308,7 @@ If the second copy of firmware is active then the output of the command will say
 
     current_kernel=kernel2
 
-Take a note of which copy of firmware is currently active.
+**Take note of which copy of firmware is currently active.**
 
 Interesting note: It is possible to manually change the value of this variable
 in order to force the Seagate Central to switch to using the other copy of
@@ -346,8 +334,7 @@ command
     mount /dev/sda2 /boot
      
 #### Make a backup copy of the original kernel
-Change into the /boot directory where the currently active uImage kernel file
-should be located and create a backup copy of the original kernel. 
+Create a backup copy of the original kernel as follows.
 
     cp /boot/uImage /boot/uImage.old
      
@@ -449,12 +436,18 @@ line with the reboot command.
 Naturally, at the point when the unit is rebooted any ssh sessions to
 the Seagate Central will be disconnected.
 
-After the unit has rebooted re-establish an ssh connection to the newly
-upgraded Seagate Central and issue the following command to confirm that
-the unit has loaded the new kernel.
+The unit should take about 3 or 4 minutes to reboot. The indicator light
+on the top of the system should show a solid green. After the LED has been
+solid green for about 1 minute, try to re-establish an ssh connection to 
+the newly upgraded Seagate Central. If you cannot re-establish a connection
+or if the green LED does not go solid then manually power cycle the unit by
+disconnecting the power for a few seconds and trying again.
+
+After re-connecting to the unit via ssh, issue the following command to confirm 
+that the unit has loaded the new kernel.
 
      uname -a
-     
+         
 The output should indicate that the version of the running kernel is now
 5.x.x-sc and that SMP functionality is enabled, as per the following sample
 output.
@@ -517,9 +510,17 @@ The command output should indicate that kernel version has reverted back to
     Linux NAS-X 2.6.35.13-cavm1.whitney-econa.whitney-econa #1 Wed Sep 16 15:47:59 PDT 2015 armv6l GNU/Linux
 
 ## Troubleshooting
-The most problematic issue that may occur after a failed kernel upgrade
-is that the unit is no longer accessible via ssh. If this happens then
-the easiest route to pursue is to force the unit to revert to it's
+The most common issue that may occur after a failed kernel upgrade
+is that the unit is no longer has network connectivity. If this happens then
+the first thing you should try is manually power cycling the unit. That is,
+disconnect the power supply and then reconnect it.
+
+There have been reports that sometimes after an upgrade the unit needs 
+to have the power supply disconnected then reconnected for the Ethernet
+to work.
+
+If power cycling the unit does not resolve the problem then the next 
+suggested course of action is to force the unit to revert to it's
 backup firmware as per the procedure at
 
 http://seagatecentralenhancementclub.blogspot.com/2015/08/revert-to-previous-firmware-on-seagate.html
@@ -530,10 +531,10 @@ In essence the steps are
 
 1) Power down then power up the Seagate Central.
 2) Wait about 35 seconds for the LED status light on top of the unit to turn from solid amber to flashing green.
-3) Execute the first 2 steps at least four times in a row.
+3) Execute the first 2 steps three more times in a row.
 4) Power up the unit and let it fully boot. It should now load the backup / alternate version of firmware
 
-After the unit boots up with the alternate version of firmware take
+After the unit boots up with the alternate version of firmware, take
 steps to mount the "failing" kernel boot partition and revert it back
 to the original kernel uImage.
 
