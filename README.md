@@ -21,9 +21,9 @@ following link
 
 https://github.com/bertofurth/Seagate-Central-Utils
 
-A pre-compiled Linux v5.16.20 kernel based on the instructions
-in this guide is currently available in the "Releases" section
-of this project at
+A pre-compiled Linux v5.x.x kernel based on the instructions
+in this guide is available in the "Releases" section of this 
+project at
 
 https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases
 
