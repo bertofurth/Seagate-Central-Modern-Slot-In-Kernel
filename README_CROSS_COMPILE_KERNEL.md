@@ -10,33 +10,33 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v5.16.20. 
+Linux kernel v5.15.70. 
 
     # Download this project to the build host
     git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
     cd Seagate-Central-Slot-In-v5.x-Kernel
     
-    # Download and extract Linux kernel v5.16.20 source code
-    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.20.tar.xz
-    tar -xf linux-5.16.20.tar.xz
-    cd linux-5.16.20
+    # Download and extract Linux kernel v5.15.70 source code
+    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.70.tar.xz
+    tar -xf linux-5.15.70.tar.xz
+    cd linux-5.15.70
      
     # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
-    patch -p1 < ../0001-SC-linux-5.16.20-arch.patch
-    patch -p1 < ../0002-SC-linux-5.16.20-drivers.patch
-    patch -p1 < ../0003-SC-linux-5.16.20-fs.patch
-    patch -p1 < ../0004-SC-linux-5.16.20-include.patch
-    patch -p1 < ../0005-SC-linux-5.16.20-mm.patch
+    patch -p1 < ../0001-SC-linux-5.15.70-arch.patch
+    patch -p1 < ../0002-SC-linux-5.15.70-drivers.patch
+    patch -p1 < ../0003-SC-linux-5.15.70-fs.patch
+    patch -p1 < ../0004-SC-linux-5.15.70-include.patch
+    patch -p1 < ../0005-SC-linux-5.15.70-mm.patch
     
     # Make sure that there are no .rej files indicating a failed patch
-    # If there are manually apply the indicated patches.
+    # If there are manually fix the problems in any .rej files
     find -name *.rej
     
     # Copy new Seagate Central source files into the Linux source tree
     cp -r ../new-files/* .
     
     # Copy the kernel config file into the build directory
-    cp ../config-sc-v5.16.20-basic.txt ../obj/.config
+    cp ../config-sc-v5.15.70-basic.txt ../obj/.config
     
     # Add the cross compilation suite directory to the PATH 
     export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
@@ -44,15 +44,24 @@ Linux kernel v5.16.20.
     # Specify the name of the cross compilation suite prefix
     export CROSS_COMPILE=arm-sc-linux-gnueabi-
     
+    # Specify the build architecture (arm)
+    export ARCH=arm
+    
+    # Specify the location of the build directory and the .config file
+    export KBUILD_OUTPUT=../obj
+    
+    # Specify the address in memory where the kernel should be loaded to
+    export LOADADDR=0x02000000
+    
     # Run "make olddefconfig" to ensure kernel config file compatiblility
-    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make olddefconfig
+    make olddefconfig
     
     # Build the kernel (Set appropriate j flag)
-    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make -j4 uImage
+    make -j4 uImage
     
     # Optional - If modules have been configured (they aren't by default)
-    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 make -j4 modules
-    KBUILD_OUTPUT=../obj INSTALL_MOD_PATH=../cross-mod make modules_install
+    make -j4 modules
+    INSTALL_MOD_PATH=../cross-mod make modules_install
     
 The newly generated uImage kernel file is located under the build
 directory at ../obj/arch/arm/boot/uImage . This kernel image can be
@@ -61,9 +70,11 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-5.16.20. Other reasonably close versions of the Linux kernel should also
-work but may require some tweaking, especially at the point where the
-kernel source tree needs to be patched.
+5.15.70. This version has been chosen as it is the latest "Long Term
+Support" release available at the time of writing. Other reasonably
+close versions of the Linux kernel should also work but may require
+some tweaking, especially at the point where the kernel source tree
+needs to be patched.
 
 This procedure has been tested to work on the following building
 platforms
@@ -136,19 +147,6 @@ system.
 * git (to download this project)
 * gcc-arm-none-eabi (If no self built cross compiler)
 
-### Warning : Samba version on the Seagate Central
-The original samba file server software on the Seagate Central
-**will not work** once a new kernel is installed on the Seagate Central.
-You can, however, upgrade the samba file server software to a
-newer compatible version.
-
-See the **Seagate-Central-Samba** project at the following link for more
-details and instructions on how to upgrade the samba service on the
-Seagate Central to a modern version that will work properly with the
-new kernel.
-
-https://github.com/bertofurth/Seagate-Central-Samba
-
 ## Build Procedure
 ### Workspace preparation
 If not already done, download the files in this project to a new
@@ -180,9 +178,9 @@ Download the required version of the Linux kernel into the working directory,
 extract it and then change into the newly created directory as per the
 following example which uses Linux v5.16.20.
 
-     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.20.tar.xz
-     tar -xf linux-5.16.20.tar.xz
-     cd linux-5.16.20
+     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.70.tar.xz
+     tar -xf linux-5.15.70.tar.xz
+     cd linux-5.15.70
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
@@ -191,16 +189,16 @@ Linux source code base directory will apply the patches. **Please make sure
 to execute these commands one at a time and carefully ensure that each
 command is successfull before proceeding to the next.**
 
-     patch -p1 < ../0001-SC-linux-5.16.20-arch.patch
-     patch -p1 < ../0002-SC-linux-5.16.20-drivers.patch
-     patch -p1 < ../0003-SC-linux-5.16.20-fs.patch
-     patch -p1 < ../0004-SC-linux-5.16.20-include.patch
-     patch -p1 < ../0005-SC-linux-5.16.20-mm.patch
+     patch -p1 < ../0001-SC-linux-5.15.70-arch.patch
+     patch -p1 < ../0002-SC-linux-5.15.70-drivers.patch
+     patch -p1 < ../0003-SC-linux-5.15.70-fs.patch
+     patch -p1 < ../0004-SC-linux-5.15.70-include.patch
+     patch -p1 < ../0005-SC-linux-5.15.70-mm.patch
      
-Make careful note of any Hunk FAILED messages. You may need to manually edit kernel 
+Make careful note of any "Hunk FAILED" messages. You may need to manually edit kernel 
 source files where patches have failed. This will most likely happen if you use
 a version of the linux kernel that is different to the version that these patches
-were created using (v5.16.20)
+were created using (v5.15.70)
 
 ### Copy new files
 New source files need to be copied into the Linux source tree as follows.
@@ -218,7 +216,7 @@ impact.
 ### Kernel configuration file
 When building the Linux kernel it is important to use a valid configuration file.
 This project includes a kernel configuration file called
-**config-sc-v5.16.20-basic.txt** that will generate a kernel image
+**config-sc-v5.15.70-basic.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central in one monolithic kernel image without the need for any
 Linux modules.
@@ -233,33 +231,23 @@ From the Linux source code base directory run the command
     cp ../config-sc-v5.16.20-basic.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
-**config-sc-v5.16.20-all-usb-cam-modules.txt** that can be copied into place
+**config-sc-v5.15.70-all-usb-cam-modules.txt** that can be copied into place
 instead of the above mentioned one if you wish to build modules supporting
 USB Video cameras. (See **README_USB_DEVICE_MODULES.md**)
 
-### make olddefconfig
-The following step makes sure that your kernel configuration is up to date
-and compatible with the kernel version being built. It automatically reconciles 
-any differences between the configuration file, your building environment and
-the version of Linux being compiled.
+### Set build environment variables
+A number of environment variables need to be set correctly in order to
+correctly cross compile the Linux kernel.
 
-There are a number of environment variables that need to be set when running the
-"make olddefconfig" command . 
+#### PATH
+If the cross compililation tool binaries are not in the standard path then the 
+location of the tools needs to be prepended to the path. This will most likely be
+the case when using the tools generated by the Seagate-Central-Toolchain project.
+If using the generic arm cross compiler then it probably won't be necessary to set
+this variable. An example command setting the PATH is as follows
 
-#### KBUILD_OUTPUT
-This is the location of the build directory and the location of the ".config"
-kernel configuration file. 
-
-#### ARCH
-This is the name of the cpu architecture we are building the Linux kernel for.
-In our case this is always set to "arm", referring to 32 bit arm style CPUs as
-used by the Seagate Central.
-
-#### LOADADDR
-This is the address in memory where the kernel needs to be copied to when the
-Seagate Central boots up. This project has been configured so that it should
-always be set to 0x02000000 as per the original Seagate Central kernel.
-
+    export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
+    
 #### CROSS_COMPILE
 This is the prefix of the cross compilation toolset being used. If the toolset
 as generated by the Seagate-Central-Toolchain project is being used then by default
@@ -267,40 +255,55 @@ this will be "arm-sc-linux-gnueabi-" . If a "generic" arm cross compiler is bein
 used then this might be something like "arm-none-eabi-". Note that this parameter
 will normally have a dash (-) at the end.
 
-#### PATH
-If the cross compililation tool binaries are not in the standard path then the 
-location of the tools needs to be prepended to the path. This will most likely be
-the case when using the tools generated by the Seagate-Central-Toolchain project.
-If using the generic arm cross compiler then it probably won't be necessary to set
-this variable.
+    export CROSS_COMPILE=arm-sc-linux-gnueabi-
 
-Here is an example of how the "make olddefconfig" command would be run when using
-the toolchain as generated by the Seagate-Central-Toolchain project.
+#### ARCH
+This is the name of the cpu architecture we are building the Linux kernel for.
+In our case this is always set to "arm", referring to 32 bit arm style CPUs as
+used by the Seagate Central.
+    
+    export ARCH=arm
 
-     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make olddefconfig
+#### KBUILD_OUTPUT
+This is the location of the build directory and the location of the ".config"
+kernel configuration file. (Make sure the specified directory exists and
+contains the ".config" kernel configuration file)
+
+    export KBUILD_OUTPUT=../obj
+
+#### LOADADDR
+This is the address in memory where the kernel needs to be copied to when the
+Seagate Central boots up. This project has been configured so that it should
+always be set to 0x02000000 as per the original Seagate Central kernel.
+
+    export LOADADDR=0x02000000
+    
+### make olddefconfig
+The following step makes sure that your kernel configuration is up to date
+and compatible with the kernel version being built. It automatically reconciles 
+any differences between the configuration file, your building environment and
+the version of Linux being compiled.
+
+Make sure that the environment variables discussed in the previous section are
+correctly set before executing this command.
+
+    make olddefconfig
      
 ### Optional - make menuconfig
 If desired the kernel configuration can be customized by running the 
 **make menuconfig** dialog. This dialog presents a user friendly menu driven
 interface which allows you to add, remove and modify kernel features.
 
-Here is an example of how the make menuconfig command would be run when using
-the toolchain as generated by the Seagate-Central-Toolchain project. Note that
-all the same environment variables as the "make olddefconfig" command need to
-be set.
 
-     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make menuconfig
+    make menuconfig
      
-Once you have finished making changes, select the "exit" option at the bottom of
-the menuconfig window. If prompted "Do you wish to save your configuration" make
-sure to select "yes". 
+Once you have finished making any required changes, select the "exit" option at
+the bottom of the menuconfig window. If prompted "Do you wish to save your 
+configuration" make sure to select "yes". 
 
 ### Build the kernel
 The linux kernel can now be build with the "make uImage" command in order to generate
 a kernel suitable for loading on the Seagate Central.
-
-Note that the same environment variables need to be set when running the "make uImage" 
-command as when the "make menuconfig" command was run.
 
 Note also that it might be useful to include the "-j[num-cpus]" parameter in the make
 command as this will let the compilation process make use of multiple CPU threads
@@ -309,14 +312,14 @@ available cpu cores on your building system.
     
 Here is an example of the "make uImage" command being executed
 
-     KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make -j4 uImage
+    make -j4 uImage
     
 The process should complete with a message similar to the following
 
-     Image Name:   Linux-5.16.20-sc
-     Created:      Wed Sep 28 15:22:44 2022
+     Image Name:   Linux-5.15.70-sc
+     Created:      Tue Oct  4 17:51:41 2022
      Image Type:   ARM Linux Kernel Image (uncompressed)
-     Data Size:    4105608 Bytes = 4009.38 KiB = 3.92 MiB
+     Data Size:    4121504 Bytes = 4024.91 KiB = 3.93 MiB
      Load Address: 02000000
      Entry Point:  02000000
        Kernel: arch/arm/boot/uImage is ready
@@ -340,11 +343,11 @@ instructions on adding module support for USB devices.
 After making the appropriate kernel configuration changes using
 a tool such as the "make menuconfig" dialog, build the kernel
 modules by issuing the "make modules" command using a command
-line similar to the following. Make sure to set all the same environment
-variables as used in the previous make commands shown above. For
+line similar to the following. Make sure that all of the same environment
+variables are set as used in the previous make commands shown above. For
 example
 
-    KBUILD_OUTPUT=../obj ARCH=arm LOADADDR=0x02000000 CROSS_COMPILE=arm-sc-linux-gnueabi- PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH make -j6 modules
+    make -j6 modules
 
 Finally, use "make modules_install" to copy all the compiled modules to
 a holding directory on the build machine where they can be later copied
@@ -354,7 +357,7 @@ with the INSTALL_MOD_PATH variable.
 In this example the module tree is copied to the "cross-mod" subdirectory
 of the base working directory.
 
-    KBUILD_OUTPUT=../obj INSTALL_MOD_PATH=../cross-mod make modules_install
+    INSTALL_MOD_PATH=../cross-mod make modules_install
  
 ## Troubleshooting
 Most problems will be due to 
