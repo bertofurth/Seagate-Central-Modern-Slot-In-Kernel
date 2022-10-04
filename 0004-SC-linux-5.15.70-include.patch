@@ -1,6 +1,6 @@
-diff -rup linux-5.16.20-orig/include/linux/pgtable.h linux-5.16.20/include/linux/pgtable.h
---- linux-5.16.20-orig/include/linux/pgtable.h	2022-09-27 21:23:38.518025545 +1000
-+++ linux-5.16.20/include/linux/pgtable.h	2022-09-27 21:24:30.922491598 +1000
+diff -rup linux-5.15.70-orig/include/linux/pgtable.h linux-5.15.70/include/linux/pgtable.h
+--- linux-5.15.70-orig/include/linux/pgtable.h	2022-09-23 22:15:52.000000000 +1000
++++ linux-5.15.70/include/linux/pgtable.h	2022-09-30 10:22:15.411338236 +1000
 @@ -58,11 +58,13 @@
   * because in such cases PTRS_PER_PxD equals 1.
   */
@@ -31,3 +31,6 @@ diff -rup linux-5.16.20-orig/include/linux/pgtable.h linux-5.16.20/include/linux
  #endif
  
  /* Find an entry in the second-level page table.. */
+Only in linux-5.15.70/include/linux/platform_data: cns3xxx.h
+Only in linux-5.15.70/include/linux/platform_data: dma-cns3xxx.h
+Only in linux-5.15.70/include/linux/platform_data: gpio-cns3xxx.h
