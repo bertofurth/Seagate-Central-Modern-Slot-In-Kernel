@@ -106,11 +106,11 @@ location relative to the base working directory.
     obj/arch/arm/boot/uImage
 
 If you have downloaded a pre-compiled kernel from the releases
-section of this project with a name like "uImage.v5.16.12-sc"
+section of this project with a name like "uImage.v5.15.70-sc"
 then it is suggested that the file be renamed to "uImage" at this
 point. For example
 
-     mv uImage.v5.16.20-sc uImage
+     mv uImage.v5.15.70-sc uImage
 
 Transfer this image to the Seagate Central. In this example we use 
 the scp command however, any other means can be used. When using scp 
@@ -377,8 +377,8 @@ that subdirectory there should be more module configuration files
 and a "kernel/" subdirectory containing the module tree. For example
 
     #ls -p cross-mod/lib/modules/
-    5.16.20-sc/
-    #ls -p cross-mod/lib/modules/5.16.20-sc
+    5.15.70-sc/
+    #ls -p cross-mod/lib/modules/5.15.70-sc
     build
     kernel/
     modules.alias
@@ -415,14 +415,14 @@ following command
 should show an output similar to the following.
 
      drwxrwxr-x 4 root root 4096 Sep 17  2015 2.6.35.13-cavm1.whitney-econa.whitney-econa
-     drwxr-xr-x 3 root root 4096 Sep 28 14:47 5.16.20-sc
+     drwxr-xr-x 3 root root 4096 Sep 28 14:47 5.15.70-sc
      
 Finally remove the original "modules.dep" file in the new module 
 subdirectory. Removing this file will cause the unit to perform a
 "depmod" for the newly installed modules on next boot which will
 properly index them.
 
-     rm /lib/modules/5.16.20-sc/modules.dep
+     rm /lib/modules/5.15.70-sc/modules.dep
      
 ### Reboot and confirm the upgrade    
 Finally, we reboot the unit and confirm that the new kernel is
@@ -452,7 +452,7 @@ The output should indicate that the version of the running kernel is now
 5.x.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-     Linux NAS-X 5.16.20-sc #1 SMP Wed Sep 28 16:43:29 AEST 2022 armv6l GNU/Linux   
+     Linux NAS-X 5.15.70-sc #1 SMP Wed Sep 28 16:43:29 AEST 2022 armv6l GNU/Linux   
      
 Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
