@@ -79,6 +79,7 @@ The other notable features that this project focused on include
 * Ethernet mac-address stored in flash
 * Control of status indicator LED
 * Access to the "Factory Default" button
+* A fake "sgnotify" device 
 
 ## Warning 
 **Performing modifications of this kind on the Seagate Central is not 
@@ -116,20 +117,6 @@ There are some aspects of the Seagate Central that make it difficult
 to create a truly "plug-in" kernel replacement. They are listed in
 detail here in approximate order of importance. 
 
-### Important - Seagate Media Server must be disabled
-Seagate Media Server was a service which would allow you to view content 
-on your Seagate Central remotely or using your phone by registering an
-account with Seagate. This service was discontinued as per the notice at
-
-https://www.seagate.com/us/en/support/downloads/seagate-media/
-
-Note, this is different to the Twonky DLNA service that provides access 
-to media for player devices on your home network.
-
-The Seagate Media Service must be completely disabled before upgrading
-the kernel otherwise the unit will hang on boot. Instructions on accomplishing
-this are given below.
-
 #### Potential Ethernet/Networking issues
 The Seagate Central uses a proprietary and closed source tool called
 "networklan" to manage the Ethernet interface. Unfortunately, this
@@ -139,12 +126,11 @@ cause some issues but in most cases there should not be any problems.
 Some users have reported that after the kernel upgrade, the unit needs
 to be power cycled a few times before it will successfully aquire an IP
 address via DHCP. It's not yet clear why this is happening for some
-systems however if this is is case in your network then it may be best
+systems however, if this is is case in your network then it may be best
 to assign a static IP address to your unit using the Web Management 
 interface under Settings -> Advanced -> LAN.
 
-Another scenario that may occur is that while running the new kernel,
-when the Ethernet cable is physically disconnected from the unit the
+When the Ethernet cable is physically disconnected from the unit the
 "networklan" tool doesn't properly recognize this event. Instead,
 the system will continue to act as if the Ethernet interface is still 
 "up". After the unit is physically reconnected to the Ethernet LAN it
@@ -170,7 +156,7 @@ we "bounce" the ethernet interface and try again.
 ### Networking Performance
 TODO - Original Kernel has slightly faster raw networking performance 
 as revealed by iperf3 tests, however when transfering real files using
-SMB or SFTP the new kernel and the original kernel have compirable
+SMB or SFTP the new kernel and the original kernel have comparable
 performance. 
 
 TODO : Add some iperf3, smb and sftp througput stats.
@@ -309,18 +295,6 @@ of this project called **new-led-monitor.sh** that could serve
 as the basis for a replacement led status monitor. Note that this
 script has not been thoroughly tested but might serve as the basis
 for future work.
-
-#### Implement a false sgnotify infrastructure
-The reason the unit running a new kernel will hang on boot if the
-defunct Seagate Media Service is not deconfigured is that one of the
-startus scripts (/etc/rc5.d/S98media_server_allow_scan) will hang
-when it tries to access kernel resources that the original
-Seagate supplied kernel provided but the new kernel does not.
-
-Ideally, for a truly "slot in" kernel we'd put some sham resources
-into the new kernel that would at least allow this startup script to
-not hang. For the moment though, it's easier to just make sure that
-the Seagate Media Service is completely disabled before upgrading.
 
 #### Power Management 
 In the new kernel there's no ability to suspend or to power down one of
