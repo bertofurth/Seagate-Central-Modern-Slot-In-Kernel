@@ -121,7 +121,7 @@ you will need to substitute your own username and NAS IP address.
 After executing the scp command you'll be prompted for the user's
 password.
 
-### OPTIONAL - Transfer kernel modules to the Seagate Central
+### Optional (Not usually needed) - Transfer kernel modules to the Seagate Central
 The instructions in this project have been designed so that
 kernel modules are not necessary for the new kernel image
 to function properly. Steps in this procedure dealing with
@@ -167,7 +167,7 @@ and becoming the root user. For example
     Password: <Enter-Password>
     root@NAS-X:/Data/admin#
      
-### Optional - Disable obsolete services
+### Optional (Recommended) - Disable obsolete services
 The Seagate Central comes with a number of services that have recently
 become obsolete and defunct. These include the "Seagate Media Service"
 and "Tappin Remote Access Service". These services consume a considerable
@@ -187,7 +187,7 @@ See the following URL for more details
 
 https://github.com/bertofurth/Seagate-Central-Tips/blob/main/Disable_obsolete_services.md
 
-### Optional - NTFS/exFAT USB insertion (Recommended)
+### Optional (Recommended) - NTFS/exFAT USB insertion 
 In order to take advantage of the new exFAT and NTFS file system
 support in the Linux kernel the following patch must be applied
 to one of the scripts that controls automatic mounting of newly
@@ -200,6 +200,25 @@ Seagate Central in a previous step.
 
      cp /usr/lib/python2.6/site-packages/shares/usbshare.py /usr/lib/python2.6/site-packages/shares/usbshare.py.old
      patch -i usbshare.py.SC.patch /usr/lib/python2.6/site-packages/shares/usbshare.py
+
+### Optional (Recommended) - Network IRQ CPU Affinity
+Testing showed that by forcing the networking interrupts to use
+the second CPU in the unit (CPU 1), there was a small but still
+statistically significant speed improvement for smb file transfers
+from a client to the the Seagate Central. (~51.5MB/s vs ~53.4MB/s)
+
+For this reason we suggest installing the included netdev-cpu.sh
+startup script on the upgraded Seagate Central which will set 
+the networking functions to have an affinity for CPU 1 rather than
+the default of both CPU 0 and CPU 1.
+
+The "netdev-cpu.sh" script, which was copied to the Seagate Central in
+a previous step, can be installed as a startup script using the
+following commands.
+
+    cp netdev-cpu.sh /etc/init.d/
+    chmod 755 /etc/init.d/netdev-cpu.sh
+    ln -s ../init.d/netdev-cpu.sh /etc/rcS.d/S42netdev-cpu.sh
 
 ### Optional - IPv6
 The original Seagate v2.6.35 kernel did not support IPv6 at all 
@@ -351,16 +370,17 @@ Confirm that the new uImage file is in place
 
     ls -l /boot
      
-The output of the above command should show the new image and the backed up
-original as per the following example (Note the file sizes may be slightly
-different in your case)
+The output of the above command should show the new kernel and the backed up
+original kernel as per the following example. Note the new kernel will generally 
+be about 4 - 5 MB in size, whereas the original kernel is much smaller at
+about 2.9MB.
 
     total 6995
-    drwx------ 2 root root   12288 Nov 17  2015 lost+found
-    -rw-r--r-- 1 root root 4129448 Sep 10 10:36 uImage
-    -rw-r--r-- 1 root root 2989612 Sep 10 10:36 uImage.orig
-
-#### OPTIONAL - Copy kernel modules into place
+    drwx------ 2 root root   12288 Oct  6 21:27 lost+found
+    -rw-r--r-- 1 root root 2989612 Oct  6 21:29 uImage
+    -rw-r--r-- 1 root root 4110824 Oct  7 08:04 uImage
+    
+#### Optional (Not usually needed) - Copy kernel modules into place
 This step should only be performed if you have made your own custom changes
 to the procedure in order to build kernel modules. By default, no kernel
 modules need to be built or installed so this step can be skipped.
@@ -428,20 +448,30 @@ properly index them.
 Finally, we reboot the unit and confirm that the new kernel is
 operational.
 
-Rebooting the unit can be performed via the Seagate Central command
-line with the reboot command.
+At this point we suggest shutting down the unit and power cycling
+as opposed to a "soft" reboot.
 
-     reboot
+Shutting down the unit can be performed via the Seagate Central command
+line with the "shutdown -h now" command.
+
+     shutdown -h now
      
-Naturally, at the point when the unit is rebooted any ssh sessions to
+Naturally, at the point when the unit is shutdown any ssh sessions to
 the Seagate Central will be disconnected.
 
+Wait for 30 seconds for the unit to shutdown properly, then power down the
+unit by disconnecting the power supply from the unit or from the mains.
+Reconnect the power after a few seconds.
+
 The unit should take about 3 or 4 minutes to reboot. The indicator light
-on the top of the system should show a solid green. After the LED has been
-solid green for about 1 minute, try to re-establish an ssh connection to 
-the newly upgraded Seagate Central. If you cannot re-establish a connection
-or if the green LED does not go solid then manually power cycle the unit by
-disconnecting the power for a few seconds and trying again.
+on the top of the system should go from amber, to flashing green and then
+eventually show a solid green. After the LED has been solid green for about
+1 minute, try to re-establish an ssh connection to the newly upgraded 
+Seagate Central. If you cannot re-establish a connection
+or if the green LED does not go solid then manually power cycle the unit
+again by disconnecting the power for a few seconds and trying again. See
+the Troubleshooting section below if you cannot reestablish an ssh
+connection.
 
 After re-connecting to the unit via ssh, issue the following command to confirm 
 that the unit has loaded the new kernel.
@@ -519,7 +549,8 @@ There have been reports that sometimes after an upgrade the unit needs
 to have the power supply disconnected then reconnected for the Ethernet
 to work.
 
-If power cycling the unit does not resolve the problem then the next 
+If power cycling the unit once or twice does not resolve the problem then 
+the next 
 suggested course of action is to force the unit to revert to it's
 backup firmware as per the procedure at
 
@@ -530,9 +561,13 @@ Archive : https://archive.ph/3eOX0
 In essence the steps are
 
 1) Power down then power up the Seagate Central.
-2) Wait about 35 seconds for the LED status light on top of the unit to turn from solid amber to flashing green.
+2) Wait about 35 seconds for the LED status light on top of the unit to turn from solid amber to flashing green. 
 3) Execute the first 2 steps three more times in a row.
 4) Power up the unit and let it fully boot. It should now load the backup / alternate version of firmware
+
+Make sure that step 2 is followed correctly. That is, power off the
+unit while the LED status light is flashing green. Don't let it
+proceed to the "solid" green state.
 
 After the unit boots up with the alternate version of firmware, take
 steps to mount the "failing" kernel boot partition and revert it back
