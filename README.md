@@ -71,7 +71,7 @@ of Gregory Clement (see Acknowledgements).
 
 The other notable features that this project focused on include
 * USB support - Allows connection of external drives and other devices.
-* Symmetric Multiprocessing (SMP) - More efficient and faster processing.
+* Symmetric Multiprocessing (SMP) - More efficient use of CPU resources.
 * IPv6 - The new standard for internet networking.
 * exFAT/NTFS3 - New Linux support for exFAT and NTFS formatted USB drives.
 * Real time clock (RTC)
@@ -117,18 +117,22 @@ There are some aspects of the Seagate Central that make it difficult
 to create a truly "plug-in" kernel replacement. They are listed in
 detail here in approximate order of importance. 
 
-#### Potential Ethernet/Networking issues
+#### Potential Ethernet/Networking issues on bootup
+Summary : On rare occasions the unit needs to be power cycled and not
+just soft rebooted to avoid Ethernet networking issues.
+
 The Seagate Central uses a proprietary and closed source tool called
 "networklan" to manage the Ethernet interface. Unfortunately, this
-tool does not work seamlessly with the new kernel and this may potentially
-cause some issues but in most cases there should not be any problems.
+tool does not work seamlessly with the new kernel and this may on rare
+occasions cause some issues but in most cases there should not be any
+problems.
 
-Some users have reported that after the kernel upgrade, the unit needs
-to be power cycled a few times before it will successfully aquire an IP
-address via DHCP. It's not yet clear why this is happening for some
-systems however, if this is is case in your network then it may be best
-to assign a static IP address to your unit using the Web Management 
-interface under Settings -> Advanced -> LAN.
+Some users have reported that sometimes after the unit is rebooted it
+may need to be power cycled to successfully aquire an IP address via
+DHCP. It's not yet clear why this is happening for some systems however,
+if this is is case in your network then it may be best to assign a
+static IP address to your unit using the Web Management interface under
+Settings -> Advanced -> LAN.
 
 When the Ethernet cable is physically disconnected from the unit the
 "networklan" tool doesn't properly recognize this event. Instead,
@@ -153,13 +157,37 @@ TODO : Modify the startup scripts so that if the unit detects that the
 ethernet hasn't aquired an IP address in a reasonable amount of time,
 we "bounce" the ethernet interface and try again.
 
-### Networking Performance
-TODO - Original Kernel has slightly faster raw networking performance 
-as revealed by iperf3 tests, however when transfering real files using
-SMB or SFTP the new kernel and the original kernel have comparable
-performance. 
+TODO : Consider replacing "networklan" with a more conventional Linux 
+network management system.
 
-TODO : Add some iperf3, smb and sftp througput stats.
+### Networking Performance
+Summary : The raw receive networking performance in the new kernel is
+less than the original kernel, however in practical terms the new SMP 
+capability makes up for it.
+
+The original Seagate Central Linux Kernel (2.6.35.13-cavm1.whitney-econa)
+included a proprietary module called sopp_cns3xxx_nas which dedicated
+one of the two CPU cores on the unit entirely to the networking function.
+This meant that the original Seagate Central kernel had very fast networking
+performance, particularly when the Seagate Central was receiving packets. 
+(iperf3 rx tcp : ~906Mbps)
+
+The drawback of the sopp_cns3xxx_nas approach was that other Linux processes
+could only make use of the one remaining CPU core, so when multiple processes
+were active at once, their performance may have suffered.
+
+The new v5.x kernel is not able to make use of the Seagate proprietary 
+networking module and as such, raw networking performance for received
+packets is not quite as fast as with the original kernel (iperf3 rx tcp 
+: ~663Mbps)
+
+The new and old kernel's raw transmit packet performance levels are
+essentially identical (iperf3 tx tcp : ~401Mbps)
+
+It is worth noting that when the new v5.x kernel is combined with the new
+samba 4.x server as seen in the **Seagate-Central-Samba** project,
+then both the upload and download performance of the smb file service is
+improved.
 
 ### Minor caveats
 The issues below are unlikely to impact on the normal operation of the
@@ -203,11 +231,14 @@ https://www.digitalcitizen.life/what-is-fat32-why-useful/
 https://www.howtogeek.com/316977/how-to-format-usb-drives-larger-than-32gb-with-fat32-on-windows/
 
 #### No red blinking LED status light for lost Ethernet connectivity
+Summary : With the new kernel, the status LED on top of the unit won't
+blink red if the Ethernet loses connectivity.
+
 When using native Seagate supplied stock firmware, if a Seagate Central
 detects that the Ethernet connection is down then the status light on
-the top of the unit will blink red. This will not occur when using
-the new kernel. This relates to the issue listed above with Ethernet
-disconnect handling.
+the top of the unit will change from solid green to blinking red. This
+will not occur when using the new kernel. This relates to the issue 
+listed above with Ethernet disconnect handling.
 
 Note that the other LED status states work properly. That is, solid
 amber after power on, flashing green during the boot process, solid
@@ -233,8 +264,6 @@ recent times.
 
 Some examples I've encountered in my testing.
 
-* SMP may not work in 4K page size mode with CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT enabled.
-
 * CONFIG_KASAN will cause a hang on boot.
 
 * CONFIG_FORTIFY_SOURCE may cause a hang on boot. (Fixed with patch 0007)
@@ -244,6 +273,8 @@ Some examples I've encountered in my testing.
 * CONFIG_PREEMPT_NONE will stop the Ethernet network from working. 
 
 * CONFIG_AFS_FS, the rarely used Andrew File System, will not work with 64K memory pages.
+
+* SMP may not work in 4K page size mode with CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT enabled.
 
 The rule of thumb I have had to follow when encountering "weird" 
 issues is to try compiling the kernel with the least number of debugs
@@ -460,12 +491,12 @@ lots of new software and services as documented by the
 * Syncthing - Modern file synchronization server and client
 * Motion - Security camera analysis software
 * MiniDLNA - To replace the bloated and CPU guzzling Twonky DLNA server
-* Up to date versions of linux command line tools
+* Up to date versions of Linux command line tools
 
-Obviously since the unit isn't particularly fast it's better to make
-use of these services "one at a time" but thanks to the excessive 
-swap space available on the platform, and thanks to the new SMP
-support, it all seems to hang together well.
+Since the unit isn't particularly fast it's better to make use of these
+services "one at a time" but thanks to the excessive swap space available
+on the platform, and thanks to the new SMP support, it all seems to hang
+together well.
 
 Hopefully these instructions can serve as a template for upgrading the 
 Linux kernel on other arm 32 based embedded NAS equipment. In particular 
