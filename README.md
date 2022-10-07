@@ -189,6 +189,11 @@ samba 4.x server as seen in the **Seagate-Central-Samba** project,
 then both the upload and download performance of the smb file service is
 improved.
 
+See the following URL for some statistics regarding networking
+and file transfer performance.
+
+https://github.com/bertofurth/Seagate-Central-Tips/blob/main/Network_Performance.md
+
 ### Minor caveats
 The issues below are unlikely to impact on the normal operation of the
 Seagate Central, however for completeness sake they are documented here.
