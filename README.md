@@ -286,21 +286,24 @@ issues is to try compiling the kernel with the least number of debugs
 and "rare" features turned on as possible.
 
 #### Unusual tracebacks and warnings on bootup 
-Due to some minor incompatibilities between the new kernel and some of 
-the original software on the Seagate Central, a careful examination of 
-the bootup logs (dmesg) may reveal some warning messages and tracebacks. 
+A careful examination of the bootup logs (dmesg) may reveal some warning messages
+and tracebacks. 
 
-These messages do not impact on the main functionality of the unit.
+These messages do not seem to impact on the main functionality of the unit.
 
 Some examples of these warning messages, which are followed by backtrace
 stackdumps, include include
 
     WARNING: CPU: X PID: XX at mm/vmalloc.c:XXX vunmap_range_noflush+0xXX/0xXX
 
+    (warn_slowpath_fmt) from [<XXXXXXXX>] (vunmap_range_noflush+0xXX/0xXXX)
+    
     WARNING: CPU: X PID: XXXX at arch/arm/mm/physaddr.c:XX __virt_to_phys+0xXX/0xXX kernel: virt_to_phys used for non-linear address: XXXXXXXX (0xXXXXXXXX)
-       
-These warnings seem to occur due to some of the proprietary Seagate 
-Central software, particularly the "ledmanager" and "networklan" tools.
+
+At this stage I'm not certain as to the cause of the messages. They only
+appear when the 64K page version of the kernel is in use. My research 
+indicates they may be indicative of one process blocking another from
+freeing memory but I'm not at all sure.
 
 ### TODO : (But probably not)
 Here are some components that I *could* have put some further effort into,
