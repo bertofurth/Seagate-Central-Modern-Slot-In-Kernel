@@ -1,0 +1,27 @@
+--- linux-5.15.70/kernel/panic.c.orig	2022-11-16 06:11:28.046097117 +1100
++++ linux-5.15.70/kernel/panic.c	2022-11-16 06:59:53.029417689 +1100
+@@ -620,6 +620,24 @@ void warn_slowpath_fmt(const char *file,
+ {
+ 	struct warn_args args;
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	static int num_warnings = 0;
++	/*
++	 * We're getting lots of these warnings
++	 * with 64K kernel and they're generally
++	 * all the same (Something relating to bpf).
++	 * Only bother printing the warnings every
++	 * few hundred or so. I know this is awful
++	 * but once you've seen one of these messages
++	 * you've seen them all.
++	 */
++	num_warnings = (num_warnings + 1) & 255;
++	if (num_warnings == 1) {
++		printk ("NOTICE : Suppressing the next 256 warn_slowpath_fmt messages\n");
++	} else {
++		return;
++	}
++#endif
+ 	pr_warn(CUT_HERE);
+ 
+ 	if (!fmt) {
