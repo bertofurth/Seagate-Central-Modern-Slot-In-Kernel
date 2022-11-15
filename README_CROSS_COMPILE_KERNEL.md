@@ -27,9 +27,10 @@ Linux kernel v5.15.70.
     patch -p1 < ../0003-SC-linux-5.15.70-fs.patch
     patch -p1 < ../0004-SC-linux-5.15.70-include.patch
     patch -p1 < ../0005-SC-linux-5.15.70-mm.patch
+    patch -p1 < ../0006-SC-linux-5.15.70-kernel.patch
     
     # Make sure that there are no .rej files indicating a failed patch
-    # If there are manually fix the problems in any .rej files
+    # If there are, manually fix the problems in any .rej files
     find -name *.rej
     
     # Copy new Seagate Central source files into the Linux source tree
@@ -194,11 +195,16 @@ command is successfull before proceeding to the next.**
      patch -p1 < ../0003-SC-linux-5.15.70-fs.patch
      patch -p1 < ../0004-SC-linux-5.15.70-include.patch
      patch -p1 < ../0005-SC-linux-5.15.70-mm.patch
+     patch -p1 < ../0006-SC-linux-5.15.70-kernel.patch
      
-Make careful note of any "Hunk FAILED" messages. You may need to manually edit kernel 
-source files where patches have failed. This will most likely happen if you use
-a version of the linux kernel that is different to the version that these patches
-were created using (v5.15.70)
+Make careful note of any "Hunk FAILED" messages. Check for any rejected patches
+by running the following command
+
+     find -name *.rej
+     
+You may need to manually edit kernel source files where patches have failed. This
+will most likely happen if you use a version of the linux kernel that is significantly
+different to the version that these patches were created using (v5.15.70)
 
 ### Copy new files
 New source files need to be copied into the Linux source tree as follows.
