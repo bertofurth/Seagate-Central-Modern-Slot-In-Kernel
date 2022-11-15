@@ -281,6 +281,8 @@ Some examples I've encountered in my testing.
 
 * SMP may not work in 4K page size mode with CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT enabled.
 
+* CONFIG_BPF_STREAM_PARSER causes tracebacks with 64K page size.
+
 The rule of thumb I have had to follow when encountering "weird" 
 issues is to try compiling the kernel with the least number of debugs
 and "rare" features turned on as possible.
@@ -291,19 +293,26 @@ and tracebacks.
 
 These messages do not seem to impact on the main functionality of the unit.
 
-Some examples of these warning messages, which are followed by backtrace
-stackdumps, include include
+Some examples of these traceback warning messages include include
 
     WARNING: CPU: X PID: XX at mm/vmalloc.c:XXX vunmap_range_noflush+0xXX/0xXX
-
+    . . .
     (warn_slowpath_fmt) from [<XXXXXXXX>] (vunmap_range_noflush+0xXX/0xXXX)
-    
-    WARNING: CPU: X PID: XXXX at arch/arm/mm/physaddr.c:XX __virt_to_phys+0xXX/0xXX kernel: virt_to_phys used for non-linear address: XXXXXXXX (0xXXXXXXXX)
+    . . .
+    (bpf_prog_free_deferred) from [<XXXXXXXX>] (process_one_work+0xXXX/0xXXX)
 
 At this stage I'm not certain as to the cause of the messages. They only
-appear when the 64K page version of the kernel is in use. My research 
-indicates they may be indicative of one process blocking another from
-freeing memory but I'm not at all sure.
+appear when the 64K page version of the kernel is in use and the BPF
+subsystem is invoked. The Seagate Central does not appear to make extensive 
+use of the BPF subsystem in normal operation so hopefully this won't be an
+issue.
+
+My research indicates that the "warn_slowpath_fmt" messages may be indicative
+of one process blocking another from freeing memory straight away but I'm not
+at all sure.
+
+Note that for the purposes of not polluting the logs, the first of these messages
+is printed but subsequent messages of the same type are suppressed.
 
 ### TODO : (But probably not)
 Here are some components that I *could* have put some further effort into,
@@ -344,19 +353,34 @@ It's possible to implement CPU power management but in my experience a
 file server needs to be ready to go 100% of the time so it's probably
 not a feature that would get much use.
 
+#### Real Time Clock
+While the real time clock implementation works very well with the 
+Seagate Central firmware and the included version of the "hwclock"
+utility, it has a slight incompatibility with the generic "hwclock"
+tool which I have not been able to resolve. 
+
+The workaround implemented was to compile the kernel with the
+CONFIG_RTC_HCTOSYS and CONFIG_RTC_SYSTOHC options which let the kernel
+itself automatically read and write the time to the real time clock
+rather than having to rely on the "hwclock" userspace utility.
+
 #### 64K to 4K partition block size conversion procedure 
 This project supports the 64K block sizes on the Seagate Central data
 partition by introducing support for a non-standard memory page size 
 of 64K.
 
-While using 64K pages, as opposed to standard 4K pages, has a potential
-performance benefit, it means that the system is less memory efficient.
+While using 64K pages, as opposed to standard 4K pages, has a significant
+performance benefit when it comes to disk operations, it means that the
+system is also significantly less memory efficient. If a user wanted to
+have a Seagate Central unit running multiple CPU and memory intensive 
+services as opposed to acting as a simple file server, then using a 4K
+kernel page size may potentially be a better choice.
 
 One possibility might be to create a guide for converting the user data
 volume in the Seagate Central from 64K block size to a standard 4K block
 size. That way a standard memory page size of 4k could be used in the
 kernel which would be slightly more efficient in terms of memory and
-disk usage.
+disk space usage.
 
 It would also mean that the changes in this kernel would be much easier
 to port into future releases of Linux because one of the most complicated
