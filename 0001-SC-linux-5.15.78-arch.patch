@@ -1,6 +1,6 @@
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/elf.h linux-5.15.70/arch/arm/include/asm/elf.h
---- linux-5.15.70-orig/arch/arm/include/asm/elf.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/elf.h	2022-10-04 20:01:42.393669803 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/elf.h linux-5.15.78/arch/arm/include/asm/elf.h
+--- linux-5.15.78-orig/arch/arm/include/asm/elf.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/elf.h	2022-11-16 10:13:13.318345537 +1100
 @@ -117,7 +117,7 @@ extern int arm_elf_read_implies_exec(int
  #define elf_read_implies_exec(ex,stk) arm_elf_read_implies_exec(stk)
  
@@ -10,9 +10,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/elf.h linux-5.15.70/arch/arm/i
  
  /* This is the base location for PIE (ET_DYN with INTERP) loads. */
  #define ELF_ET_DYN_BASE		0x400000UL
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/fixmap.h linux-5.15.70/arch/arm/include/asm/fixmap.h
---- linux-5.15.70-orig/arch/arm/include/asm/fixmap.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/fixmap.h	2022-10-04 20:01:42.393669803 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/fixmap.h linux-5.15.78/arch/arm/include/asm/fixmap.h
+--- linux-5.15.78-orig/arch/arm/include/asm/fixmap.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/fixmap.h	2022-11-16 10:13:13.322345579 +1100
 @@ -8,6 +8,7 @@
  
  #include <linux/pgtable.h>
@@ -30,9 +30,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/fixmap.h linux-5.15.70/arch/ar
  #define FIX_BTMAPS_SLOTS	7
  #define TOTAL_FIX_BTMAPS	(NR_FIX_BTMAPS * FIX_BTMAPS_SLOTS)
  
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/page.h linux-5.15.70/arch/arm/include/asm/page.h
---- linux-5.15.70-orig/arch/arm/include/asm/page.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/page.h	2022-10-04 20:01:42.393669803 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/page.h linux-5.15.78/arch/arm/include/asm/page.h
+--- linux-5.15.78-orig/arch/arm/include/asm/page.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/page.h	2022-11-16 10:13:13.322345579 +1100
 @@ -8,7 +8,11 @@
  #define _ASMARM_PAGE_H
  
@@ -45,9 +45,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/page.h linux-5.15.70/arch/arm/
  #define PAGE_SIZE		(_AC(1,UL) << PAGE_SHIFT)
  #define PAGE_MASK		(~((1 << PAGE_SHIFT) - 1))
  
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/pgtable-2level.h linux-5.15.70/arch/arm/include/asm/pgtable-2level.h
---- linux-5.15.70-orig/arch/arm/include/asm/pgtable-2level.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/pgtable-2level.h	2022-10-04 20:01:42.397669837 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/pgtable-2level.h linux-5.15.78/arch/arm/include/asm/pgtable-2level.h
+--- linux-5.15.78-orig/arch/arm/include/asm/pgtable-2level.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/pgtable-2level.h	2022-11-16 10:13:13.322345579 +1100
 @@ -71,6 +71,20 @@
  #define PTRS_PER_PMD		1
  #define PTRS_PER_PGD		2048
@@ -69,9 +69,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/pgtable-2level.h linux-5.15.70
  #define PTE_HWTABLE_PTRS	(PTRS_PER_PTE)
  #define PTE_HWTABLE_OFF		(PTE_HWTABLE_PTRS * sizeof(pte_t))
  #define PTE_HWTABLE_SIZE	(PTRS_PER_PTE * sizeof(u32))
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/pgtable-2level-hwdef.h linux-5.15.70/arch/arm/include/asm/pgtable-2level-hwdef.h
---- linux-5.15.70-orig/arch/arm/include/asm/pgtable-2level-hwdef.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/pgtable-2level-hwdef.h	2022-10-04 20:01:42.397669837 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/pgtable-2level-hwdef.h linux-5.15.78/arch/arm/include/asm/pgtable-2level-hwdef.h
+--- linux-5.15.78-orig/arch/arm/include/asm/pgtable-2level-hwdef.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/pgtable-2level-hwdef.h	2022-11-16 10:13:13.322345579 +1100
 @@ -66,7 +66,11 @@
  /*
   *   - extended small page/tiny page
@@ -96,9 +96,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/pgtable-2level-hwdef.h linux-5
  #define PTE_EXT_APX		(_AT(pteval_t, 1) << 9)		/* v6 */
  #define PTE_EXT_COHERENT	(_AT(pteval_t, 1) << 9)		/* XScale3 */
  #define PTE_EXT_SHARED		(_AT(pteval_t, 1) << 10)	/* v6 */
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/pgtable.h linux-5.15.70/arch/arm/include/asm/pgtable.h
---- linux-5.15.70-orig/arch/arm/include/asm/pgtable.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/pgtable.h	2022-10-04 20:01:42.397669837 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/pgtable.h linux-5.15.78/arch/arm/include/asm/pgtable.h
+--- linux-5.15.78-orig/arch/arm/include/asm/pgtable.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/pgtable.h	2022-11-16 10:13:13.322345579 +1100
 @@ -58,7 +58,11 @@ extern void __pgd_error(const char *file
   * mapping to be mapped at.  This is particularly important for
   * non-high vector CPUs.
@@ -128,9 +128,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/pgtable.h linux-5.15.70/arch/a
  #define pte_pfn(pte)		((pte_val(pte) & PHYS_MASK) >> PAGE_SHIFT)
  #define pfn_pte(pfn,prot)	__pte(__pfn_to_phys(pfn) | pgprot_val(prot))
  
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/shmparam.h linux-5.15.70/arch/arm/include/asm/shmparam.h
---- linux-5.15.70-orig/arch/arm/include/asm/shmparam.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/shmparam.h	2022-10-04 20:01:42.397669837 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/shmparam.h linux-5.15.78/arch/arm/include/asm/shmparam.h
+--- linux-5.15.78-orig/arch/arm/include/asm/shmparam.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/shmparam.h	2022-11-16 10:13:13.322345579 +1100
 @@ -7,7 +7,11 @@
   * or page size, whichever is greater since the cache aliases
   * every size/ways bytes.
@@ -143,9 +143,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/shmparam.h linux-5.15.70/arch/
  
  /*
   * Enforce SHMLBA in shmat
-diff -rup linux-5.15.70-orig/arch/arm/include/asm/thread_info.h linux-5.15.70/arch/arm/include/asm/thread_info.h
---- linux-5.15.70-orig/arch/arm/include/asm/thread_info.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/asm/thread_info.h	2022-10-04 20:01:42.405669907 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/asm/thread_info.h linux-5.15.78/arch/arm/include/asm/thread_info.h
+--- linux-5.15.78-orig/arch/arm/include/asm/thread_info.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/asm/thread_info.h	2022-11-16 10:13:13.322345579 +1100
 @@ -13,6 +13,9 @@
  #include <asm/fpstate.h>
  #include <asm/page.h>
@@ -164,9 +164,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/asm/thread_info.h linux-5.15.70/ar
  #define THREAD_SIZE		(PAGE_SIZE << THREAD_SIZE_ORDER)
  #define THREAD_START_SP		(THREAD_SIZE - 8)
  
-diff -rup linux-5.15.70-orig/arch/arm/include/uapi/asm/setup.h linux-5.15.70/arch/arm/include/uapi/asm/setup.h
---- linux-5.15.70-orig/arch/arm/include/uapi/asm/setup.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/include/uapi/asm/setup.h	2022-10-04 20:01:42.405669907 +1100
+diff -rup linux-5.15.78-orig/arch/arm/include/uapi/asm/setup.h linux-5.15.78/arch/arm/include/uapi/asm/setup.h
+--- linux-5.15.78-orig/arch/arm/include/uapi/asm/setup.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/include/uapi/asm/setup.h	2022-11-16 10:13:13.326345621 +1100
 @@ -124,7 +124,7 @@ struct tag_videolfb {
  #define ATAG_CMDLINE	0x54410009
  
@@ -176,9 +176,9 @@ diff -rup linux-5.15.70-orig/arch/arm/include/uapi/asm/setup.h linux-5.15.70/arc
  };
  
  /* acorn RiscPC specific information */
-diff -rup linux-5.15.70-orig/arch/arm/Kconfig linux-5.15.70/arch/arm/Kconfig
---- linux-5.15.70-orig/arch/arm/Kconfig	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/Kconfig	2022-10-04 20:01:42.405669907 +1100
+diff -rup linux-5.15.78-orig/arch/arm/Kconfig linux-5.15.78/arch/arm/Kconfig
+--- linux-5.15.78-orig/arch/arm/Kconfig	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/Kconfig	2022-11-16 10:13:13.326345621 +1100
 @@ -337,6 +337,27 @@ config ARM_SINGLE_ARMV7M
  	select SPARSE_IRQ
  	select USE_OF
@@ -223,9 +223,9 @@ diff -rup linux-5.15.70-orig/arch/arm/Kconfig linux-5.15.70/arch/arm/Kconfig
  	default 0x9f000000 if PAGE_OFFSET=0xC0000000
  	default 0x8f000000 if PAGE_OFFSET=0xB0000000
  	default 0xffffffff
-diff -rup linux-5.15.70-orig/arch/arm/Kconfig.debug linux-5.15.70/arch/arm/Kconfig.debug
---- linux-5.15.70-orig/arch/arm/Kconfig.debug	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/Kconfig.debug	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/Kconfig.debug linux-5.15.78/arch/arm/Kconfig.debug
+--- linux-5.15.78-orig/arch/arm/Kconfig.debug	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/Kconfig.debug	2022-11-16 10:13:13.334345705 +1100
 @@ -1788,7 +1788,6 @@ config DEBUG_UART_VIRT
  				DEBUG_OMAP4UART2 || DEBUG_OMAP5UART2
  	default 0xfa06e000 if DEBUG_OMAP2UART3 || DEBUG_OMAP4UART4
@@ -242,9 +242,9 @@ diff -rup linux-5.15.70-orig/arch/arm/Kconfig.debug linux-5.15.70/arch/arm/Kconf
  	default 0xffd01000 if DEBUG_HIP01_UART
  	default DEBUG_UART_PHYS if !MMU
  	depends on DEBUG_LL_UART_8250 || DEBUG_LL_UART_PL01X || \
-diff -rup linux-5.15.70-orig/arch/arm/kernel/entry-common.S linux-5.15.70/arch/arm/kernel/entry-common.S
---- linux-5.15.70-orig/arch/arm/kernel/entry-common.S	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/kernel/entry-common.S	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/kernel/entry-common.S linux-5.15.78/arch/arm/kernel/entry-common.S
+--- linux-5.15.78-orig/arch/arm/kernel/entry-common.S	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/kernel/entry-common.S	2022-11-16 10:13:13.334345705 +1100
 @@ -426,8 +426,19 @@ ENDPROC(sys_fstatfs64_wrapper)
   * offset, we return EINVAL.
   */
@@ -265,9 +265,9 @@ diff -rup linux-5.15.70-orig/arch/arm/kernel/entry-common.S linux-5.15.70/arch/a
  ENDPROC(sys_mmap2)
  
  #ifdef CONFIG_OABI_COMPAT
-diff -rup linux-5.15.70-orig/arch/arm/kernel/traps.c linux-5.15.70/arch/arm/kernel/traps.c
---- linux-5.15.70-orig/arch/arm/kernel/traps.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/kernel/traps.c	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/kernel/traps.c linux-5.15.78/arch/arm/kernel/traps.c
+--- linux-5.15.78-orig/arch/arm/kernel/traps.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/kernel/traps.c	2022-11-16 10:13:13.334345705 +1100
 @@ -866,7 +866,11 @@ void __init early_trap_init(void *vector
  
  	kuser_init(vectors_base);
@@ -280,9 +280,9 @@ diff -rup linux-5.15.70-orig/arch/arm/kernel/traps.c linux-5.15.70/arch/arm/kern
  }
  #else /* ifndef CONFIG_CPU_V7M */
  void __init early_trap_init(void *vectors_base)
-diff -rup linux-5.15.70-orig/arch/arm/lib/copy_page.S linux-5.15.70/arch/arm/lib/copy_page.S
---- linux-5.15.70-orig/arch/arm/lib/copy_page.S	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/lib/copy_page.S	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/lib/copy_page.S linux-5.15.78/arch/arm/lib/copy_page.S
+--- linux-5.15.78-orig/arch/arm/lib/copy_page.S	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/lib/copy_page.S	2022-11-16 10:13:13.334345705 +1100
 @@ -25,7 +25,7 @@ ENTRY(copy_page)
  		stmfd	sp!, {r4, lr}			@	2
  	PLD(	pld	[r1, #0]		)
@@ -292,9 +292,9 @@ diff -rup linux-5.15.70-orig/arch/arm/lib/copy_page.S linux-5.15.70/arch/arm/lib
  		ldmia	r1!, {r3, r4, ip, lr}		@	4+1
  1:	PLD(	pld	[r1, #2 * L1_CACHE_BYTES])
  	PLD(	pld	[r1, #3 * L1_CACHE_BYTES])
-diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/core.c linux-5.15.70/arch/arm/mach-cns3xxx/core.c
---- linux-5.15.70-orig/arch/arm/mach-cns3xxx/core.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mach-cns3xxx/core.c	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/core.c linux-5.15.78/arch/arm/mach-cns3xxx/core.c
+--- linux-5.15.78-orig/arch/arm/mach-cns3xxx/core.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mach-cns3xxx/core.c	2022-11-16 10:13:13.334345705 +1100
 @@ -12,48 +12,68 @@
  #include <linux/irqchip/arm-gic.h>
  #include <linux/of_platform.h>
@@ -495,9 +495,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/core.c linux-5.15.70/arch/arm
  }
  
  static const char *const cns3xxx_dt_compat[] __initconst = {
-diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/devices.c linux-5.15.70/arch/arm/mach-cns3xxx/devices.c
---- linux-5.15.70-orig/arch/arm/mach-cns3xxx/devices.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mach-cns3xxx/devices.c	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/devices.c linux-5.15.78/arch/arm/mach-cns3xxx/devices.c
+--- linux-5.15.78-orig/arch/arm/mach-cns3xxx/devices.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mach-cns3xxx/devices.c	2022-11-16 10:13:13.334345705 +1100
 @@ -13,8 +13,9 @@
  #include <linux/compiler.h>
  #include <linux/dma-mapping.h>
@@ -529,9 +529,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/devices.c linux-5.15.70/arch/
  	/* MMC/SD pins share with GPIOA */
  	gpioa_pins |= 0x1fff0004;
  	__raw_writel(gpioa_pins, gpioa);
-diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/Kconfig linux-5.15.70/arch/arm/mach-cns3xxx/Kconfig
---- linux-5.15.70-orig/arch/arm/mach-cns3xxx/Kconfig	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mach-cns3xxx/Kconfig	2022-10-04 20:15:18.472728026 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/Kconfig linux-5.15.78/arch/arm/mach-cns3xxx/Kconfig
+--- linux-5.15.78-orig/arch/arm/mach-cns3xxx/Kconfig	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mach-cns3xxx/Kconfig	2022-11-16 10:13:13.334345705 +1100
 @@ -1,13 +1,8 @@
  # SPDX-License-Identifier: GPL-2.0
 -menuconfig ARCH_CNS3XXX
@@ -589,9 +589,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/Kconfig linux-5.15.70/arch/ar
 +endmenu
 +
  endif
-diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/Makefile linux-5.15.70/arch/arm/mach-cns3xxx/Makefile
---- linux-5.15.70-orig/arch/arm/mach-cns3xxx/Makefile	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mach-cns3xxx/Makefile	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/Makefile linux-5.15.78/arch/arm/mach-cns3xxx/Makefile
+--- linux-5.15.78-orig/arch/arm/mach-cns3xxx/Makefile	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mach-cns3xxx/Makefile	2022-11-16 10:13:13.334345705 +1100
 @@ -4,3 +4,6 @@ cns3xxx-y				+= core.o pm.o
  cns3xxx-$(CONFIG_ATAGS)			+= devices.o
  cns3xxx-$(CONFIG_PCI)			+= pcie.o
@@ -599,9 +599,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/Makefile linux-5.15.70/arch/a
 +cns3xxx-$(CONFIG_MACH_SEAGATE)		+= seagate.o seagate_button.o
 +cns3xxx-$(CONFIG_SMP)              	+= platsmp.o headsmp.o cns3xxx_fiq.o
 +cns3xxx-$(CONFIG_HOTPLUG_CPU)         	+= hotplug.o
-diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/pm.c linux-5.15.70/arch/arm/mach-cns3xxx/pm.c
---- linux-5.15.70-orig/arch/arm/mach-cns3xxx/pm.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mach-cns3xxx/pm.c	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/pm.c linux-5.15.78/arch/arm/mach-cns3xxx/pm.c
+--- linux-5.15.78-orig/arch/arm/mach-cns3xxx/pm.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mach-cns3xxx/pm.c	2022-11-16 10:13:13.334345705 +1100
 @@ -8,9 +8,15 @@
  #include <linux/io.h>
  #include <linux/delay.h>
@@ -925,9 +925,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mach-cns3xxx/pm.c linux-5.15.70/arch/arm/m
 +
 +
 +late_initcall(cns3xxx_pm_init);
-diff -rup linux-5.15.70-orig/arch/arm/mm/copypage-v6.c linux-5.15.70/arch/arm/mm/copypage-v6.c
---- linux-5.15.70-orig/arch/arm/mm/copypage-v6.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/copypage-v6.c	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/copypage-v6.c linux-5.15.78/arch/arm/mm/copypage-v6.c
+--- linux-5.15.78-orig/arch/arm/mm/copypage-v6.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/copypage-v6.c	2022-11-16 10:13:13.334345705 +1100
 @@ -17,10 +17,6 @@
  
  #include "mm.h"
@@ -939,9 +939,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/copypage-v6.c linux-5.15.70/arch/arm/mm
  static DEFINE_RAW_SPINLOCK(v6_lock);
  
  /*
-diff -rup linux-5.15.70-orig/arch/arm/mm/dma.h linux-5.15.70/arch/arm/mm/dma.h
---- linux-5.15.70-orig/arch/arm/mm/dma.h	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/dma.h	2022-10-04 20:01:42.417670012 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/dma.h linux-5.15.78/arch/arm/mm/dma.h
+--- linux-5.15.78-orig/arch/arm/mm/dma.h	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/dma.h	2022-11-16 10:13:13.334345705 +1100
 @@ -5,8 +5,13 @@
  #include <asm/glue-cache.h>
  
@@ -956,9 +956,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/dma.h linux-5.15.70/arch/arm/mm/dma.h
  
  /*
   * These are private to the dma-mapping API.  Do not use directly.
-diff -rup linux-5.15.70-orig/arch/arm/mm/dump.c linux-5.15.70/arch/arm/mm/dump.c
---- linux-5.15.70-orig/arch/arm/mm/dump.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/dump.c	2022-10-04 20:01:42.421670046 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/dump.c linux-5.15.78/arch/arm/mm/dump.c
+--- linux-5.15.78-orig/arch/arm/mm/dump.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/dump.c	2022-11-16 10:13:13.334345705 +1100
 @@ -309,8 +309,11 @@ static void walk_pte(struct pg_state *st
  	pte_t *pte = pte_offset_kernel(pmd, 0);
  	unsigned long addr;
@@ -972,9 +972,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/dump.c linux-5.15.70/arch/arm/mm/dump.c
  		addr = start + i * PAGE_SIZE;
  		note_page(st, addr, 5, pte_val(*pte), domain);
  	}
-diff -rup linux-5.15.70-orig/arch/arm/mm/fault.c linux-5.15.70/arch/arm/mm/fault.c
---- linux-5.15.70-orig/arch/arm/mm/fault.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/fault.c	2022-10-04 20:01:42.421670046 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/fault.c linux-5.15.78/arch/arm/mm/fault.c
+--- linux-5.15.78-orig/arch/arm/mm/fault.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/fault.c	2022-11-16 10:13:13.334345705 +1100
 @@ -26,6 +26,19 @@
  
  #ifdef CONFIG_MMU
@@ -1011,9 +1011,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/fault.c linux-5.15.70/arch/arm/mm/fault
  		pte_unmap(pte);
  	} while(0);
  
-diff -rup linux-5.15.70-orig/arch/arm/mm/flush.c linux-5.15.70/arch/arm/mm/flush.c
---- linux-5.15.70-orig/arch/arm/mm/flush.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/flush.c	2022-10-04 20:01:42.425670081 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/flush.c linux-5.15.78/arch/arm/mm/flush.c
+--- linux-5.15.78-orig/arch/arm/mm/flush.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/flush.c	2022-11-16 10:13:13.334345705 +1100
 @@ -315,6 +315,7 @@ void __sync_icache_dcache(pte_t pteval)
  void flush_dcache_page(struct page *page)
  {
@@ -1035,9 +1035,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/flush.c linux-5.15.70/arch/arm/mm/flush
  	    mapping && !page_mapcount(page))
  		clear_bit(PG_dcache_clean, &page->flags);
  	else {
-diff -rup linux-5.15.70-orig/arch/arm/mm/Kconfig linux-5.15.70/arch/arm/mm/Kconfig
---- linux-5.15.70-orig/arch/arm/mm/Kconfig	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/Kconfig	2022-10-04 20:01:42.425670081 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/Kconfig linux-5.15.78/arch/arm/mm/Kconfig
+--- linux-5.15.78-orig/arch/arm/mm/Kconfig	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/Kconfig	2022-11-16 10:13:13.334345705 +1100
 @@ -937,6 +937,17 @@ config DMA_CACHE_RWFO
  	  in hardware, other workarounds are needed (e.g. cache
  	  maintenance broadcasting in software via FIQ).
@@ -1073,10 +1073,10 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/Kconfig linux-5.15.70/arch/arm/mm/Kconf
  config CACHE_L2X0
  	bool "Enable the L2x0 outer cache controller" if MIGHT_HAVE_CACHE_L2X0
  	default MIGHT_HAVE_CACHE_L2X0
-diff -rup linux-5.15.70-orig/arch/arm/mm/mmu.c linux-5.15.70/arch/arm/mm/mmu.c
---- linux-5.15.70-orig/arch/arm/mm/mmu.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/mmu.c	2022-10-04 20:01:42.425670081 +1100
-@@ -355,7 +355,11 @@ static pte_t bm_pte[PTRS_PER_PTE + PTE_H
+diff -rup linux-5.15.78-orig/arch/arm/mm/mmu.c linux-5.15.78/arch/arm/mm/mmu.c
+--- linux-5.15.78-orig/arch/arm/mm/mmu.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/mmu.c	2022-11-16 10:13:13.334345705 +1100
+@@ -359,7 +359,11 @@ static pte_t bm_pte[PTRS_PER_PTE + PTE_H
  
  static pte_t * __init pte_offset_early_fixmap(pmd_t *dir, unsigned long addr)
  {
@@ -1088,7 +1088,7 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/mmu.c linux-5.15.70/arch/arm/mm/mmu.c
  }
  
  static pte_t *pte_offset_late_fixmap(pmd_t *dir, unsigned long addr)
-@@ -725,7 +729,9 @@ static pte_t * __init arm_pte_alloc(pmd_
+@@ -729,7 +733,9 @@ static pte_t * __init arm_pte_alloc(pmd_
  				void *(*alloc)(unsigned long sz))
  {
  	if (pmd_none(*pmd)) {
@@ -1099,7 +1099,7 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/mmu.c linux-5.15.70/arch/arm/mm/mmu.c
  		__pmd_populate(pmd, __pa(pte), prot);
  	}
  	BUG_ON(pmd_bad(*pmd));
-@@ -749,7 +755,11 @@ static void __init alloc_init_pte(pmd_t
+@@ -753,7 +759,11 @@ static void __init alloc_init_pte(pmd_t
  		set_pte_ext(pte, pfn_pte(pfn, __pgprot(type->prot_pte)),
  			    ng ? PTE_EXT_NG : 0);
  		pfn++;
@@ -1111,7 +1111,7 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/mmu.c linux-5.15.70/arch/arm/mm/mmu.c
  }
  
  static void __init __map_init_section(pmd_t *pmd, unsigned long addr,
-@@ -1358,7 +1368,16 @@ static void __init devicemaps_init(const
+@@ -1362,7 +1372,16 @@ static void __init devicemaps_init(const
  	/*
  	 * Allocate the vector page early.
  	 */
@@ -1128,7 +1128,7 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/mmu.c linux-5.15.70/arch/arm/mm/mmu.c
  
  	early_trap_init(vectors);
  
-@@ -1428,13 +1447,22 @@ static void __init devicemaps_init(const
+@@ -1432,13 +1451,22 @@ static void __init devicemaps_init(const
  		map.type = MT_LOW_VECTORS;
  		create_mapping(&map);
  	}
@@ -1152,9 +1152,10 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/mmu.c linux-5.15.70/arch/arm/mm/mmu.c
  
  	/*
  	 * Ask the machine support to map in the statically mapped devices.
-diff -rup linux-5.15.70-orig/arch/arm/mm/pgd.c linux-5.15.70/arch/arm/mm/pgd.c
---- linux-5.15.70-orig/arch/arm/mm/pgd.c	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/pgd.c	2022-10-04 20:01:42.425670081 +1100
+Only in linux-5.15.78/arch/arm/mm: mmu.c.orig
+diff -rup linux-5.15.78-orig/arch/arm/mm/pgd.c linux-5.15.78/arch/arm/mm/pgd.c
+--- linux-5.15.78-orig/arch/arm/mm/pgd.c	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/pgd.c	2022-11-16 10:13:13.334345705 +1100
 @@ -119,7 +119,9 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
  		init_pmd = pmd_offset(init_pud, 0);
  		init_pte = pte_offset_map(init_pmd, 0);
@@ -1165,9 +1166,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/pgd.c linux-5.15.70/arch/arm/mm/pgd.c
  		pte_unmap(init_pte);
  		pte_unmap(new_pte);
  	}
-diff -rup linux-5.15.70-orig/arch/arm/mm/proc-macros.S linux-5.15.70/arch/arm/mm/proc-macros.S
---- linux-5.15.70-orig/arch/arm/mm/proc-macros.S	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/proc-macros.S	2022-10-04 20:01:42.425670081 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/proc-macros.S linux-5.15.78/arch/arm/mm/proc-macros.S
+--- linux-5.15.78-orig/arch/arm/mm/proc-macros.S	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/proc-macros.S	2022-11-16 10:13:13.334345705 +1100
 @@ -155,8 +155,16 @@
  
  	bic	r3, r1, #0x000003fc
@@ -1215,9 +1216,9 @@ diff -rup linux-5.15.70-orig/arch/arm/mm/proc-macros.S linux-5.15.70/arch/arm/mm
  	.endm
  
  
-diff -rup linux-5.15.70-orig/arch/arm/mm/proc-v6.S linux-5.15.70/arch/arm/mm/proc-v6.S
---- linux-5.15.70-orig/arch/arm/mm/proc-v6.S	2022-09-23 22:15:52.000000000 +1000
-+++ linux-5.15.70/arch/arm/mm/proc-v6.S	2022-10-04 20:01:42.425670081 +1100
+diff -rup linux-5.15.78-orig/arch/arm/mm/proc-v6.S linux-5.15.78/arch/arm/mm/proc-v6.S
+--- linux-5.15.78-orig/arch/arm/mm/proc-v6.S	2022-11-11 04:15:43.000000000 +1100
++++ linux-5.15.78/arch/arm/mm/proc-v6.S	2022-11-16 10:13:13.338345747 +1100
 @@ -95,21 +95,31 @@ ENTRY(cpu_v6_dcache_clean_area)
   */
  ENTRY(cpu_v6_switch_mm)
