@@ -1,6 +1,6 @@
-diff -rup linux-5.15.78-orig/include/linux/pgtable.h linux-5.15.78/include/linux/pgtable.h
---- linux-5.15.78-orig/include/linux/pgtable.h	2022-11-11 04:15:43.000000000 +1100
-+++ linux-5.15.78/include/linux/pgtable.h	2022-11-16 10:13:31.146531620 +1100
+diff -rup linux-5.15.81-orig/include/linux/pgtable.h linux-5.15.81/include/linux/pgtable.h
+--- linux-5.15.81-orig/include/linux/pgtable.h	2022-12-03 03:41:12.000000000 +1100
++++ linux-5.15.81/include/linux/pgtable.h	2022-12-03 13:08:44.001576966 +1100
 @@ -58,11 +58,13 @@
   * because in such cases PTRS_PER_PxD equals 1.
   */
