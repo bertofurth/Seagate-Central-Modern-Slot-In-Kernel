@@ -10,7 +10,7 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v5.15.78. 
+Linux kernel v5.15.81. 
 
     # Download this project to the build host
     git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
@@ -18,17 +18,17 @@ Linux kernel v5.15.78.
     
     # Download and extract Linux kernel v5.15.78 source code
     # or another close kernel release
-    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.78.tar.xz
-    tar -xf linux-5.15.78.tar.xz
-    cd linux-5.15.78
+    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.81.tar.xz
+    tar -xf linux-5.15.81.tar.xz
+    cd linux-5.15.81
      
     # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
-    patch -p1 < ../0001-SC-linux-5.15.78-arch.patch
-    patch -p1 < ../0002-SC-linux-5.15.78-drivers.patch
-    patch -p1 < ../0003-SC-linux-5.15.78-fs.patch
-    patch -p1 < ../0004-SC-linux-5.15.78-include.patch
-    patch -p1 < ../0005-SC-linux-5.15.78-mm.patch
-    patch -p1 < ../0006-SC-linux-5.15.78-kernel.patch
+    patch -p1 < ../0001-SC-linux-5.15.81-arch.patch
+    patch -p1 < ../0002-SC-linux-5.15.81-drivers.patch
+    patch -p1 < ../0003-SC-linux-5.15.81-fs.patch
+    patch -p1 < ../0004-SC-linux-5.15.81-include.patch
+    patch -p1 < ../0005-SC-linux-5.15.81-mm.patch
+    patch -p1 < ../0006-SC-linux-5.15.81-kernel.patch
     
     # Make sure that there are no .rej files indicating a failed patch
     # If there are, manually fix the problems in any .rej files
@@ -38,7 +38,7 @@ Linux kernel v5.15.78.
     cp -r ../new-files/* .
     
     # Copy the kernel config file into the build directory
-    cp ../config-sc-v5.15.78-basic.txt ../obj/.config
+    cp ../config-sc-v5.15.81-basic.txt ../obj/.config
     
     # Add the cross compilation suite directory to the PATH 
     export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
@@ -56,7 +56,7 @@ Linux kernel v5.15.78.
     export KBUILD_OUTPUT=../obj
     
     # Specify the address in memory where the kernel should be loaded to
-    export LOADADDR=0x02000000
+    export LOADADDR=0x22000000
     
     # Run "make olddefconfig" to ensure kernel config file compatiblility
     make olddefconfig
@@ -75,7 +75,7 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-5.15.78. This version has been chosen as it is the latest "Long Term
+5.15.81. This version has been chosen as it is the latest "Long Term
 Support" release available at the time of writing. Other reasonably
 close versions of the Linux kernel should also work but may require
 some tweaking, especially at the point where the kernel source tree
@@ -181,11 +181,11 @@ code and extracting it.
 
 Download the required version of the Linux kernel into the working directory,
 extract it and then change into the newly created directory as per the
-following example which uses Linux v5.16.20.
+following example which uses Linux v5.15.81.
 
-     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.78.tar.xz
-     tar -xf linux-5.15.78.tar.xz
-     cd linux-5.15.78
+     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.81.tar.xz
+     tar -xf linux-5.15.81.tar.xz
+     cd linux-5.15.81
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
@@ -194,12 +194,12 @@ Linux source code base directory will apply the patches. **Please make sure
 to execute these commands one at a time and carefully ensure that each
 command is successfull before proceeding to the next.**
 
-     patch -p1 < ../0001-SC-linux-5.15.78-arch.patch
-     patch -p1 < ../0002-SC-linux-5.15.78-drivers.patch
-     patch -p1 < ../0003-SC-linux-5.15.78-fs.patch
-     patch -p1 < ../0004-SC-linux-5.15.78-include.patch
-     patch -p1 < ../0005-SC-linux-5.15.78-mm.patch
-     patch -p1 < ../0006-SC-linux-5.15.78-kernel.patch
+     patch -p1 < ../0001-SC-linux-5.15.81-arch.patch
+     patch -p1 < ../0002-SC-linux-5.15.81-drivers.patch
+     patch -p1 < ../0003-SC-linux-5.15.81-fs.patch
+     patch -p1 < ../0004-SC-linux-5.15.81-include.patch
+     patch -p1 < ../0005-SC-linux-5.15.81-mm.patch
+     patch -p1 < ../0006-SC-linux-5.15.81-kernel.patch
      
 Make careful note of any "Hunk FAILED" messages. Check for any rejected patches
 by running the following command
@@ -226,7 +226,7 @@ impact.
 ### Kernel configuration file
 When building the Linux kernel it is important to use a valid configuration file.
 This project includes a kernel configuration file called
-**config-sc-v5.15.78-basic.txt** that will generate a kernel image
+**config-sc-v5.15.81-basic.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central in one monolithic kernel image without the need for any
 Linux modules.
@@ -238,7 +238,7 @@ subdirectory of the base working directory.
 From the Linux source code base directory run the command
 
     mkdir -p ../obj
-    cp ../config-sc-v5.15.78-basic.txt ../obj/.config
+    cp ../config-sc-v5.15.81-basic.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
 **config-sc-v5.15.70-all-usb-cam-modules.txt** that can be copied into place
@@ -285,9 +285,9 @@ contains the ".config" kernel configuration file)
 #### LOADADDR
 This is the address in memory where the kernel needs to be copied to when the
 Seagate Central boots up. This project has been configured so that it should
-always be set to 0x02000000 as per the original Seagate Central kernel.
+always be set to 0x22000000.
 
-    export LOADADDR=0x02000000
+    export LOADADDR=0x22000000
     
 ### make olddefconfig
 The following step makes sure that your kernel configuration is up to date
@@ -327,12 +327,12 @@ Here is an example of the "make uImage" command being executed
     
 The process should complete with a message similar to the following
 
-     Image Name:   Linux-5.15.78-sc
-     Created:      Wed Nov 16 09:24:33 2022
+     Image Name:   Linux-5.15.81-sc
+     Created:      Sat Dec 3 09:24:33 2022
      Image Type:   ARM Linux Kernel Image (uncompressed)
      Data Size:    4312616 Bytes = 4211.54 KiB = 4.11 MiB
-     Load Address: 02000000
-     Entry Point:  02000000
+     Load Address: 22000000
+     Entry Point:  22000000
        Kernel: arch/arm/boot/uImage is ready
       
 As per the message, the newly generated uImage kernel file is located
