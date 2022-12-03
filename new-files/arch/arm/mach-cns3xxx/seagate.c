@@ -773,7 +773,7 @@ static void __init cns3420_init(void)
 	platform_add_devices(cns3420_pdevs, ARRAY_SIZE(cns3420_pdevs));
 
 	cns3xxx_ahci_init();
-#ifndef CONFIG_MACH_SEAGATE
+#ifndef CONFIG_MACH_SEAGATE_CENTRAL
 	/*
 	 * Enabling sdhci seems to stop USB working on 
 	 * Segate central due to modification of the gpio

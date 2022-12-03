@@ -518,7 +518,7 @@ diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/devices.c linux-5.15.78/arch/
 +        u32 __iomem *gpioa = IOMEM(CNS3XXX_MISC_BASE_VIRT + 0x0014);  // MISC_GPIOA_PIN_DISABLE_OFFSET
  	u32 gpioa_pins = __raw_readl(gpioa);
  
-+#ifdef CONFIG_MACH_SEAGATE
++#ifdef CONFIG_MACH_SEAGATE_CENTRAL
 +	printk (" %s WARNING : Loading the sdhci driver will stop usb working\n", __FUNCTION__);
 +	printk ("    on the Seagate Central. \n");
 +#endif
@@ -552,7 +552,7 @@ diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/Kconfig linux-5.15.78/arch/ar
  	  This is a platform with an on-board ARM11 MPCore and has support
  	  for USB, USB-OTG, MMC/SD/SDIO, SATA, PCI-E, etc.
  
-+config MACH_SEAGATE
++config MACH_SEAGATE_CENTRAL
 +	bool "Experimental Seagate Central Single Bay"
 +	depends on ATAGS
 +	help
@@ -561,7 +561,7 @@ diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/Kconfig linux-5.15.78/arch/ar
 +
 +config CNS3XXX_FAKE_SGNOTIFY_NODE
 +        bool "Create a fake sgnotify node for Seagate Central"
-+	depends on MACH_SEAGATE
++	depends on MACH_SEAGATE_CENTRAL
 +	default y
 +	help
 +	  Seagate Central firmware requires that a node exist for the
@@ -596,7 +596,7 @@ diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/Makefile linux-5.15.78/arch/a
  cns3xxx-$(CONFIG_ATAGS)			+= devices.o
  cns3xxx-$(CONFIG_PCI)			+= pcie.o
  cns3xxx-$(CONFIG_MACH_CNS3420VB)	+= cns3420vb.o
-+cns3xxx-$(CONFIG_MACH_SEAGATE)		+= seagate.o seagate_button.o
++cns3xxx-$(CONFIG_MACH_SEAGATE_CENTRAL)	+= seagate.o seagate_button.o
 +cns3xxx-$(CONFIG_SMP)              	+= platsmp.o headsmp.o cns3xxx_fiq.o
 +cns3xxx-$(CONFIG_HOTPLUG_CPU)         	+= hotplug.o
 diff -rup linux-5.15.78-orig/arch/arm/mach-cns3xxx/pm.c linux-5.15.78/arch/arm/mach-cns3xxx/pm.c
