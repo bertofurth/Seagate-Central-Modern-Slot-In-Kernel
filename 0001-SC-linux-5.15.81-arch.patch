@@ -272,7 +272,7 @@ diff -rup linux-5.15.81-orig/arch/arm/kernel/setup.c linux-5.15.81/arch/arm/kern
  	 * size.
  	 */
  	if (usermem == 0) {
-+#ifdef CONFIG_MACH_SEAGATE
++#ifdef CONFIG_MACH_SEAGATE_CENTRAL
 +		start = memblock_start_of_DRAM();
 +		size = memblock_end_of_DRAM() - start;
 +		pr_info ("Seagate Central: Bootloader detected DRAM start 0x%llx size 0x%llx \n",
@@ -305,7 +305,7 @@ diff -rup linux-5.15.81-orig/arch/arm/kernel/setup.c linux-5.15.81/arch/arm/kern
  	start = PHYS_OFFSET;
  	size  = memparse(p, &endp);
 +
-+#ifdef CONFIG_MACH_SEAGATE
++#ifdef CONFIG_MACH_SEAGATE_CENTRAL
 +	if (size == 0x10100000) {
 +		/*
 +		 * If the special Linux command line value "mem=257M" is specified
