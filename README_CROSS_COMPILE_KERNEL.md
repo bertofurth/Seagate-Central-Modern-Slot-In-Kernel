@@ -66,7 +66,8 @@ Linux kernel v5.15.81.
     
     # Optional - If modules have been configured (they aren't by default)
     make -j4 modules
-    INSTALL_MOD_PATH=../cross-mod make modules_install
+    export INSTALL_MOD_PATH=../cross-mod
+    make modules_install
     
 The newly generated uImage kernel file is located under the build
 directory at ../obj/arch/arm/boot/uImage . This kernel image can be
@@ -368,9 +369,10 @@ with the INSTALL_MOD_PATH variable.
 In this example the module tree is copied to the "cross-mod" subdirectory
 of the base working directory.
 
-    INSTALL_MOD_PATH=../cross-mod make modules_install
+    export INSTALL_MOD_PATH=../cross-mod make modules_install
+    make modules_install
  
-## Troubleshooting
+## Troubleshooting the build process
 Most problems will be due to 
 
 * A needed build system component has not been installed.
@@ -378,9 +380,9 @@ Most problems will be due to
 * One of the new files not being copied into the kernel source tree.
 
 If the build fails then it may be helpful to add the "-j1 V=1" options 
-to the "make" commnd line as per the following example
+to the "make" command line as per the following example
 
-     .... make -j1 V=1 uImage
+     make -j1 V=1 uImage
 
 These options make sure that only 1 cpu thread is active and that
 the make command outputs verbose details of what actions are being
@@ -389,6 +391,7 @@ taken. This will make the nature of the issue clearer.
 If the kernel build configuration is modified to include new 
 functionality, then be aware that many older system components have 
 not received as much testing attention from the Linux community in 
-conjunction with the arm32 platform. It may be that some weird 
-compilation errors could occur that might require some minor 
-source file modification.
+conjunction with the arm32 platform or 64K page sizes. It may be that
+some weird compilation errors could occur that might require some minor 
+source file modification or that more obscure kernel components be
+removed from the build.
