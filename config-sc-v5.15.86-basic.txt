@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm 5.15.81 Kernel Configuration
+# Linux/arm 5.15.86 Kernel Configuration
 #
 CONFIG_CC_VERSION_TEXT="arm-none-eabi-gcc (SUSE Linux) 11.3.1 20220721 [revision a55184ada8e2887ca94c0ab07027617885beafc9]"
 CONFIG_CC_IS_GCC=y
