@@ -1,6 +1,6 @@
-diff -rup linux-5.15.81-orig/kernel/panic.c linux-5.15.81/kernel/panic.c
---- linux-5.15.81-orig/kernel/panic.c	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/kernel/panic.c	2022-12-03 13:08:53.073659786 +1100
+diff -rup linux-5.15.86-orig/kernel/panic.c linux-5.15.86/kernel/panic.c
+--- linux-5.15.86-orig/kernel/panic.c	2023-01-06 21:31:01.579931269 +1100
++++ linux-5.15.86/kernel/panic.c	2023-01-06 21:36:02.806619937 +1100
 @@ -620,6 +620,24 @@ void warn_slowpath_fmt(const char *file,
  {
  	struct warn_args args;

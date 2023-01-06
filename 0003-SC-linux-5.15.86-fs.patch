@@ -1,6 +1,6 @@
-diff -rup linux-5.15.81-orig/fs/ext2/ext2.h linux-5.15.81/fs/ext2/ext2.h
---- linux-5.15.81-orig/fs/ext2/ext2.h	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/fs/ext2/ext2.h	2022-12-03 13:08:39.833538906 +1100
+diff -rup linux-5.15.86-orig/fs/ext2/ext2.h linux-5.15.86/fs/ext2/ext2.h
+--- linux-5.15.86-orig/fs/ext2/ext2.h	2023-01-06 21:31:01.239928201 +1100
++++ linux-5.15.86/fs/ext2/ext2.h	2023-01-06 21:36:01.898611872 +1100
 @@ -177,7 +177,11 @@ static inline struct ext2_sb_info *EXT2_
   * Macro-instructions used to manage several block sizes
   */
@@ -13,9 +13,9 @@ diff -rup linux-5.15.81-orig/fs/ext2/ext2.h linux-5.15.81/fs/ext2/ext2.h
  #define EXT2_MIN_BLOCK_LOG_SIZE		  10
  #define EXT2_BLOCK_SIZE(s)		((s)->s_blocksize)
  #define	EXT2_ADDR_PER_BLOCK(s)		(EXT2_BLOCK_SIZE(s) / sizeof (__u32))
-diff -rup linux-5.15.81-orig/fs/ntfs3/fslog.c linux-5.15.81/fs/ntfs3/fslog.c
---- linux-5.15.81-orig/fs/ntfs3/fslog.c	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/fs/ntfs3/fslog.c	2022-12-03 13:08:39.833538906 +1100
+diff -rup linux-5.15.86-orig/fs/ntfs3/fslog.c linux-5.15.86/fs/ntfs3/fslog.c
+--- linux-5.15.86-orig/fs/ntfs3/fslog.c	2023-01-06 21:31:01.247928273 +1100
++++ linux-5.15.86/fs/ntfs3/fslog.c	2023-01-06 21:36:01.898611872 +1100
 @@ -1180,8 +1180,9 @@ static int log_read_rst(struct ntfs_log
  			struct restart_info *info)
  {
@@ -28,9 +28,9 @@ diff -rup linux-5.15.81-orig/fs/ntfs3/fslog.c linux-5.15.81/fs/ntfs3/fslog.c
  	if (!r_page)
  		return -ENOMEM;
  
-diff -rup linux-5.15.81-orig/fs/proc/task_mmu.c linux-5.15.81/fs/proc/task_mmu.c
---- linux-5.15.81-orig/fs/proc/task_mmu.c	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/fs/proc/task_mmu.c	2022-12-03 13:08:39.833538906 +1100
+diff -rup linux-5.15.86-orig/fs/proc/task_mmu.c linux-5.15.86/fs/proc/task_mmu.c
+--- linux-5.15.86-orig/fs/proc/task_mmu.c	2023-01-06 21:31:01.247928273 +1100
++++ linux-5.15.86/fs/proc/task_mmu.c	2023-01-06 21:36:01.902611908 +1100
 @@ -609,7 +609,11 @@ static int smaps_pte_range(pmd_t *pmd, u
  	 * in here.
  	 */

@@ -1,6 +1,6 @@
-diff -rup linux-5.15.81-orig/drivers/gpio/Kconfig linux-5.15.81/drivers/gpio/Kconfig
---- linux-5.15.81-orig/drivers/gpio/Kconfig	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/gpio/Kconfig	2022-12-03 13:08:34.633491431 +1100
+diff -rup linux-5.15.86-orig/drivers/gpio/Kconfig linux-5.15.86/drivers/gpio/Kconfig
+--- linux-5.15.86-orig/drivers/gpio/Kconfig	2023-01-06 21:30:59.819915406 +1100
++++ linux-5.15.86/drivers/gpio/Kconfig	2023-01-06 21:36:01.858611517 +1100
 @@ -112,6 +112,13 @@ config GPIO_MAX730X
  menu "Memory mapped GPIO drivers"
  	depends on HAS_IOMEM
@@ -15,9 +15,9 @@ diff -rup linux-5.15.81-orig/drivers/gpio/Kconfig linux-5.15.81/drivers/gpio/Kco
  config GPIO_74XX_MMIO
  	tristate "GPIO driver for 74xx-ICs with MMIO access"
  	depends on OF_GPIO
-diff -rup linux-5.15.81-orig/drivers/gpio/Makefile linux-5.15.81/drivers/gpio/Makefile
---- linux-5.15.81-orig/drivers/gpio/Makefile	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/gpio/Makefile	2022-12-03 13:08:34.633491431 +1100
+diff -rup linux-5.15.86-orig/drivers/gpio/Makefile linux-5.15.86/drivers/gpio/Makefile
+--- linux-5.15.86-orig/drivers/gpio/Makefile	2023-01-06 21:30:59.819915406 +1100
++++ linux-5.15.86/drivers/gpio/Makefile	2023-01-06 21:36:01.862611552 +1100
 @@ -46,6 +46,7 @@ obj-$(CONFIG_GPIO_BRCMSTB)		+= gpio-brcm
  obj-$(CONFIG_GPIO_BT8XX)		+= gpio-bt8xx.o
  obj-$(CONFIG_GPIO_CADENCE)		+= gpio-cadence.o
@@ -26,9 +26,9 @@ diff -rup linux-5.15.81-orig/drivers/gpio/Makefile linux-5.15.81/drivers/gpio/Ma
  obj-$(CONFIG_GPIO_SNPS_CREG)		+= gpio-creg-snps.o
  obj-$(CONFIG_GPIO_CRYSTAL_COVE)		+= gpio-crystalcove.o
  obj-$(CONFIG_GPIO_CS5535)		+= gpio-cs5535.o
-diff -rup linux-5.15.81-orig/drivers/irqchip/irq-gic.c linux-5.15.81/drivers/irqchip/irq-gic.c
---- linux-5.15.81-orig/drivers/irqchip/irq-gic.c	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/irqchip/irq-gic.c	2022-12-03 13:08:34.633491431 +1100
+diff -rup linux-5.15.86-orig/drivers/irqchip/irq-gic.c linux-5.15.86/drivers/irqchip/irq-gic.c
+--- linux-5.15.86-orig/drivers/irqchip/irq-gic.c	2023-01-06 21:31:00.243919227 +1100
++++ linux-5.15.86/drivers/irqchip/irq-gic.c	2023-01-06 21:36:01.862611552 +1100
 @@ -1131,6 +1131,7 @@ static const struct irq_domain_ops gic_i
  static const struct irq_domain_ops gic_irq_domain_ops = {
  	.map = gic_irq_domain_map,
@@ -37,9 +37,9 @@ diff -rup linux-5.15.81-orig/drivers/irqchip/irq-gic.c linux-5.15.81/drivers/irq
  };
  
  static void gic_init_chip(struct gic_chip_data *gic, struct device *dev,
-diff -rup linux-5.15.81-orig/drivers/leds/Kconfig linux-5.15.81/drivers/leds/Kconfig
---- linux-5.15.81-orig/drivers/leds/Kconfig	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/leds/Kconfig	2022-12-03 13:08:34.637491468 +1100
+diff -rup linux-5.15.86-orig/drivers/leds/Kconfig linux-5.15.86/drivers/leds/Kconfig
+--- linux-5.15.86-orig/drivers/leds/Kconfig	2023-01-06 21:31:00.243919227 +1100
++++ linux-5.15.86/drivers/leds/Kconfig	2023-01-06 21:36:01.866611588 +1100
 @@ -122,6 +122,15 @@ config LEDS_BCM6358
  	  This option enables support for LEDs connected to the BCM6358
  	  LED HW controller accessed via MMIO registers.
@@ -56,9 +56,9 @@ diff -rup linux-5.15.81-orig/drivers/leds/Kconfig linux-5.15.81/drivers/leds/Kco
  config LEDS_CPCAP
  	tristate "LED Support for Motorola CPCAP"
  	depends on LEDS_CLASS
-diff -rup linux-5.15.81-orig/drivers/leds/Makefile linux-5.15.81/drivers/leds/Makefile
---- linux-5.15.81-orig/drivers/leds/Makefile	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/leds/Makefile	2022-12-03 13:08:34.637491468 +1100
+diff -rup linux-5.15.86-orig/drivers/leds/Makefile linux-5.15.86/drivers/leds/Makefile
+--- linux-5.15.86-orig/drivers/leds/Makefile	2023-01-06 21:31:00.243919227 +1100
++++ linux-5.15.86/drivers/leds/Makefile	2023-01-06 21:36:01.866611588 +1100
 @@ -21,6 +21,7 @@ obj-$(CONFIG_LEDS_BCM6358)		+= leds-bcm6
  obj-$(CONFIG_LEDS_BD2802)		+= leds-bd2802.o
  obj-$(CONFIG_LEDS_BLINKM)		+= leds-blinkm.o
@@ -67,9 +67,9 @@ diff -rup linux-5.15.81-orig/drivers/leds/Makefile linux-5.15.81/drivers/leds/Ma
  obj-$(CONFIG_LEDS_COBALT_QUBE)		+= leds-cobalt-qube.o
  obj-$(CONFIG_LEDS_COBALT_RAQ)		+= leds-cobalt-raq.o
  obj-$(CONFIG_LEDS_CPCAP)		+= leds-cpcap.o
-diff -rup linux-5.15.81-orig/drivers/mtd/devices/Kconfig linux-5.15.81/drivers/mtd/devices/Kconfig
---- linux-5.15.81-orig/drivers/mtd/devices/Kconfig	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/mtd/devices/Kconfig	2022-12-03 13:08:34.637491468 +1100
+diff -rup linux-5.15.86-orig/drivers/mtd/devices/Kconfig linux-5.15.86/drivers/mtd/devices/Kconfig
+--- linux-5.15.86-orig/drivers/mtd/devices/Kconfig	2023-01-06 21:31:00.487921429 +1100
++++ linux-5.15.86/drivers/mtd/devices/Kconfig	2023-01-06 21:36:01.870611623 +1100
 @@ -95,6 +95,15 @@ config MTD_MCHP48L640
  	help
  	  This enables access to Microchip 48L640 EERAM chips, using SPI.
@@ -86,9 +86,9 @@ diff -rup linux-5.15.81-orig/drivers/mtd/devices/Kconfig linux-5.15.81/drivers/m
  config MTD_SPEAR_SMI
  	tristate "SPEAR MTD NOR Support through SMI controller"
  	depends on PLAT_SPEAR || COMPILE_TEST
-diff -rup linux-5.15.81-orig/drivers/net/ethernet/cavium/Kconfig linux-5.15.81/drivers/net/ethernet/cavium/Kconfig
---- linux-5.15.81-orig/drivers/net/ethernet/cavium/Kconfig	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/net/ethernet/cavium/Kconfig	2022-12-03 13:08:34.637491468 +1100
+diff -rup linux-5.15.86-orig/drivers/net/ethernet/cavium/Kconfig linux-5.15.86/drivers/net/ethernet/cavium/Kconfig
+--- linux-5.15.86-orig/drivers/net/ethernet/cavium/Kconfig	2023-01-06 21:31:00.551922002 +1100
++++ linux-5.15.86/drivers/net/ethernet/cavium/Kconfig	2023-01-06 21:36:01.870611623 +1100
 @@ -13,6 +13,33 @@ config NET_VENDOR_CAVIUM
  
  if NET_VENDOR_CAVIUM
@@ -123,9 +123,9 @@ diff -rup linux-5.15.81-orig/drivers/net/ethernet/cavium/Kconfig linux-5.15.81/d
  config THUNDER_NIC_PF
  	tristate "Thunder Physical function driver"
  	depends on 64BIT && PCI
-diff -rup linux-5.15.81-orig/drivers/net/ethernet/cavium/Makefile linux-5.15.81/drivers/net/ethernet/cavium/Makefile
---- linux-5.15.81-orig/drivers/net/ethernet/cavium/Makefile	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/net/ethernet/cavium/Makefile	2022-12-03 13:08:34.645491542 +1100
+diff -rup linux-5.15.86-orig/drivers/net/ethernet/cavium/Makefile linux-5.15.86/drivers/net/ethernet/cavium/Makefile
+--- linux-5.15.86-orig/drivers/net/ethernet/cavium/Makefile	2023-01-06 21:31:00.551922002 +1100
++++ linux-5.15.86/drivers/net/ethernet/cavium/Makefile	2023-01-06 21:36:01.870611623 +1100
 @@ -2,6 +2,7 @@
  #
  # Makefile for the Cavium ethernet device drivers.
@@ -134,9 +134,9 @@ diff -rup linux-5.15.81-orig/drivers/net/ethernet/cavium/Makefile linux-5.15.81/
  obj-$(CONFIG_NET_VENDOR_CAVIUM) += common/
  obj-$(CONFIG_NET_VENDOR_CAVIUM) += thunder/
  obj-$(CONFIG_NET_VENDOR_CAVIUM) += liquidio/
-diff -rup linux-5.15.81-orig/drivers/rtc/Kconfig linux-5.15.81/drivers/rtc/Kconfig
---- linux-5.15.81-orig/drivers/rtc/Kconfig	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/rtc/Kconfig	2022-12-03 13:08:34.645491542 +1100
+diff -rup linux-5.15.86-orig/drivers/rtc/Kconfig linux-5.15.86/drivers/rtc/Kconfig
+--- linux-5.15.86-orig/drivers/rtc/Kconfig	2023-01-06 21:31:00.727923590 +1100
++++ linux-5.15.86/drivers/rtc/Kconfig	2023-01-06 21:36:01.874611658 +1100
 @@ -1619,6 +1619,24 @@ config RTC_DRV_CADENCE
  	  To compile this driver as a module, choose M here: the
  	  module will be called rtc-cadence.
@@ -162,9 +162,9 @@ diff -rup linux-5.15.81-orig/drivers/rtc/Kconfig linux-5.15.81/drivers/rtc/Kconf
  config RTC_DRV_FTRTC010
  	tristate "Faraday Technology FTRTC010 RTC"
  	depends on HAS_IOMEM
-diff -rup linux-5.15.81-orig/drivers/rtc/Makefile linux-5.15.81/drivers/rtc/Makefile
---- linux-5.15.81-orig/drivers/rtc/Makefile	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/rtc/Makefile	2022-12-03 13:08:34.645491542 +1100
+diff -rup linux-5.15.86-orig/drivers/rtc/Makefile linux-5.15.86/drivers/rtc/Makefile
+--- linux-5.15.86-orig/drivers/rtc/Makefile	2023-01-06 21:31:00.727923590 +1100
++++ linux-5.15.86/drivers/rtc/Makefile	2023-01-06 21:36:01.874611658 +1100
 @@ -39,6 +39,8 @@ obj-$(CONFIG_RTC_DRV_BQ4802)	+= rtc-bq48
  obj-$(CONFIG_RTC_DRV_BRCMSTB)	+= rtc-brcmstb-waketimer.o
  obj-$(CONFIG_RTC_DRV_CADENCE)	+= rtc-cadence.o
@@ -174,9 +174,9 @@ diff -rup linux-5.15.81-orig/drivers/rtc/Makefile linux-5.15.81/drivers/rtc/Make
  obj-$(CONFIG_RTC_DRV_CPCAP)	+= rtc-cpcap.o
  obj-$(CONFIG_RTC_DRV_CROS_EC)	+= rtc-cros-ec.o
  obj-$(CONFIG_RTC_DRV_DA9052)	+= rtc-da9052.o
-diff -rup linux-5.15.81-orig/drivers/spi/Kconfig linux-5.15.81/drivers/spi/Kconfig
---- linux-5.15.81-orig/drivers/spi/Kconfig	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/spi/Kconfig	2022-12-03 13:08:34.645491542 +1100
+diff -rup linux-5.15.86-orig/drivers/spi/Kconfig linux-5.15.86/drivers/spi/Kconfig
+--- linux-5.15.86-orig/drivers/spi/Kconfig	2023-01-06 21:31:00.971925776 +1100
++++ linux-5.15.86/drivers/spi/Kconfig	2023-01-06 21:36:01.878611695 +1100
 @@ -36,6 +36,20 @@ config SPI_DEBUG
  # MASTER side ... talking to discrete SPI slave chips including microcontrollers
  #
@@ -198,9 +198,9 @@ diff -rup linux-5.15.81-orig/drivers/spi/Kconfig linux-5.15.81/drivers/spi/Kconf
  config SPI_MASTER
  #	bool "SPI Master Support"
  	bool
-diff -rup linux-5.15.81-orig/drivers/spi/Makefile linux-5.15.81/drivers/spi/Makefile
---- linux-5.15.81-orig/drivers/spi/Makefile	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/spi/Makefile	2022-12-03 13:08:34.645491542 +1100
+diff -rup linux-5.15.86-orig/drivers/spi/Makefile linux-5.15.86/drivers/spi/Makefile
+--- linux-5.15.86-orig/drivers/spi/Makefile	2023-01-06 21:31:00.971925776 +1100
++++ linux-5.15.86/drivers/spi/Makefile	2023-01-06 21:36:01.878611695 +1100
 @@ -36,6 +36,7 @@ obj-$(CONFIG_SPI_CADENCE)		+= spi-cadenc
  obj-$(CONFIG_SPI_CADENCE_QUADSPI)	+= spi-cadence-quadspi.o
  obj-$(CONFIG_SPI_CLPS711X)		+= spi-clps711x.o
@@ -209,9 +209,9 @@ diff -rup linux-5.15.81-orig/drivers/spi/Makefile linux-5.15.81/drivers/spi/Make
  obj-$(CONFIG_SPI_DAVINCI)		+= spi-davinci.o
  obj-$(CONFIG_SPI_DLN2)			+= spi-dln2.o
  obj-$(CONFIG_SPI_DESIGNWARE)		+= spi-dw.o
-diff -rup linux-5.15.81-orig/drivers/usb/host/ohci-hcd.c linux-5.15.81/drivers/usb/host/ohci-hcd.c
---- linux-5.15.81-orig/drivers/usb/host/ohci-hcd.c	2022-12-03 03:41:12.000000000 +1100
-+++ linux-5.15.81/drivers/usb/host/ohci-hcd.c	2022-12-03 13:08:34.645491542 +1100
+diff -rup linux-5.15.86-orig/drivers/usb/host/ohci-hcd.c linux-5.15.86/drivers/usb/host/ohci-hcd.c
+--- linux-5.15.86-orig/drivers/usb/host/ohci-hcd.c	2023-01-06 21:31:01.127927189 +1100
++++ linux-5.15.86/drivers/usb/host/ohci-hcd.c	2023-01-06 21:36:01.882611730 +1100
 @@ -1271,6 +1271,11 @@ MODULE_LICENSE ("GPL");
  #define TMIO_OHCI_DRIVER	ohci_hcd_tmio_driver
  #endif
