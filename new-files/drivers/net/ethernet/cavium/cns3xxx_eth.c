@@ -1278,13 +1278,19 @@ static void destroy_rings(struct sw *sw)
 	}
 }
 
-static int eth_open(struct net_device *dev)
+static int cns3xxx_eth_open(struct net_device *dev)
 {
 	struct port *port = netdev_priv(dev);
 	struct sw *sw = port->sw;
 	u32 temp;
 	int ret;
 
+	/*
+	 * WARNING: Don't remove the following printk. It
+	 * magically fixed a problem where every few reboots
+	 * the ethernet interface would not come up!!
+	 */
+	printk("%s start. ports_open: %u\n", __FUNCTION__, ports_open);
 	port->speed = 0;	/* force "link up" message */
 	phy_start(port->phydev);
 
@@ -1327,12 +1333,13 @@ static int eth_open(struct net_device *dev)
 	return 0;
 }
 
-static int eth_close(struct net_device *dev)
+static int cns3xxx_eth_close(struct net_device *dev)
 {
 	struct port *port = netdev_priv(dev);
 	struct sw *sw = port->sw;
 	u32 temp;
 
+	printk("%s start. ports_open: %u\n", __FUNCTION__, ports_open);
 	ports_open--;
 
 	temp = __raw_readl(&sw->regs->mac_cfg[port->id]);
@@ -1438,8 +1445,8 @@ static int eth_set_mac(struct net_device *netdev, void *p)
 }
 
 static const struct net_device_ops cns3xxx_netdev_ops = {
-	.ndo_open = eth_open,
-	.ndo_stop = eth_close,
+	.ndo_open = cns3xxx_eth_open,
+	.ndo_stop = cns3xxx_eth_close,
 	.ndo_start_xmit = eth_xmit,
 	.ndo_set_rx_mode = eth_rx_mode,
 	.ndo_do_ioctl = eth_ioctl,
