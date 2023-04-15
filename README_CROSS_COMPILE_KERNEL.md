@@ -150,6 +150,7 @@ system.
 * bc
 * u-boot-tools
 * libncurses-dev
+* libssl-dev
 * git (to download this project)
 * gcc-arm-none-eabi (If no self built cross compiler)
 
