@@ -186,8 +186,8 @@ extract it and then change into the newly created directory as per the
 following example which uses Linux v5.15.86.
 
      wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.86.tar.xz
-     tar -xf linux-5.15.81.tar.xz
-     cd linux-5.15.81
+     tar -xf linux-5.15.86.tar.xz
+     cd linux-5.15.86
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
