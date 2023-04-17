@@ -560,14 +560,14 @@ Archive : https://archive.ph/3eOX0
 
 In essence the steps are
 
-1) Power down then power up the Seagate Central.
-2) Wait about 35 seconds for the LED status light on top of the unit to turn from solid amber to flashing green. 
-3) Execute the first 2 steps three more times in a row.
-4) Power up the unit and let it fully boot. It should now load the backup / alternate version of firmware
+1) Power down then power up the Seagate Central by disconnecting and reconnecting the power.
+2) Wait about 30 seconds to a minute for the LED status light on top of the unit to turn from solid amber to flashing green. 
+3) As soon as the LED flashes green execute the first 2 steps three more times in a row.
+4) On the 4th boot up let the unit fully boot. It should now load the backup / alternate version of firmware
 
-Make sure that step 2 is followed correctly. That is, power off the
-unit while the LED status light is flashing green. Don't let it
-proceed to the "solid" green state.
+Make sure that step 2 is followed correctly. That is, power off the 
+unit as soon as the LEF status light starts flashing green. Don't
+let it proceed to the solid green state.
 
 After the unit boots up with the alternate version of firmware, take
 steps to mount the "failing" kernel boot partition and revert it back
