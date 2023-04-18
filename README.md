@@ -121,27 +121,18 @@ detail here in approximate order of importance.
 Summary : On rare occasions the unit needs to be power cycled and not
 just soft rebooted to avoid Ethernet networking issues.
 
-The Seagate Central uses a proprietary and closed source tool called
-"networklan" to manage the Ethernet interface. Unfortunately, this
-tool does not work seamlessly with the new kernel and this may on rare
-occasions cause some issues but in most cases there should not be any
-problems.
-
 Some users have reported that sometimes after the unit is rebooted it
-may need to be power cycled to successfully aquire an IP address via
-DHCP. It's not yet clear why this is happening for some systems however,
-if this is is case in your network then it may be best to assign a
-static IP address to your unit using the Web Management interface under
-Settings -> Advanced -> LAN.
+may need to be power cycled in order for the Ethernet interface to
+come up. 
 
-When the Ethernet cable is physically disconnected from the unit the
-"networklan" tool doesn't properly recognize this event. Instead,
-the system will continue to act as if the Ethernet interface is still 
-"up". After the unit is physically reconnected to the Ethernet LAN it
+In addition, when the Ethernet cable is physically disconnected from
+the unit the system does not properly recognize this event. Instead, the
+system will continue to act as if the Ethernet interface is still "up".
+After the unit is physically reconnected to the Ethernet LAN it
 will simply function as if nothing has happened. Normally this doesn't
-cause any problems. One very rare scenario where this might be an issue
+cause any problems. One very rare case where this might be an issue
 would be where a Seagate Central is moved from one physical subnet to
-another while still being powered on.
+another while still being powered on but this would be an unlikely scenario.
 
 Another scenario where a problem may sometimes occur is if the IP address
 configuration of the unit is modified via the Web Management interface.
@@ -156,9 +147,6 @@ configuration of the network the unit is connected to is changed.
 TODO : Modify the startup scripts so that if the unit detects that the
 ethernet hasn't aquired an IP address in a reasonable amount of time,
 we "bounce" the ethernet interface and try again.
-
-TODO : Consider replacing "networklan" with a more conventional Linux 
-network management system.
 
 ### Networking Performance
 Summary : The raw receive networking performance in the new kernel is
@@ -392,7 +380,7 @@ more than the standard data payload of 1500 bytes. This is in order
 to reduce the packet header processing overhead associated with 
 each packet.
 
-I have never come across any normal home or small enterprise networks
+I have never come across any normal home or small enterprise network
 that uses Jumbo Ethernet frames. One important reason for this is 
 because Jumbo Ethernet frames are not supported over Wi-Fi. Jumbo 
 frames only work over hard Ethernet connections where *all* the
