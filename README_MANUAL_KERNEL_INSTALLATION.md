@@ -19,6 +19,14 @@ the command line, such as installing other cross compiled software,
 then make sure that none of the steps below interfere with those 
 changes.
 
+## TLDNR
+* Obtain a uImage kernel image from the releases section in the project.
+* Upload the uImage to  the unit being upgraded.
+* Perform optional customizations and optimizations.
+* Identify then mount the boot partition (either /dev/sda1 or /dev/sda2).
+* Copy the new kernel over the old kernel.
+* Reboot the unit by shutting down and power cycling.
+
 ## Prerequisites
 ### ssh access to the Seagate Central.
 You'll need ssh access to issue commands on the Seagate Central command 
@@ -319,7 +327,7 @@ run on the Seagate Central command line
 
     fw_printenv | grep current_kernel
 
-If the first copy of firmware is active then the output of the command will say
+If the first/primary copy of firmware is active then the output of the command will say
 
     current_kernel=kernel1
      
@@ -340,13 +348,13 @@ The kernel image is kept on a disk partition which is not, by default, mounted
 by the Seagate Central during normal operation. We will call this partition
 the **kernel boot partition**.
 
-If the **first** copy of firmware is active (kernel1) then the kernel boot 
+If the **first** copy of firmware is active (current_kernel=kernel1) then the kernel boot 
 partition is located on "/dev/sda1" . Mount the kernel boot partition with the
 command
 
     mount /dev/sda1 /boot
      
-If the **second** copy of firmware is active (kernel2) then the kernel boot 
+If the **second** copy of firmware is active (current_kernel=kernel2) then the kernel boot 
 partition is located on "/dev/sda2" . Mount the kernel boot partition with the
 command
 
@@ -459,19 +467,21 @@ line with the "shutdown -h now" command.
 Naturally, at the point when the unit is shutdown any ssh sessions to
 the Seagate Central will be disconnected.
 
-Wait for 30 seconds for the unit to shutdown properly, then power down the
+Wait for a minute for the unit to shutdown properly, then power down the
 unit by disconnecting the power supply from the unit or from the mains.
 Reconnect the power after a few seconds.
 
 The unit should take about 3 or 4 minutes to reboot. The indicator light
 on the top of the system should go from amber, to flashing green and then
 eventually show a solid green. After the LED has been solid green for about
-1 minute, try to re-establish an ssh connection to the newly upgraded 
-Seagate Central. If you cannot re-establish a connection
-or if the green LED does not go solid then manually power cycle the unit
-again by disconnecting the power for a few seconds and trying again. See
-the Troubleshooting section below if you cannot reestablish an ssh
-connection.
+1 minute the unit will hopefully be operational and running the new Linux
+kernel.
+
+Try to re-establish an ssh connection to the newly upgraded Seagate Central.
+If you cannot re-establish a connection or if the green LED does not go solid
+then manually power cycle the unit again by disconnecting the power for a
+few seconds and trying again. See the Troubleshooting section below if you
+still cannot reestablish an ssh connection.
 
 After re-connecting to the unit via ssh, issue the following command to confirm 
 that the unit has loaded the new kernel.
