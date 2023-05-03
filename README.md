@@ -1,7 +1,7 @@
-# Seagate Central Slot In v5.x Kernel
+# Seagate Central Modern Slot In Kernel
 # Summary
 
-A modern slot in Linux Kernel for the Seagate Central Single
+A modern (v6.1.X) slot in Linux Kernel for the Seagate Central Single
 Drive NAS running stock Seagate Central firmware.
 
 This project accompanies the **Seagate-Central-Samba** project
@@ -21,16 +21,16 @@ following link
 
 https://github.com/bertofurth/Seagate-Central-Utils
 
-A pre-compiled Linux v5.x.x kernel based on the instructions
+A pre-compiled Linux kernel based on the instructions
 in this guide is available in the "Releases" section of this 
 project at
 
-https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/releases
+https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel/releases
 
 There are three sets of instructions included in this project.
 
 ### README_CROSS_COMPILE_KERNEL.md
-Cross compile the new v5.x Linux kernel for Seagate Central from 
+Cross compile the new Linux kernel for Seagate Central from 
 scratch.
 
 ### README_USB_DEVICE_MODULES.md
@@ -89,6 +89,9 @@ device becoming unusable or damaged.**
 
 **Do not use the products of this project in a mission critical system
 or in a system that people's health or safety depends on.**
+
+**This project is not endorsed or supported by the original vendors 
+or manufacturers of the Seagate Central NAS.**
 
 It is worth noting that during the testing and development of this
 procedure I never encountered any problems involving data corruption 
@@ -164,7 +167,7 @@ The drawback of the sopp_cns3xxx_nas approach was that other Linux processes
 could only make use of the one remaining CPU core, so when multiple processes
 were active at once, their performance may have suffered.
 
-The new v5.x kernel is not able to make use of the Seagate proprietary 
+The new modern kernel is not able to make use of the Seagate proprietary 
 networking module and as such, raw networking performance for received
 packets is not quite as fast as with the original kernel (iperf3 rx tcp 
 : ~663Mbps)
@@ -196,11 +199,11 @@ modern Windows operating systems.
 The original Seagate Central firmware uses a proprietary driver module, 
 called ufsd, to mount and interact with USB attached NTFS drives. 
 
-Unfortunately the v5.x slot in kernel is not able to make use of this
+Unfortunately the modern slot in kernel is not able to make use of this
 proprietary driver as it was designed for exclusive use with only the original
 custom Seagate Central based Linux v2.6.35 kernel.
 
-Since v5.15.x, Linux includes native support for a new read and write
+Since kernel v5.15.x, Linux includes native support for a new read and write
 capable NTFS driver called ntfs3 by Paragon Software. My own brief tests 
 indicate that this driver works well however this driver is quite new and may
 well still have some issues. See the following link for more details
