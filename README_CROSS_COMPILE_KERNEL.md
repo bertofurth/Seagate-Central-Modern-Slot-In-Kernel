@@ -1,7 +1,7 @@
 # README_CROSS_COMPILE_KERNEL.md
 ## Summary
 This is a guide that describes how to cross compile a replacement
-v5.x.x Linux kernel suitable for installation on a Seagate Central NAS 
+Linux kernel suitable for installation on a Seagate Central NAS 
 device.
 
 Manual installation of the cross compiled kernel is covered by 
@@ -10,25 +10,25 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v5.15.86. 
+Linux kernel v6.1.26 for Seagate Central 
 
     # Download this project to the build host
-    git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel.git
-    cd Seagate-Central-Slot-In-v5.x-Kernel
+    git clone https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel
+    cd Seagate-Central-Modern-Slot-In-Kernel
     
-    # Download and extract Linux kernel v5.15.86 source code
+    # Download and extract Linux kernel v6.1.26 source code
     # or another close kernel release
-    wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.86.tar.xz
-    tar -xf linux-5.15.86.tar.xz
-    cd linux-5.15.86
+    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.26.tar.xz
+    tar -xf linux-6.1.26.tar.xz
+    cd linux-6.1.26
      
     # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
-    patch -p1 < ../0001-SC-linux-5.15.86-arch.patch
-    patch -p1 < ../0002-SC-linux-5.15.86-drivers.patch
-    patch -p1 < ../0003-SC-linux-5.15.86-fs.patch
-    patch -p1 < ../0004-SC-linux-5.15.86-include.patch
-    patch -p1 < ../0005-SC-linux-5.15.86-mm.patch
-    patch -p1 < ../0006-SC-linux-5.15.86-kernel.patch
+    patch -p1 < ../0001-SC-linux-6.1.26-arch.patch
+    patch -p1 < ../0002-SC-linux-6.1.26-drivers.patch
+    patch -p1 < ../0003-SC-linux-6.1.26-fs.patch
+    patch -p1 < ../0004-SC-linux-6.1.26-include.patch
+    patch -p1 < ../0005-SC-linux-6.1.26-mm.patch
+    patch -p1 < ../0006-SC-linux-6.1.26-kernel.patch
     
     # Make sure that there are no .rej files indicating a failed patch
     # If there are, manually fix the problems in any .rej files
@@ -38,7 +38,7 @@ Linux kernel v5.15.86.
     cp -r ../new-files/* .
     
     # Copy the kernel config file into the build directory
-    cp ../config-sc-v5.15.86-basic.txt ../obj/.config
+    cp ../config-sc-v6.1.26-basic.txt ../obj/.config
     
     # Optional - If necessary, add the cross compilation suite directory to the PATH 
     export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
@@ -76,7 +76,7 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-5.15.86. This version has been chosen as it is the latest "Long Term
+6.1.26. The v6.1.X version has been chosen as it is the latest "Long Term
 Support" release available at the time of writing. Other reasonably
 close versions of the Linux kernel should also work but may require
 some tweaking, especially at the point where the kernel source tree
@@ -85,12 +85,12 @@ needs to be patched.
 This procedure has been tested to work on the following building
 platforms
 
-* OpenSUSE Tumbleweed (Aug 2021) on x86
-* OpenSUSE Tumbleweed (Aug 2021) on Raspberry Pi 4B
+* OpenSUSE Tumbleweed on x86
+* OpenSUSE Tumbleweed on Raspberry Pi 4B
 * Debian 10 (Buster) on x86
 
 The procedure has been tested to work with make v4.3 and v4.2.1 as well
-cross compiler gcc versions 11.2.0, 8.5.0 and 5.5.0.
+cross compiler gcc versions 12.2.1, 11.2.0, 8.5.0 and 5.5.0.
 
 In general, it is suggested to use the latest stable versions of gcc,
 binutils and associated building tools.
@@ -108,7 +108,7 @@ on the building host. The generated kernel will only consume about
 4MB of storage space on the Seagate Central.
 
 ### Time
-The kernel build component takes a total of about 8 minutes to complete
+The kernel build component takes in the order of about 8 minutes to complete
 on an 8 core i7 PC. It takes about 45 minutes on a Raspberry Pi 4B.
 
 ### A cross compilation suite on the build host
@@ -135,15 +135,15 @@ In addition to the above mentioned cross compilation toolset the following
 packages or their equivalents may also need to be installed on the building
 system.
 
-#### OpenSUSE Tumbleweed - Aug 2021 (zypper add ...)
+#### OpenSUSE Tumbleweed - (zypper add ...)
 * zypper install -t pattern devel_basis
 * bc
 * u-boot-tools
 * wget (or use "curl -O")
 * git (to download this project)
-* cross-arm-none-gcc11 (If no self built cross compiler)
+* cross-arm-none-gcc12 (If no self built cross compiler)
 
-#### Debian 10 - Buster (apt-get install ...)
+#### Debian 10 - (apt-get install ...)
 * build-essential
 * bison
 * flex
@@ -161,21 +161,21 @@ directory on your build machine.
 
 For example, the following **git** command will download the 
 files in this project to a new subdirectory called 
-Seagate-Central-Slot-In-v5.x-Kernel
+Seagate-Central-Modern-Slot-In-Kernel
 
-    git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel
+    git clone https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel
     
 Alternately, the following **wget** and **unzip** commands will 
 download the files in this project to a new subdirectory called
-Seagate-Central-Slot-In-v5.x-Kernel-main
+Seagate-Central-Modern-Slot-In-Kernel-main
 
-    wget https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/archive/refs/heads/main.zip
+    wget https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel/archive/refs/heads/main.zip
     unzip main.zip
 
 Change into this new subdirectory. This will be referred to as 
 the base working directory going forward.
 
-    cd Seagate-Central-Slot-In-v5.x-Kernel
+    cd Seagate-Central-Modern-Slot-In-Kernel
 
 ### Linux kernel source code download and extraction
 The next part of the procedure involves gathering the Linux kernel source
@@ -183,11 +183,11 @@ code and extracting it.
 
 Download the required version of the Linux kernel into the working directory,
 extract it and then change into the newly created directory as per the
-following example which uses Linux v5.15.86.
+following example which uses Linux v6.1.26.
 
-     wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.86.tar.xz
-     tar -xf linux-5.15.86.tar.xz
-     cd linux-5.15.86
+     wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.26.tar.xz
+     tar -xf linux-6.1.26.tar.xz
+     cd linux-6.1.26
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
@@ -196,12 +196,12 @@ Linux source code base directory will apply the patches. **Please make sure
 to execute these commands one at a time and carefully ensure that each
 command is successfull before proceeding to the next.**
 
-     patch -p1 < ../0001-SC-linux-5.15.86-arch.patch
-     patch -p1 < ../0002-SC-linux-5.15.86-drivers.patch
-     patch -p1 < ../0003-SC-linux-5.15.86-fs.patch
-     patch -p1 < ../0004-SC-linux-5.15.86-include.patch
-     patch -p1 < ../0005-SC-linux-5.15.86-mm.patch
-     patch -p1 < ../0006-SC-linux-5.15.86-kernel.patch
+     patch -p1 < ../0001-SC-linux-6.1.26-arch.patch
+     patch -p1 < ../0002-SC-linux-6.1.26-drivers.patch
+     patch -p1 < ../0003-SC-linux-6.1.26-fs.patch
+     patch -p1 < ../0004-SC-linux-6.1.26-include.patch
+     patch -p1 < ../0005-SC-linux-6.1.26-mm.patch
+     patch -p1 < ../0006-SC-linux-6.1.26-kernel.patch
      
 Make careful note of any "Hunk FAILED" messages. Check for any rejected patches
 by running the following command
@@ -210,7 +210,7 @@ by running the following command
      
 You may need to manually edit kernel source files where patches have failed. This
 will most likely happen if you use a version of the linux kernel that is significantly
-different to the version that these patches were created using (v5.15.86)
+different to the version that these patches were created using (v6.1.26)
 
 ### Copy new files
 New source files need to be copied into the Linux source tree as follows.
@@ -228,7 +228,7 @@ impact.
 ### Kernel configuration file
 When building the Linux kernel it is important to use a valid configuration file.
 This project includes a kernel configuration file called
-**config-sc-v5.15.86-basic.txt** that will generate a kernel image
+**config-sc-v6.1.26-basic.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central in one monolithic kernel image without the need for any
 Linux modules.
@@ -240,7 +240,7 @@ subdirectory of the base working directory.
 From the Linux source code base directory run the command
 
     mkdir -p ../obj
-    cp ../config-sc-v5.15.86-basic.txt ../obj/.config
+    cp ../config-sc-v6.1.26-basic.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
 **config-sc-v5.15.70-all-usb-cam-modules.txt** that can be copied into place
