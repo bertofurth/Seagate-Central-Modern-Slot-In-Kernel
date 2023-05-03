@@ -1,7 +1,7 @@
-diff -rup linux-5.15.86-orig/fs/ext2/ext2.h linux-5.15.86/fs/ext2/ext2.h
---- linux-5.15.86-orig/fs/ext2/ext2.h	2023-01-06 21:31:01.239928201 +1100
-+++ linux-5.15.86/fs/ext2/ext2.h	2023-01-06 21:36:01.898611872 +1100
-@@ -177,7 +177,11 @@ static inline struct ext2_sb_info *EXT2_
+diff -rup linux-6.1.26.orig/fs/ext2/ext2.h linux-6.1.26/fs/ext2/ext2.h
+--- linux-6.1.26.orig/fs/ext2/ext2.h	2023-04-26 22:28:44.000000000 +1000
++++ linux-6.1.26/fs/ext2/ext2.h	2023-05-03 13:12:07.426052742 +1000
+@@ -178,7 +178,11 @@ static inline struct ext2_sb_info *EXT2_
   * Macro-instructions used to manage several block sizes
   */
  #define EXT2_MIN_BLOCK_SIZE		1024
@@ -13,25 +13,10 @@ diff -rup linux-5.15.86-orig/fs/ext2/ext2.h linux-5.15.86/fs/ext2/ext2.h
  #define EXT2_MIN_BLOCK_LOG_SIZE		  10
  #define EXT2_BLOCK_SIZE(s)		((s)->s_blocksize)
  #define	EXT2_ADDR_PER_BLOCK(s)		(EXT2_BLOCK_SIZE(s) / sizeof (__u32))
-diff -rup linux-5.15.86-orig/fs/ntfs3/fslog.c linux-5.15.86/fs/ntfs3/fslog.c
---- linux-5.15.86-orig/fs/ntfs3/fslog.c	2023-01-06 21:31:01.247928273 +1100
-+++ linux-5.15.86/fs/ntfs3/fslog.c	2023-01-06 21:36:01.898611872 +1100
-@@ -1180,8 +1180,9 @@ static int log_read_rst(struct ntfs_log
- 			struct restart_info *info)
- {
- 	u32 skip, vbo;
--	struct RESTART_HDR *r_page = kmalloc(DefaultLogPageSize, GFP_NOFS);
--
-+        struct RESTART_HDR *r_page = kmalloc(PAGE_SIZE > DefaultLogPageSize ?
-+						 PAGE_SIZE : DefaultLogPageSize,		
-+						 GFP_NOFS);
- 	if (!r_page)
- 		return -ENOMEM;
- 
-diff -rup linux-5.15.86-orig/fs/proc/task_mmu.c linux-5.15.86/fs/proc/task_mmu.c
---- linux-5.15.86-orig/fs/proc/task_mmu.c	2023-01-06 21:31:01.247928273 +1100
-+++ linux-5.15.86/fs/proc/task_mmu.c	2023-01-06 21:36:01.902611908 +1100
-@@ -609,7 +609,11 @@ static int smaps_pte_range(pmd_t *pmd, u
+diff -rup linux-6.1.26.orig/fs/proc/task_mmu.c linux-6.1.26/fs/proc/task_mmu.c
+--- linux-6.1.26.orig/fs/proc/task_mmu.c	2023-04-26 22:28:44.000000000 +1000
++++ linux-6.1.26/fs/proc/task_mmu.c	2023-05-03 13:12:07.430052737 +1000
+@@ -632,7 +632,11 @@ static int smaps_pte_range(pmd_t *pmd, u
  	 * in here.
  	 */
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -43,7 +28,7 @@ diff -rup linux-5.15.86-orig/fs/proc/task_mmu.c linux-5.15.86/fs/proc/task_mmu.c
  		smaps_pte_entry(pte, addr, walk);
  	pte_unmap_unlock(pte - 1, ptl);
  out:
-@@ -1165,7 +1169,11 @@ out:
+@@ -1189,7 +1193,11 @@ out:
  		return 0;
  
  	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -55,7 +40,7 @@ diff -rup linux-5.15.86-orig/fs/proc/task_mmu.c linux-5.15.86/fs/proc/task_mmu.c
  		ptent = *pte;
  
  		if (cp->type == CLEAR_REFS_SOFT_DIRTY) {
-@@ -1502,7 +1510,11 @@ static int pagemap_pmd_range(pmd_t *pmdp
+@@ -1542,7 +1550,11 @@ static int pagemap_pmd_range(pmd_t *pmdp
  	 * goes beyond vma->vm_end.
  	 */
  	orig_pte = pte = pte_offset_map_lock(walk->mm, pmdp, addr, &ptl);
@@ -67,7 +52,7 @@ diff -rup linux-5.15.86-orig/fs/proc/task_mmu.c linux-5.15.86/fs/proc/task_mmu.c
  		pagemap_entry_t pme;
  
  		pme = pte_to_pagemap_entry(pm, vma, addr, *pte);
-@@ -1841,8 +1853,11 @@ static int gather_pte_stats(pmd_t *pmd,
+@@ -1886,8 +1898,11 @@ static int gather_pte_stats(pmd_t *pmd,
  		if (!page)
  			continue;
  		gather_stats(page, md, pte_dirty(*pte), 1);

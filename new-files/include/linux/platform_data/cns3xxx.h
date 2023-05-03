@@ -1267,7 +1267,7 @@ extern struct dentry *cns3xxx_debugfs_dir;
 /* Information about built-in Ethernet MAC interfaces */
 struct cns3xxx_plat_info {
     u8 ports; /* Bitmap of enabled Ports */
-    u8 hwaddr[4][6];
+    const u8 hwaddr[4][8];
     u32 phy[3];
 };
 

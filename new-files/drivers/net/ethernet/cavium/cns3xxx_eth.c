@@ -1094,7 +1094,9 @@ static void cns3xxx_get_drvinfo(struct net_device *dev,
 }
 
 static void cns3xxx_get_ringparam(struct net_device *netdev,
-				  struct ethtool_ringparam *ring)
+				  struct ethtool_ringparam *ring,
+				  struct kernel_ethtool_ringparam *kernel_coal,
+				  struct netlink_ext_ack *extack)
 
 {
 	struct port *port = netdev_priv(netdev);
@@ -1109,7 +1111,9 @@ static void cns3xxx_get_ringparam(struct net_device *netdev,
 }
 
 static int cns3xxx_set_ringparam(struct net_device *netdev,
-				 struct ethtool_ringparam *ring)
+				 struct ethtool_ringparam *ring,
+				 struct kernel_ethtool_ringparam *kernel_coal,
+				 struct netlink_ext_ack *extack)
 {
 #ifdef TODO_CNS3XXX_ETH
 
@@ -1836,7 +1840,7 @@ static int eth_init_one(struct platform_device *pdev)
 	}
 	platform_set_drvdata(pdev, napi_dev);
 
-	netif_napi_add(napi_dev, &sw->napi, eth_poll, NAPI_WEIGHT);
+	netif_napi_add(napi_dev, &sw->napi, eth_poll);
 
 	for (i = 0; i < 3; i++) {
 		if (!(plat->ports & (1 << i))) {
@@ -1874,17 +1878,17 @@ static int eth_init_one(struct platform_device *pdev)
 		    sprintf(name, "ethaddr%d=", i);
 		    if (0 == fmg_get(name, &val_len)) {
 			mac_str_to_int(ethaddr, val_len, mac_int, ETH_ALEN);
-			memcpy(dev->dev_addr, mac_int, ETH_ALEN);
+			eth_hw_addr_set(dev, mac_int);
 			printk(KERN_INFO "eth%d : MAC Address retrieved from u-boot env variable \"ethaddr%d\"\n",
 			       i, i);
 		    } else {
-			memcpy(dev->dev_addr, &plat->hwaddr[i], ETH_ALEN);
+			eth_hw_addr_set(dev, plat->hwaddr[i]);
 		    }
 		} else {
-		    memcpy(dev->dev_addr, &plat->hwaddr[i], ETH_ALEN);
+		    eth_hw_addr_set(dev, plat->hwaddr[i]);
 		}
 #else		
-		memcpy(dev->dev_addr, &plat->hwaddr[i], ETH_ALEN);
+		eth_hw_addr_set(dev, plat->hwaddr[i]);
 #endif
 		printk(KERN_INFO "eth%d : Ethernet MAC Address assigned : %pM\n",
 		       i, dev->dev_addr);

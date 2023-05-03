@@ -1,8 +1,8 @@
-diff -rup linux-5.15.86-orig/kernel/panic.c linux-5.15.86/kernel/panic.c
---- linux-5.15.86-orig/kernel/panic.c	2023-01-06 21:31:01.579931269 +1100
-+++ linux-5.15.86/kernel/panic.c	2023-01-06 21:36:02.806619937 +1100
-@@ -620,6 +620,24 @@ void warn_slowpath_fmt(const char *file,
- {
+diff -rup linux-6.1.26.orig/kernel/panic.c linux-6.1.26/kernel/panic.c
+--- linux-6.1.26.orig/kernel/panic.c	2023-04-26 22:28:44.000000000 +1000
++++ linux-6.1.26/kernel/panic.c	2023-05-03 13:12:08.398051542 +1000
+@@ -690,6 +690,24 @@ void warn_slowpath_fmt(const char *file,
+ 	bool rcu = warn_rcu_enter();
  	struct warn_args args;
  
 +#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
