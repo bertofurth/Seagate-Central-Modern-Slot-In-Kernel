@@ -2,7 +2,7 @@
 
 This is a guide that describes how to manually replace the original
 Linux v2.6.25 kernel on a Seagate Central NAS with a previously
-cross compiled modern, Linux v5.x kernel.
+cross compiled modern Linux kernel.
 
 Refer to the instructions in **README_CROSS_COMPILE_KERNEL.md**
 to cross compile a kernel for use in this procedure or refer to the
@@ -21,10 +21,10 @@ changes.
 
 ## TLDNR
 * Obtain a uImage kernel image from the releases section in the project.
-* Upload the uImage to  the unit being upgraded.
+* Upload the uImage to the unit being upgraded.
 * Perform optional customizations and optimizations.
 * Identify then mount the boot partition (either /dev/sda1 or /dev/sda2).
-* Copy the new kernel over the old kernel.
+* Remove the old kernel and install the new one.
 * Reboot the unit by shutting down and power cycling.
 
 ## Prerequisites
@@ -86,21 +86,21 @@ directory on your build machine.
 
 For example, the following **git** command will download the files
 in this project to a new subdirectory called 
-Seagate-Central-Slot-In-v5.x-Kernel
+Seagate-Central-Modern-Slot-In-Kernel
 
-    git clone https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel
+    git clone https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel
     
 Alternately, the following **wget** and **unzip** commands will 
 download the files in this project to a new subdirectory called
-Seagate-Central-Slot-In-v5.x-Kernel-main
+Seagate-Central-Modern-Slot-In-Kernel-main
 
-    wget https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel/archive/refs/heads/main.zip
+    wget https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel/archive/refs/heads/main.zip
     unzip main.zip
 
 Change into this new subdirectory. This will be referred to as 
 the base working directory going forward.
 
-     cd Seagate-Central-Slot-In-v5.x-Kernel
+     cd Seagate-Central-Modern-Slot-In-Kernel
 
 ### Transfer the cross compiled kernel to the Seagate Central
 You should have a self generated or downloaded kernel "uImage" file
@@ -114,11 +114,11 @@ location relative to the base working directory.
     obj/arch/arm/boot/uImage
 
 If you have downloaded a pre-compiled kernel from the releases
-section of this project with a name like "uImage.v5.15.70-sc"
+section of this project with a name like "uImage.v6.1.X-sc"
 then it is suggested that the file be renamed to "uImage" at this
 point. For example
 
-     mv uImage.v5.15.70-sc uImage
+     mv uImage.v6.1.26-sc uImage
 
 Transfer this image to the Seagate Central. In this example we use 
 the scp command however, any other means can be used. When using scp 
@@ -176,7 +176,7 @@ and becoming the root user. For example
     root@NAS-X:/Data/admin#
      
 ### Optional (Recommended) - Disable obsolete services
-The Seagate Central comes with a number of services that have recently
+The Seagate Central comes with a number of services that have
 become obsolete and defunct. These include the "Seagate Media Service"
 and "Tappin Remote Access Service". These services consume a considerable
 amount of memory and CPU resources but do not provide any useful
@@ -405,8 +405,8 @@ that subdirectory there should be more module configuration files
 and a "kernel/" subdirectory containing the module tree. For example
 
     #ls -p cross-mod/lib/modules/
-    5.15.70-sc/
-    #ls -p cross-mod/lib/modules/5.15.70-sc
+    6.1.26-sc/
+    #ls -p cross-mod/lib/modules/6.1.26-sc
     build
     kernel/
     modules.alias
@@ -434,7 +434,7 @@ command.
 
      cp -r cross-mod/lib/modules/* /lib/modules/
 
-There should be a new 5.x.x-sc modules subdirectory on the unit alongside the 
+There should be a new 6.1.x-sc modules subdirectory on the unit alongside the 
 modules subdirectory for the original v2.6.35 kernel. The output of the 
 following command
 
@@ -443,14 +443,14 @@ following command
 should show an output similar to the following.
 
      drwxrwxr-x 4 root root 4096 Sep 17  2015 2.6.35.13-cavm1.whitney-econa.whitney-econa
-     drwxr-xr-x 3 root root 4096 Sep 28 14:47 5.15.70-sc
+     drwxr-xr-x 3 root root 4096 Sep 28 14:47 6.1.26-sc
      
 Finally remove the original "modules.dep" file in the new module 
 subdirectory. Removing this file will cause the unit to perform a
 "depmod" for the newly installed modules on next boot which will
 properly index them.
 
-     rm /lib/modules/5.15.70-sc/modules.dep
+     rm /lib/modules/6.1.26-sc/modules.dep
      
 ### Reboot and confirm the upgrade    
 Finally, we reboot the unit and confirm that the new kernel is
@@ -489,10 +489,10 @@ that the unit has loaded the new kernel.
      uname -a
          
 The output should indicate that the version of the running kernel is now
-5.x.x-sc and that SMP functionality is enabled, as per the following sample
+6.1.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-     Linux NAS-X 5.15.70-sc #1 SMP Wed Sep 28 16:43:29 AEST 2022 armv6l GNU/Linux   
+     Linux NAS-X 6.1.26-sc #1 SMP Wed May 6 16:43:29 EST 2023 armv6l GNU/Linux   
      
 Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
