@@ -329,10 +329,10 @@ Here is an example of the "make uImage" command being executed
     
 The process should complete with a message similar to the following
 
-    Image Name:   Linux-5.15.86-sc
-    Created:      Fri Jan  6 22:16:24 2023
+    Image Name:   Linux-6.1.26-sc
+    Created:      Thu May  4 06:53:15 2023
     Image Type:   ARM Linux Kernel Image (uncompressed)
-    Data Size:    4317016 Bytes = 4215.84 KiB = 4.12 MiB
+    Data Size:    4437272 Bytes = 4333.27 KiB = 4.23 MiB
     Load Address: 22000000
     Entry Point:  22000000
       Kernel: arch/arm/boot/uImage is ready
