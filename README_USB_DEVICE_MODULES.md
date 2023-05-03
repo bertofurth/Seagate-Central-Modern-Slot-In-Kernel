@@ -14,9 +14,9 @@ new device.
 
 The best way to create a new customizable kernel for the Seagate
 Central is by referring to the other README files in this
-**Seagate-Central-Slot-In-v5.x-Kernel** project.
+**Seagate-Central-Modern-Slot-In-Kernel** project.
 
-https://github.com/bertofurth/Seagate-Central-Slot-In-v5.x-Kernel
+https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel
 
 For more information about Linux modules please refer to other more
 complete guides such as
@@ -32,7 +32,7 @@ https://tldp.org/HOWTO/Module-HOWTO/
 ## TLDNR 1
 If you just want USB Video Camera support then all modules for every
 USB camera natively supported in Linux can be built by using the included
-**config-sc-v5.16.20-all-usb-cam-modules.txt** kernel configuration file. 
+**config-sc-vX.X.X-all-usb-cam-modules.txt** kernel configuration file. 
 Simply copy this configuration file to the build directory ( obj/.config )
 before compiling your kernel and modules as per the
 **README_CROSS_COMPILE_KERNEL.md** instructions in this project.
