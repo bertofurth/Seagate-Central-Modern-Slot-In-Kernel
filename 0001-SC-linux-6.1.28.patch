@@ -1,0 +1,2255 @@
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/elf.h linux-6.1.28/arch/arm/include/asm/elf.h
+--- linux-6.1.28.orig/arch/arm/include/asm/elf.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/elf.h	2023-05-13 14:13:50.187458919 +1000
+@@ -120,7 +120,7 @@ extern int arm_elf_read_implies_exec(int
+ #define elf_read_implies_exec(ex,stk) arm_elf_read_implies_exec(stk)
+ 
+ #define CORE_DUMP_USE_REGSET
+-#define ELF_EXEC_PAGESIZE	4096
++#define ELF_EXEC_PAGESIZE	PAGE_SIZE
+ 
+ /* This is the base location for PIE (ET_DYN with INTERP) loads. */
+ #define ELF_ET_DYN_BASE		0x400000UL
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/fixmap.h linux-6.1.28/arch/arm/include/asm/fixmap.h
+--- linux-6.1.28.orig/arch/arm/include/asm/fixmap.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/fixmap.h	2023-05-13 14:13:50.191458912 +1000
+@@ -8,6 +8,7 @@
+ 
+ #include <linux/pgtable.h>
+ #include <asm/kmap_size.h>
++#include <linux/sizes.h>
+ 
+ enum fixed_addresses {
+ 	FIX_EARLYCON_MEM_BASE,
+@@ -27,7 +28,7 @@ enum fixed_addresses {
+ 	 * not to clash since early_ioremap() is only available before
+ 	 * paging_init(), and kmap() only after.
+ 	 */
+-#define NR_FIX_BTMAPS		32
++#define NR_FIX_BTMAPS		(SZ_128K / PAGE_SIZE)
+ #define FIX_BTMAPS_SLOTS	7
+ #define TOTAL_FIX_BTMAPS	(NR_FIX_BTMAPS * FIX_BTMAPS_SLOTS)
+ 
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/page.h linux-6.1.28/arch/arm/include/asm/page.h
+--- linux-6.1.28.orig/arch/arm/include/asm/page.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/page.h	2023-05-13 14:13:50.191458912 +1000
+@@ -8,7 +8,11 @@
+ #define _ASMARM_PAGE_H
+ 
+ /* PAGE_SHIFT determines the page size */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PAGE_SHIFT              16
++#else
+ #define PAGE_SHIFT		12
++#endif
+ #define PAGE_SIZE		(_AC(1,UL) << PAGE_SHIFT)
+ #define PAGE_MASK		(~((1 << PAGE_SHIFT) - 1))
+ 
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/pgtable-2level.h linux-6.1.28/arch/arm/include/asm/pgtable-2level.h
+--- linux-6.1.28.orig/arch/arm/include/asm/pgtable-2level.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/pgtable-2level.h	2023-05-13 14:13:50.191458912 +1000
+@@ -71,6 +71,20 @@
+ #define PTRS_PER_PMD		1
+ #define PTRS_PER_PGD		2048
+ 
++/*
++ * Irrespective of the page size, the number of entries in the L2 page
++ * table remain the same and is set to 512 as indicated by PTS_PER_PTE.
++ * When the page size is set to 64K each unique page table entry has
++ * (64K / 4K) = 16 copies (PTE_STEP). This means there are only 
++ * (PTRS_PER_PTE / PTE_STEP) = (512 / 16) = 32 unique Page Table 
++ * Entries (PTRS_PER_PTE_REAL). This needs to be born in mind when
++ * walking a page table.
++ */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PTRS_PER_PTE_REAL       32
++#define PTE_STEP                16
++#endif
++
+ #define PTE_HWTABLE_PTRS	(PTRS_PER_PTE)
+ #define PTE_HWTABLE_OFF		(PTE_HWTABLE_PTRS * sizeof(pte_t))
+ #define PTE_HWTABLE_SIZE	(PTRS_PER_PTE * sizeof(u32))
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/pgtable-2level-hwdef.h linux-6.1.28/arch/arm/include/asm/pgtable-2level-hwdef.h
+--- linux-6.1.28.orig/arch/arm/include/asm/pgtable-2level-hwdef.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/pgtable-2level-hwdef.h	2023-05-13 14:13:50.191458912 +1000
+@@ -66,7 +66,11 @@
+ /*
+  *   - extended small page/tiny page
+  */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PTE_EXT_XN		(_AT(pteval_t, 1) << 15)	/* v6 */
++#else
+ #define PTE_EXT_XN		(_AT(pteval_t, 1) << 0)		/* v6 */
++#endif
+ #define PTE_EXT_AP_MASK		(_AT(pteval_t, 3) << 4)
+ #define PTE_EXT_AP0		(_AT(pteval_t, 1) << 4)
+ #define PTE_EXT_AP1		(_AT(pteval_t, 2) << 4)
+@@ -74,7 +78,11 @@
+ #define PTE_EXT_AP_UNO_SRW	(PTE_EXT_AP0)
+ #define PTE_EXT_AP_URO_SRW	(PTE_EXT_AP1)
+ #define PTE_EXT_AP_URW_SRW	(PTE_EXT_AP1|PTE_EXT_AP0)
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PTE_EXT_TEX(x)		(_AT(pteval_t, (x)) << 12)	/* Large Page */
++#else
+ #define PTE_EXT_TEX(x)		(_AT(pteval_t, (x)) << 6)	/* v5 */
++#endif
+ #define PTE_EXT_APX		(_AT(pteval_t, 1) << 9)		/* v6 */
+ #define PTE_EXT_COHERENT	(_AT(pteval_t, 1) << 9)		/* XScale3 */
+ #define PTE_EXT_SHARED		(_AT(pteval_t, 1) << 10)	/* v6 */
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/pgtable.h linux-6.1.28/arch/arm/include/asm/pgtable.h
+--- linux-6.1.28.orig/arch/arm/include/asm/pgtable.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/pgtable.h	2023-05-13 14:13:50.195458904 +1000
+@@ -67,7 +67,11 @@ extern void __pgd_error(const char *file
+  * mapping to be mapped at.  This is particularly important for
+  * non-high vector CPUs.
+  */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define FIRST_USER_ADDRESS      PAGE_SIZE
++#else
+ #define FIRST_USER_ADDRESS	(PAGE_SIZE * 2)
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
+ 
+ /*
+  * Use TASK_SIZE as the ceiling argument for free_pgtables() and
+@@ -163,6 +167,16 @@ static inline pte_t *pmd_page_vaddr(pmd_
+ 
+ #define pmd_page(pmd)		pfn_to_page(__phys_to_pfn(pmd_val(pmd) & PHYS_MASK))
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define pte_index(addr)         (((addr) >> PAGE_SHIFT) & \
++				 (PTRS_PER_PTE_REAL - 1))
++#define pte_offset_kernel(dir, addr)    (pmd_page_vaddr(*(dir)) + \
++					 pte_index(addr) * PTE_STEP)
++#define pte_offset_map(pmd, addr)       (pmd_page_vaddr(*(pmd)) +	\
++					 pte_index(addr) * PTE_STEP)
++#define pte_unmap(pte)                   do { } while (0)
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
++
+ #define pte_pfn(pte)		((pte_val(pte) & PHYS_MASK) >> PAGE_SHIFT)
+ #define pfn_pte(pfn,prot)	__pte(__pfn_to_phys(pfn) | pgprot_val(prot))
+ 
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/shmparam.h linux-6.1.28/arch/arm/include/asm/shmparam.h
+--- linux-6.1.28.orig/arch/arm/include/asm/shmparam.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/shmparam.h	2023-05-13 14:13:50.195458904 +1000
+@@ -7,7 +7,11 @@
+  * or page size, whichever is greater since the cache aliases
+  * every size/ways bytes.
+  */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define SHMLBA  (PAGE_SIZE)
++#else
+ #define	SHMLBA	(4 * PAGE_SIZE)		 /* attach addr a multiple of this */
++#endif
+ 
+ /*
+  * Enforce SHMLBA in shmat
+diff -rup linux-6.1.28.orig/arch/arm/include/asm/thread_info.h linux-6.1.28/arch/arm/include/asm/thread_info.h
+--- linux-6.1.28.orig/arch/arm/include/asm/thread_info.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/asm/thread_info.h	2023-05-13 14:13:50.195458904 +1000
+@@ -13,6 +13,9 @@
+ #include <asm/fpstate.h>
+ #include <asm/page.h>
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define THREAD_SIZE_ORDER       0
++#else
+ #ifdef CONFIG_KASAN
+ /*
+  * KASan uses a lot of extra stack space so the thread size order needs to
+@@ -22,6 +25,7 @@
+ #else
+ #define THREAD_SIZE_ORDER	1
+ #endif
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
+ #define THREAD_SIZE		(PAGE_SIZE << THREAD_SIZE_ORDER)
+ #define THREAD_START_SP		(THREAD_SIZE - 8)
+ 
+diff -rup linux-6.1.28.orig/arch/arm/include/uapi/asm/setup.h linux-6.1.28/arch/arm/include/uapi/asm/setup.h
+--- linux-6.1.28.orig/arch/arm/include/uapi/asm/setup.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/include/uapi/asm/setup.h	2023-05-13 14:13:50.195458904 +1000
+@@ -124,7 +124,7 @@ struct tag_videolfb {
+ #define ATAG_CMDLINE	0x54410009
+ 
+ struct tag_cmdline {
+-	char	cmdline[1];	/* this is the minimum size */
++	char	cmdline[COMMAND_LINE_SIZE];
+ };
+ 
+ /* acorn RiscPC specific information */
+diff -rup linux-6.1.28.orig/arch/arm/Kconfig linux-6.1.28/arch/arm/Kconfig
+--- linux-6.1.28.orig/arch/arm/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/Kconfig	2023-05-13 14:13:50.195458904 +1000
+@@ -1112,6 +1112,7 @@ config PAGE_OFFSET
+ 	default PHYS_OFFSET if !MMU
+ 	default 0x40000000 if VMSPLIT_1G
+ 	default 0x80000000 if VMSPLIT_2G
++	default 0xA0000000 if CNS3XXX_HIGH_PHYS_OFFSET
+ 	default 0xB0000000 if VMSPLIT_3G_OPT
+ 	default 0xC0000000
+ 
+@@ -1120,6 +1121,7 @@ config KASAN_SHADOW_OFFSET
+ 	depends on KASAN
+ 	default 0x1f000000 if PAGE_OFFSET=0x40000000
+ 	default 0x5f000000 if PAGE_OFFSET=0x80000000
++	default 0x7f000000 if PAGE_OFFSET=0xA0000000
+ 	default 0x9f000000 if PAGE_OFFSET=0xC0000000
+ 	default 0x8f000000 if PAGE_OFFSET=0xB0000000
+ 	default 0xffffffff
+diff -rup linux-6.1.28.orig/arch/arm/Kconfig.debug linux-6.1.28/arch/arm/Kconfig.debug
+--- linux-6.1.28.orig/arch/arm/Kconfig.debug	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/Kconfig.debug	2023-05-13 14:13:50.195458904 +1000
+@@ -1818,7 +1818,6 @@ config DEBUG_UART_VIRT
+ 				DEBUG_OMAP4UART2 || DEBUG_OMAP5UART2
+ 	default 0xfa06e000 if DEBUG_OMAP2UART3 || DEBUG_OMAP4UART4
+ 	default 0xfa71e000 if DEBUG_QCOM_UARTDM
+-	default 0xfb002000 if DEBUG_CNS3XXX
+ 	default 0xfb009000 if DEBUG_REALVIEW_STD_PORT
+ 	default 0xfb00c000 if DEBUG_AT91_SAMA5D4_USART3
+ 	default 0xfb020000 if DEBUG_OMAP3UART3
+@@ -1862,6 +1861,7 @@ config DEBUG_UART_VIRT
+ 	default 0xff0b0000 if DEBUG_OMAP1UART1 || DEBUG_OMAP7XXUART1
+ 	default 0xff0b0800 if DEBUG_OMAP1UART2 || DEBUG_OMAP7XXUART2
+ 	default 0xff0b9800 if DEBUG_OMAP1UART3 || DEBUG_OMAP7XXUART3
++	default 0xff050000 if DEBUG_CNS3XXX
+ 	default 0xffd01000 if DEBUG_HIP01_UART
+ 	default DEBUG_UART_PHYS if !MMU
+ 	depends on DEBUG_LL_UART_8250 || DEBUG_LL_UART_PL01X || \
+diff -rup linux-6.1.28.orig/arch/arm/kernel/entry-common.S linux-6.1.28/arch/arm/kernel/entry-common.S
+--- linux-6.1.28.orig/arch/arm/kernel/entry-common.S	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/kernel/entry-common.S	2023-05-13 14:13:50.195458904 +1000
+@@ -422,8 +422,19 @@ ENDPROC(sys_fstatfs64_wrapper)
+  * offset, we return EINVAL.
+  */
+ sys_mmap2:
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define PGOFF_SHIFT (PAGE_SHIFT - 12)
++#define PGOFF_MASK  ((1 << PGOFF_SHIFT) - 1)	
++	        tst     r5, #PGOFF_MASK
++	        moveq   r5, r5, lsr #PGOFF_SHIFT
++	        streq   r5, [sp, #4]
++	        beq     sys_mmap_pgoff
++	        mov     r0, #-EINVAL
++	        ret     lr
++#else	
+ 		str	r5, [sp, #4]
+ 		b	sys_mmap_pgoff
++#endif
+ ENDPROC(sys_mmap2)
+ 
+ #ifdef CONFIG_OABI_COMPAT
+diff -rup linux-6.1.28.orig/arch/arm/kernel/setup.c linux-6.1.28/arch/arm/kernel/setup.c
+--- linux-6.1.28.orig/arch/arm/kernel/setup.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/kernel/setup.c	2023-05-13 14:13:50.195458904 +1000
+@@ -829,6 +829,31 @@ static int __init early_mem(char *p)
+ 	 * size.
+ 	 */
+ 	if (usermem == 0) {
++#ifdef CONFIG_MACH_SEAGATE_CENTRAL
++		start = memblock_start_of_DRAM();
++		size = memblock_end_of_DRAM() - start;
++		pr_info ("Seagate Central: Bootloader detected DRAM start 0x%llx size 0x%llx \n",
++			 start, size);
++		size = memparse(p, &endp);
++		if (start == 0x20000000 && size == 0x10000000) {
++			/*
++			 * The default Seagate Central u-boot bootloader inserts
++			 * "mem=256M" into the Linux command line even though there is
++			 * usually 512MB of RAM actually available. Modifying the
++			 * "bootargs" value in Seagate u-boot makes no difference.
++			 * Therefore, if "mem=256M" has been specified then we ignore
++			 * this parameter in order to force the system to use *all*
++			 * the detected memory.
++			 * The proper solution for this issue would be to replace
++			 * u-boot to stop the forced insertion of the "mem=256M"
++			 * parameter this can be dangerous and difficult, hence this
++			 * ugly workaround.
++			 */
++			pr_info ("Seagate Central: Ignoring command line mem=256M argument\n");
++			pr_info ("Seagate Central: Specify mem=257M to force 256MB RAM on this platform.\n");
++			return 0;
++		}
++#endif
+ 		usermem = 1;
+ 		memblock_remove(memblock_start_of_DRAM(),
+ 			memblock_end_of_DRAM() - memblock_start_of_DRAM());
+@@ -836,6 +861,19 @@ static int __init early_mem(char *p)
+ 
+ 	start = PHYS_OFFSET;
+ 	size  = memparse(p, &endp);
++
++#ifdef CONFIG_MACH_SEAGATE_CENTRAL
++	if (size == 0x10100000) {
++		/*
++		 * If the special Linux command line value "mem=257M" is specified
++		 * then we set the system memory to 256M.
++		 */
++		pr_info ("Seagate Central: Special command line argument mem=257M used\n");
++		pr_info ("Seagate Central: Setting system RAM size to 256M\n");
++		size = 0x10000000;
++	}
++#endif
++	
+ 	if (*endp == '@')
+ 		start = memparse(endp + 1, NULL);
+ 
+diff -rup linux-6.1.28.orig/arch/arm/kernel/traps.c linux-6.1.28/arch/arm/kernel/traps.c
+--- linux-6.1.28.orig/arch/arm/kernel/traps.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/kernel/traps.c	2023-05-13 14:13:50.195458904 +1000
+@@ -882,7 +882,11 @@ void __init early_trap_init(void *vector
+ 
+ 	kuser_init(vectors_base);
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	flush_vectors(vectors_base, 0, PAGE_SIZE);
++#else
+ 	flush_vectors(vectors_base, 0, PAGE_SIZE * 2);
++#endif
+ }
+ #else /* ifndef CONFIG_CPU_V7M */
+ void __init early_trap_init(void *vectors_base)
+diff -rup linux-6.1.28.orig/arch/arm/lib/copy_page.S linux-6.1.28/arch/arm/lib/copy_page.S
+--- linux-6.1.28.orig/arch/arm/lib/copy_page.S	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/lib/copy_page.S	2023-05-13 14:13:50.199458896 +1000
+@@ -25,7 +25,7 @@ ENTRY(copy_page)
+ 		stmfd	sp!, {r4, lr}			@	2
+ 	PLD(	pld	[r1, #0]		)
+ 	PLD(	pld	[r1, #L1_CACHE_BYTES]		)
+-		mov	r2, #COPY_COUNT			@	1
++		ldr	r2, =COPY_COUNT			@	1
+ 		ldmia	r1!, {r3, r4, ip, lr}		@	4+1
+ 1:	PLD(	pld	[r1, #2 * L1_CACHE_BYTES])
+ 	PLD(	pld	[r1, #3 * L1_CACHE_BYTES])
+diff -rup linux-6.1.28.orig/arch/arm/mach-cns3xxx/core.c linux-6.1.28/arch/arm/mach-cns3xxx/core.c
+--- linux-6.1.28.orig/arch/arm/mach-cns3xxx/core.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mach-cns3xxx/core.c	2023-05-13 14:13:50.199458896 +1000
+@@ -12,48 +12,68 @@
+ #include <linux/irqchip/arm-gic.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+-#include <linux/usb/ehci_pdriver.h>
+-#include <linux/usb/ohci_pdriver.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+ #include <asm/mach/time.h>
+ #include <asm/mach/irq.h>
+ #include <asm/hardware/cache-l2x0.h>
+-#include "cns3xxx.h"
++//#include <mach/irqs.h>
++#include <linux/platform_data/cns3xxx.h>
+ #include "core.h"
+-#include "pm.h"
++#include <mach/pm.h>
+ 
++#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+ static struct map_desc cns3xxx_io_desc[] __initdata = {
+ 	{
+ 		.virtual	= CNS3XXX_TC11MP_SCU_BASE_VIRT,
+ 		.pfn		= __phys_to_pfn(CNS3XXX_TC11MP_SCU_BASE),
+-		.length		= SZ_8K,
++		.length		= MAX(SZ_8K, PAGE_SIZE),
+ 		.type		= MT_DEVICE,
+ 	}, {
+ 		.virtual	= CNS3XXX_TIMER1_2_3_BASE_VIRT,
+ 		.pfn		= __phys_to_pfn(CNS3XXX_TIMER1_2_3_BASE),
+-		.length		= SZ_4K,
++		.length		= MAX(SZ_4K, PAGE_SIZE),
+ 		.type		= MT_DEVICE,
+ 	}, {
+ 		.virtual	= CNS3XXX_MISC_BASE_VIRT,
+ 		.pfn		= __phys_to_pfn(CNS3XXX_MISC_BASE),
+-		.length		= SZ_4K,
++		.length		= MAX(SZ_4K, PAGE_SIZE),
+ 		.type		= MT_DEVICE,
+ 	}, {
++	        .virtual        = CNS3XXX_GPIOA_BASE_VIRT,
++		.pfn            = __phys_to_pfn(CNS3XXX_GPIOA_BASE),
++		.length         = PAGE_SIZE,
++		.type           = MT_DEVICE,
++	}, {
++	        .virtual        = CNS3XXX_GPIOB_BASE_VIRT,
++		.pfn            = __phys_to_pfn(CNS3XXX_GPIOB_BASE),
++		.length         = PAGE_SIZE,
++		.type           = MT_DEVICE,
++	}, {
+ 		.virtual	= CNS3XXX_PM_BASE_VIRT,
+ 		.pfn		= __phys_to_pfn(CNS3XXX_PM_BASE),
+-		.length		= SZ_4K,
++		.length		= MAX(SZ_4K, PAGE_SIZE),
++		.type		= MT_DEVICE,
++	}, {
++		.virtual	= CNS3XXX_SSP_BASE_VIRT,
++		.pfn		= __phys_to_pfn(CNS3XXX_SSP_BASE),
++		.length		= SZ_64K,
++		.type		= MT_DEVICE,
++	}, {
++		.virtual	= CNS3XXX_USB_BASE_VIRT,
++		.pfn		= __phys_to_pfn(CNS3XXX_USB_BASE),
++		.length		= SZ_64K,
+ 		.type		= MT_DEVICE,
+ #ifdef CONFIG_PCI
+ 	}, {
+ 		.virtual	= CNS3XXX_PCIE0_HOST_BASE_VIRT,
+ 		.pfn		= __phys_to_pfn(CNS3XXX_PCIE0_HOST_BASE),
+-		.length		= SZ_4K,
++		.length		= MAX(SZ_4K, PAGE_SIZE),
+ 		.type		= MT_DEVICE,
+ 	}, {
+ 		.virtual	= CNS3XXX_PCIE0_CFG0_BASE_VIRT,
+ 		.pfn		= __phys_to_pfn(CNS3XXX_PCIE0_CFG0_BASE),
+-		.length		= SZ_64K, /* really 4 KiB at offset 32 KiB */
++		.length		= MAX(SZ_4K, PAGE_SIZE), /* really 4 KiB at offset 32 KiB */
+ 		.type		= MT_DEVICE,
+ 	}, {
+ 		.virtual	= CNS3XXX_PCIE0_CFG1_BASE_VIRT,
+@@ -63,7 +83,7 @@ static struct map_desc cns3xxx_io_desc[]
+ 	}, {
+ 		.virtual	= CNS3XXX_PCIE1_HOST_BASE_VIRT,
+ 		.pfn		= __phys_to_pfn(CNS3XXX_PCIE1_HOST_BASE),
+-		.length		= SZ_4K,
++		.length		= SZ_64K,
+ 		.type		= MT_DEVICE,
+ 	}, {
+ 		.virtual	= CNS3XXX_PCIE1_CFG0_BASE_VIRT,
+@@ -122,17 +142,18 @@ static int cns3xxx_set_oneshot(struct cl
+ 
+ 	/* period set, and timer enabled in 'next_event' hook */
+ 	ctrl |= (1 << 2) | (1 << 9);
++	writel(0, cns3xxx_tmr1 + TIMER1_AUTO_RELOAD_OFFSET);
+ 	writel(ctrl, cns3xxx_tmr1 + TIMER1_2_CONTROL_OFFSET);
+ 	return 0;
+ }
+ 
+-static int cns3xxx_set_periodic(struct clock_event_device *clk)
++int cns3xxx_set_periodic(struct clock_event_device *clk)
+ {
+ 	unsigned long ctrl = readl(cns3xxx_tmr1 + TIMER1_2_CONTROL_OFFSET);
+ 	int pclk = cns3xxx_cpu_clock() / 8;
+ 	int reload;
+-
+-	reload = pclk * 20 / (3 * HZ) * 0x25000;
++	reload = pclk * 1000000 / HZ;
++	pr_info ("cns3xxx_set_periodic reload: %u\n", reload);
+ 	writel(reload, cns3xxx_tmr1 + TIMER1_AUTO_RELOAD_OFFSET);
+ 	ctrl |= (1 << 0) | (1 << 2) | (1 << 9);
+ 	writel(ctrl, cns3xxx_tmr1 + TIMER1_2_CONTROL_OFFSET);
+@@ -159,8 +180,8 @@ static struct clock_event_device cns3xxx
+ 	.set_state_oneshot	= cns3xxx_set_oneshot,
+ 	.tick_resume		= cns3xxx_shutdown,
+ 	.set_next_event		= cns3xxx_timer_set_next_event,
+-	.rating			= 350,
+-	.cpumask		= cpu_all_mask,
++	.rating			= 300,
++	.cpumask		= cpu_possible_mask,
+ };
+ 
+ static void __init cns3xxx_clockevents_init(unsigned int timer_irq)
+@@ -257,7 +278,7 @@ void __init cns3xxx_timer_init(void)
+ 
+ void __init cns3xxx_l2x0_init(void)
+ {
+-	void __iomem *base = ioremap(CNS3XXX_L2C_BASE, SZ_4K);
++	void __iomem *base = ioremap(CNS3XXX_L2C_BASE, MAX(SZ_4K, PAGE_SIZE));
+ 	u32 val;
+ 
+ 	if (WARN_ON(!base))
+@@ -295,58 +316,6 @@ void __init cns3xxx_l2x0_init(void)
+ 
+ #endif /* CONFIG_CACHE_L2X0 */
+ 
+-static int csn3xxx_usb_power_on(struct platform_device *pdev)
+-{
+-	/*
+-	 * EHCI and OHCI share the same clock and power,
+-	 * resetting twice would cause the 1st controller been reset.
+-	 * Therefore only do power up  at the first up device, and
+-	 * power down at the last down device.
+-	 *
+-	 * Set USB AHB INCR length to 16
+-	 */
+-	if (atomic_inc_return(&usb_pwr_ref) == 1) {
+-		cns3xxx_pwr_power_up(1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_PLL_USB);
+-		cns3xxx_pwr_clk_en(1 << PM_CLK_GATE_REG_OFFSET_USB_HOST);
+-		cns3xxx_pwr_soft_rst(1 << PM_SOFT_RST_REG_OFFST_USB_HOST);
+-		__raw_writel((__raw_readl(MISC_CHIP_CONFIG_REG) | (0X2 << 24)),
+-			MISC_CHIP_CONFIG_REG);
+-	}
+-
+-	return 0;
+-}
+-
+-static void csn3xxx_usb_power_off(struct platform_device *pdev)
+-{
+-	/*
+-	 * EHCI and OHCI share the same clock and power,
+-	 * resetting twice would cause the 1st controller been reset.
+-	 * Therefore only do power up  at the first up device, and
+-	 * power down at the last down device.
+-	 */
+-	if (atomic_dec_return(&usb_pwr_ref) == 0)
+-		cns3xxx_pwr_clk_dis(1 << PM_CLK_GATE_REG_OFFSET_USB_HOST);
+-}
+-
+-static struct usb_ehci_pdata cns3xxx_usb_ehci_pdata = {
+-	.power_on	= csn3xxx_usb_power_on,
+-	.power_off	= csn3xxx_usb_power_off,
+-};
+-
+-static struct usb_ohci_pdata cns3xxx_usb_ohci_pdata = {
+-	.num_ports	= 1,
+-	.power_on	= csn3xxx_usb_power_on,
+-	.power_off	= csn3xxx_usb_power_off,
+-};
+-
+-static const struct of_dev_auxdata cns3xxx_auxdata[] __initconst = {
+-	{ "intel,usb-ehci", CNS3XXX_USB_BASE, "ehci-platform", &cns3xxx_usb_ehci_pdata },
+-	{ "intel,usb-ohci", CNS3XXX_USB_OHCI_BASE, "ohci-platform", &cns3xxx_usb_ohci_pdata },
+-	{ "cavium,cns3420-ahci", CNS3XXX_SATA2_BASE, "ahci", NULL },
+-	{ "cavium,cns3420-sdhci", CNS3XXX_SDIO_BASE, "ahci", NULL },
+-	{},
+-};
+-
+ static void __init cns3xxx_init(void)
+ {
+ 	struct device_node *dn;
+@@ -381,7 +350,6 @@ static void __init cns3xxx_init(void)
+ 	
+ 		/* MMC/SD pins share with GPIOA */
+ 		gpioa_pins |= 0x1fff0004;
+-		__raw_writel(gpioa_pins, gpioa);
+ 	
+ 		cns3xxx_pwr_clk_en(CNS3XXX_PWR_CLK_EN(SDIO));
+ 		cns3xxx_pwr_soft_rst(CNS3XXX_PWR_SOFTWARE_RST(SDIO));
+@@ -390,7 +358,6 @@ static void __init cns3xxx_init(void)
+ 
+ 	pm_power_off = cns3xxx_power_off;
+ 
+-	of_platform_default_populate(NULL, cns3xxx_auxdata, NULL);
+ }
+ 
+ static const char *const cns3xxx_dt_compat[] __initconst = {
+diff -rup linux-6.1.28.orig/arch/arm/mach-cns3xxx/devices.c linux-6.1.28/arch/arm/mach-cns3xxx/devices.c
+--- linux-6.1.28.orig/arch/arm/mach-cns3xxx/devices.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mach-cns3xxx/devices.c	2023-05-13 14:13:50.199458896 +1000
+@@ -13,8 +13,9 @@
+ #include <linux/compiler.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/platform_device.h>
+-#include "cns3xxx.h"
+-#include "pm.h"
++//#include <mach/irqs.h>
++#include <linux/platform_data/cns3xxx.h>
++#include <mach/pm.h>
+ #include "core.h"
+ #include "devices.h"
+ 
+@@ -94,9 +95,17 @@ static struct platform_device cns3xxx_sd
+ 
+ void __init cns3xxx_sdhci_init(void)
+ {
+-	u32 __iomem *gpioa = IOMEM(CNS3XXX_MISC_BASE_VIRT + 0x0014);
++        u32 __iomem *gpioa = IOMEM(CNS3XXX_MISC_BASE_VIRT + 0x0014);  // MISC_GPIOA_PIN_DISABLE_OFFSET
+ 	u32 gpioa_pins = __raw_readl(gpioa);
+ 
++#ifdef CONFIG_MACH_SEAGATE_CENTRAL
++	printk (" %s WARNING : Loading the sdhci driver will stop usb working\n", __FUNCTION__);
++	printk ("    on the Seagate Central. \n");
++#endif
++	/*
++	 * N.B. The following register change disables USB support
++	 * on Seagate Central Single Drive NAS so use with caution.
++	 */
+ 	/* MMC/SD pins share with GPIOA */
+ 	gpioa_pins |= 0x1fff0004;
+ 	__raw_writel(gpioa_pins, gpioa);
+diff -rup linux-6.1.28.orig/arch/arm/mach-cns3xxx/Kconfig linux-6.1.28/arch/arm/mach-cns3xxx/Kconfig
+--- linux-6.1.28.orig/arch/arm/mach-cns3xxx/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mach-cns3xxx/Kconfig	2023-05-13 14:13:50.199458896 +1000
+@@ -3,6 +3,20 @@ menuconfig ARCH_CNS3XXX
+ 	bool "Cavium Networks CNS3XXX family"
+ 	depends on ARCH_MULTI_V6
+ 	depends on ATAGS && UNUSED_BOARD_FILES
++        select CPU_V6K
++        select ARM_HAS_SG_CHAIN
++        select HAVE_ARM_SCU if SMP
++        select HAVE_ARM_TWD
++        select HAVE_SMP
++        select FIQ
++        select TIMER_OF
++        select COMMON_CLK
++        select GENERIC_IRQ_MULTI_HANDLER
++        select SPARSE_IRQ
++        select MIGHT_HAVE_CACHE_L2X0
++        select MIGHT_HAVE_PCI
++        select USE_OF
++        select GENERIC_IRQ_CHIP
+ 	select ARM_GIC
+ 	help
+ 	  Support for Cavium Networks CNS3XXX platform.
+@@ -18,4 +32,38 @@ config MACH_CNS3420VB
+ 	  This is a platform with an on-board ARM11 MPCore and has support
+ 	  for USB, USB-OTG, MMC/SD/SDIO, SATA, PCI-E, etc.
+ 
++config MACH_SEAGATE_CENTRAL
++	bool "Experimental Seagate Central Single Bay"
++	depends on ATAGS
++	help
++	  This is a platform with an on-board ARM11 MPCore and has support
++	  for USB, USB-OTG, MMC/SD/SDIO, SATA, PCI-E, etc.
++
++config CNS3XXX_FAKE_SGNOTIFY_NODE
++        bool "Create a fake sgnotify node for Seagate Central"
++	depends on MACH_SEAGATE_CENTRAL
++	default y
++	help
++	  Seagate Central firmware requires that a node exist for the
++	  now obsolete and defunct Seagate Media Service otherwise when
++	  running the default firmware the unit may hang on boot.
++	  This node serves no purpose except to stop the unit from
++	  hanging on boot if the Seagate Media Service has not been
++	  disabled. Recommended set to 'y' only for Seagate Central
++	  Platform running Seagate supplied firmware which has the
++	  Seagate Media Service software included.
++	  
++config CNS3XXX_HIGH_PHYS_OFFSET
++        bool "High physical base address for the CNS3XXX platform"
++        depends on MMU
++	default y	
++	help
++	  CNS3XXX based systems make RAM available at physical
++	  address 0x20000000, the first 256MB of which is mirrored at
++	  physical address 0x00000000.
++	
++	  If the board has more than 256MB of RAM (unlikely), then
++	  this option allows the unit to access all of that memory
++	  by using the 0x20000000 high physical offset.
++	
+ endif
+diff -rup linux-6.1.28.orig/arch/arm/mach-cns3xxx/Makefile linux-6.1.28/arch/arm/mach-cns3xxx/Makefile
+--- linux-6.1.28.orig/arch/arm/mach-cns3xxx/Makefile	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mach-cns3xxx/Makefile	2023-05-13 14:13:50.199458896 +1000
+@@ -1,6 +1,11 @@
+ # SPDX-License-Identifier: GPL-2.0
++# 
++ccflags-$(CONFIG_ARCH_CNS3XXX)          += -I$(srctree)/$(src)/include
+ obj-$(CONFIG_ARCH_CNS3XXX)		+= cns3xxx.o
+-cns3xxx-y				+= core.o pm.o
++cns3xxx-y				+= core.o pm.o 
+ cns3xxx-$(CONFIG_ATAGS)			+= devices.o
+ cns3xxx-$(CONFIG_PCI)			+= pcie.o
+ cns3xxx-$(CONFIG_MACH_CNS3420VB)	+= cns3420vb.o
++cns3xxx-$(CONFIG_MACH_SEAGATE_CENTRAL)	+= seagate.o seagate_button.o
++cns3xxx-$(CONFIG_SMP)              	+= platsmp.o headsmp.o cns3xxx_fiq.o
++cns3xxx-$(CONFIG_HOTPLUG_CPU)         	+= hotplug.o
+diff -rup linux-6.1.28.orig/arch/arm/mach-cns3xxx/pm.c linux-6.1.28/arch/arm/mach-cns3xxx/pm.c
+--- linux-6.1.28.orig/arch/arm/mach-cns3xxx/pm.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mach-cns3xxx/pm.c	2023-05-13 14:13:50.199458896 +1000
+@@ -8,9 +8,20 @@
+ #include <linux/io.h>
+ #include <linux/delay.h>
+ #include <linux/atomic.h>
+-#include "cns3xxx.h"
+-#include "pm.h"
++#include <linux/platform_data/cns3xxx.h>
++#include <include/mach/pm.h>
+ #include "core.h"
++#include <linux/seq_file.h>
++#include <linux/proc_fs.h>
++#include <linux/cpufreq.h>
++
++extern int cns3xxx_set_periodic(struct clock_event_device *clk);
++
++static struct proc_dir_entry *cns3xxx_pm_proc_entry;
++static struct proc_dir_entry *cns3xxx_pm_clk_proc_entry;
++static struct proc_dir_entry *cns3xxx_pm_pll_pd_proc_entry;
++static struct proc_dir_entry *cns3xxx_pm_clk_ctrl_entry;
++static struct proc_dir_entry *cns3xxx_pm_cpu_freq_entry;
+ 
+ void cns3xxx_pwr_clk_en(unsigned int block)
+ {
+@@ -30,6 +41,21 @@ void cns3xxx_pwr_clk_dis(unsigned int bl
+ }
+ EXPORT_SYMBOL(cns3xxx_pwr_clk_dis);
+ 
++/*
++ * void cns3xxx_pwr_lp_hs - enable lower power handshake
++ * @dev: bitmap for device
++ */
++static void cns3xxx_lp_hs(unsigned int dev)
++{
++    u32 data;
++    void *addr;
++
++    addr = PM_HS_CFG_REG; 
++    data = readl(addr);
++    data |= (PM_HS_CFG_REG_MASK_SUPPORT & dev);
++    writel(data, addr);
++} 
++
+ void cns3xxx_pwr_power_up(unsigned int block)
+ {
+ 	u32 reg = __raw_readl(PM_PLL_HM_PD_CTRL_REG);
+@@ -116,5 +142,472 @@ int cns3xxx_cpu_clock(void)
+ }
+ EXPORT_SYMBOL(cns3xxx_cpu_clock);
+ 
++void cns3xxx_wfi(void)
++{
++
++        mb();
++	asm volatile(
++	    "mov r0, #0\n"
++	    "mcr p15, 0, r0, c7, c10, 4\n"
++	    "mcr p15, 0, r0, c7, c0, 4\n"
++	    );
++}
++EXPORT_SYMBOL(cns3xxx_wfi);
++
++/*
++ * cns3xxx_pwr_mode - change CPU power mode
++ * @pwr_mode: CPU power mode
++ */
++void cns3xxx_pwr_mode(unsigned int pwr_mode)
++{
++        u32 data;
++	u32 __iomem *addr;
++
++	if (CNS3XXX_PWR_CPU_MODE_HIBERNATE < pwr_mode)
++	    return;
++	
++	addr = (u32*)CNS3XXX_PM_BASE_VIRT + 0x014; /* PM_CLK_CTRL_REG */
++	
++	data = readl(addr);
++	data &= ~(0x7 << PM_CLK_CTRL_REG_OFFSET_CPU_PWR_MODE);
++	data |= ((pwr_mode & 0x7)<<PM_CLK_CTRL_REG_OFFSET_CPU_PWR_MODE);
++	writel(data, addr);
++}
++EXPORT_SYMBOL(cns3xxx_pwr_mode);
++
+ atomic_t usb_pwr_ref = ATOMIC_INIT(0);
+ EXPORT_SYMBOL(usb_pwr_ref);
++
++
++static int cns3xxx_pm_clk_write_proc(struct file *file, const char *buffer,
++				     size_t count, loff_t *ppos)
++{
++    if (count) {
++	unsigned int index = PM_CLK_GATE_REG_OFFSET_SDIO + 1, val = 2;
++	sscanf(buffer, "%u %u", &index, &val);
++	if (1 < val)
++	    goto clk_debug_exit;
++
++	if ((0x1 << index) & PM_CLK_GATE_REG_MASK) {
++	    if (val)
++		PM_CLK_GATE_REG_VALUE |= (0x1 << index);
++	    else
++		PM_CLK_GATE_REG_VALUE &= ~(0x1 << index);
++	}
++    }
++clk_debug_exit:
++    return count;
++}
++
++static int cns3xxx_pm_clk_read_proc(struct seq_file *seq, void *unused) {
++#define CLK_STRING(DEV) \
++    "(%.2d): %s\n", PM_CLK_GATE_REG_OFFSET_##DEV, (0x1 & (reg >> \
++							  PM_CLK_GATE_REG_OFFSET_##DEV)) ? "On" : "Off"
++
++    int reg = PM_CLK_GATE_REG_VALUE;
++
++    seq_printf(seq, "PM_CLK_GATE_REG 0x%.8x\n", reg);
++    seq_printf(seq, "SMC  "CLK_STRING(SMC_NFI));
++    seq_printf(seq, "SPI/I2C "CLK_STRING(SPI_PCM_I2C));
++    seq_printf(seq, "GDMA        "CLK_STRING(GDMA));
++    seq_printf(seq, "RTC  "CLK_STRING(RTC));
++    seq_printf(seq, "UART0   "CLK_STRING(UART0));
++    seq_printf(seq, "UART1   "CLK_STRING(UART1));
++    seq_printf(seq, "UART2   "CLK_STRING(UART2));
++    seq_printf(seq, "GPIO        "CLK_STRING(GPIO));
++    seq_printf(seq, "SWITCH  "CLK_STRING(SWITCH));
++    seq_printf(seq, "HCIE        "CLK_STRING(HCIE));
++    seq_printf(seq, "CRYPTO  "CLK_STRING(CRYPTO));
++    seq_printf(seq, "TIMER   "CLK_STRING(TIMER));
++    seq_printf(seq, "USB_OTG "CLK_STRING(USB_OTG));
++    seq_printf(seq, "USB_HOST"CLK_STRING(USB_HOST));
++    seq_printf(seq, "PCIE1   "CLK_STRING(PCIE(1)));
++    seq_printf(seq, "PCIE0   "CLK_STRING(PCIE(0)));
++    seq_printf(seq, "SATA        "CLK_STRING(SATA));
++    seq_printf(seq, "RAID        "CLK_STRING(RAID));
++    seq_printf(seq, "I2S  "CLK_STRING(I2S));
++    seq_printf(seq, "LCDC        "CLK_STRING(LCDC));
++    seq_printf(seq, "CIM  "CLK_STRING(CIM));
++    seq_printf(seq, "GPU  "CLK_STRING(GPU));
++    seq_printf(seq, "SDIO        "CLK_STRING(SDIO));
++
++    return 0;
++} /* cns3xxx_pm_clk_read_proc() */
++
++static int cns3xxx_pm_clk_open_proc(struct inode *inode, struct file *file)
++{
++    return single_open(file, cns3xxx_pm_clk_read_proc, &inode->i_private);
++}
++
++static const struct proc_ops cns3xxx_pm_clk_fops = {
++    .proc_open           = cns3xxx_pm_clk_open_proc,
++    .proc_read           = seq_read,
++    .proc_lseek          = seq_lseek,
++    .proc_release        = single_release,
++    .proc_write          = cns3xxx_pm_clk_write_proc,
++};
++
++
++static int cns3xxx_pm_pll_pd_write_proc(struct file *file, const char *buffer,
++					size_t count, loff_t *ppos)
++{
++    if (count) {
++	unsigned int index = PM_PLL_HM_PD_CTRL_REG_OFFSET_SATA_PHY1 + 1;
++	unsigned int val = 2;
++	sscanf(buffer, "%u %u", &index, &val);
++	if (1 < val)
++	    goto clk_debug_exit;
++
++	if ((0x1 << index) & PM_PLL_HM_PD_CTRL_REG_MASK) {
++	    if (val)
++		PM_PLL_HM_PD_CTRL_REG_VALUE |= (0x1 << index);
++	    else
++		PM_PLL_HM_PD_CTRL_REG_VALUE &= ~(0x1 << index);
++	}
++    }
++clk_debug_exit:
++    return count;
++} /* cns3xxx_pm_pll_pd_write_proc() */
++
++static int cns3xxx_pm_pll_pd_read_proc(struct seq_file *seq, void *unused)
++{
++#define PLL_PD_STRING(DEV) \
++    "(%.2d): %s\n", \
++	PM_PLL_HM_PD_CTRL_REG_OFFSET_PLL_##DEV, \
++	(0x1 & (reg>>PM_PLL_HM_PD_CTRL_REG_OFFSET_PLL_##DEV)) ? "Power Down" : \
++	        "Power Up"
++
++#define PHY_PD_STRING(DEV) \
++    "(%.2d): %s\n", \
++	PM_PLL_HM_PD_CTRL_REG_OFFSET_##DEV, \
++	(0x1 & (reg >> PM_PLL_HM_PD_CTRL_REG_OFFSET_##DEV)) ? "Power Down" : \
++	        "Power Up"
++
++    int reg = PM_PLL_HM_PD_CTRL_REG_VALUE;
++
++    seq_printf(seq, "PM_PLL_HM_PD_CTRL_REG 0x%.8x\n", reg);
++    seq_printf(seq, "RGMII        "PLL_PD_STRING(RGMII));
++    seq_printf(seq, "USB    "PLL_PD_STRING(USB));
++    seq_printf(seq, "LCD    "PLL_PD_STRING(LCD));
++    seq_printf(seq, "I2S    "PLL_PD_STRING(I2S));
++    seq_printf(seq, "I2SCD        "PLL_PD_STRING(I2SCD));
++    seq_printf(seq, "SATA_PHY0 "PHY_PD_STRING(SATA_PHY0));
++    seq_printf(seq, "SATA_PHY1 "PHY_PD_STRING(SATA_PHY1));
++
++    return 0;
++} /* cns3xxx_pm_pll_pd_read_proc() */
++
++static int cns3xxx_pm_pll_pd_open_proc(struct inode *inode, struct file *file)
++{
++    return single_open(file, cns3xxx_pm_pll_pd_read_proc, &inode->i_private);
++}
++
++static const struct proc_ops cns3xxx_pm_pll_pd_fops = {
++    .proc_open           = cns3xxx_pm_pll_pd_open_proc,
++    .proc_read           = seq_read,
++    .proc_lseek          = seq_lseek,
++    .proc_release        = single_release,
++    .proc_write          = cns3xxx_pm_pll_pd_write_proc,
++};
++
++
++const int ddr_speed_str[] = {200, 266, 333, 400};
++
++static int cns3xxx_pm_read_proc(struct seq_file *seq, void *unused)
++{
++
++    seq_printf(seq, "CLK_GATE_REG         0x%.8x\n",
++	       PM_CLK_GATE_REG_VALUE);
++    seq_printf(seq, "SOFT_RST_REG         0x%.8x\n",
++	       PM_SOFT_RST_REG_VALUE);
++    seq_printf(seq, "HS_CFG_REG     0x%.8x\n", PM_HS_CFG_REG_VALUE);
++    seq_printf(seq, "CACTIVE_STA_REG       0x%.8x\n",
++	       PM_CACTIVE_STA_REG_VALUE);
++    seq_printf(seq, "PWR_STA_REG   0x%.8x\n", PM_PWR_STA_REG_VALUE);
++    seq_printf(seq, "CLK_CTRL_REG         0x%.8x\n",
++	       PM_CLK_CTRL_REG_VALUE);
++    seq_printf(seq, "PLL_LCD_I2S_CTRL_REG 0x%.8x\n",
++	       PM_PLL_LCD_I2S_CTRL_REG_VALUE);
++    seq_printf(seq, "PLL_HM_PD_CTRL_REG   0x%.8x\n",
++	       PM_PLL_HM_PD_CTRL_REG_VALUE);
++    seq_printf(seq, "REGULAT_CTRL_REG     0x%.8x\n",
++	       PM_REGULAT_CTRL_REG_VALUE);
++    seq_printf(seq, "WDT_CTRL_REG         0x%.8x\n",
++	       PM_WDT_CTRL_REG_VALUE);
++    seq_printf(seq, "WU_CTRL0_REG         0x%.8x\n",
++	       PM_WU_CTRL0_REG_VALUE);
++    seq_printf(seq, "WU_CTRL1_REG         0x%.8x\n",
++	       PM_WU_CTRL1_REG_VALUE);
++    seq_printf(seq, "CSR_REG 0x%.8x\n", PM_CSR_REG_VALUE);
++
++    seq_printf(seq, "PLL CPU Frequency: ");
++    switch (PM_CLK_CTRL_REG_VALUE & 0xf) {
++    case 0:
++	seq_printf(seq, "300MHz\n");
++	break;
++    case 1:
++	seq_printf(seq, "333MHz\n");
++	break;
++    case 2:
++	seq_printf(seq, "366MHz\n");
++	break;
++    case 3:
++	seq_printf(seq, "400MHz\n");
++	break;
++    case 4:
++	seq_printf(seq, "433MHz\n");
++	break;
++    case 5:
++	seq_printf(seq, "466MHz\n");
++	break;
++    case 6:
++	seq_printf(seq, "500MHz\n");
++	break;
++    case 7:
++	seq_printf(seq, "533MHz\n");
++	break;
++    case 8:
++	seq_printf(seq, "566MHz\n");
++	break;
++    case 9:
++	seq_printf(seq, "600MHz\n");
++	break;
++    default:
++	seq_printf(seq, "!!!!!\n");
++    }
++
++    seq_printf(seq, "CPU clock divider: %d\n",
++		   0x1 << ((PM_CLK_CTRL_REG_VALUE >> 4) & 0x3));
++    seq_printf(seq, "CPU clock: %d MHz\n",
++		   cns3xxx_cpu_clock());
++    seq_printf(seq, "DDR2 clock %d MHz\n",
++		   ddr_speed_str[(PM_CLK_CTRL_REG_VALUE >> 7) & 0x3]);
++    
++    return 0;
++}
++
++static int cns3xxx_pm_open_proc(struct inode *inode, struct file *file)
++{
++    return single_open(file, cns3xxx_pm_read_proc, &inode->i_private);
++}
++
++static const struct proc_ops cns3xxx_pm_fops = {
++    .proc_open           = cns3xxx_pm_open_proc,
++    .proc_read           = seq_read,
++    .proc_lseek         = seq_lseek,
++    .proc_release        = single_release,
++};
++
++
++
++
++static int cns3xxx_pm_clk_ctrl_read_proc(struct seq_file *seq, void *unused)
++{
++#define CLK_CTRL_STRING(DEV) \
++    "(%.2d): %s\n", PM_CLK_CTRL_REG_OFFSET_##DEV, (0x1 & (reg >> \
++							  PM_CLK_CTRL_REG_OFFSET_##DEV)) ? "0x1 On" : "0x0 Off"
++    int reg = PM_CLK_CTRL_REG_VALUE;
++    int tmp, cpu_freq;
++
++    seq_printf(seq, "PM_CLK_CTRL_REG 0x%.8x\n", reg);
++    tmp = reg >> PM_CLK_CTRL_REG_OFFSET_PLL_CPU_SEL & 0xf;
++    seq_printf(seq, "PLL_CPU_SEL        (%.2d): 0x%.1x", PM_CLK_CTRL_REG_OFFSET_PLL_CPU_SEL,
++	       tmp);
++    /* Calculate the clock frequency */
++    cpu_freq = 300 + ((tmp / 3) * 100) + ((tmp % 3) * 33);
++    seq_printf(seq, " (%uMHz) \n", cpu_freq);
++    seq_printf(seq, "CPU_CLK_DIV        (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_CPU_CLK_DIV,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_CPU_CLK_DIV & 0x3);
++    
++    seq_printf(seq, "DIV_IMMEDIATE      "CLK_CTRL_STRING(DIV_IMMEDIATE));
++
++    seq_printf(seq, "PLL_DDR2_SEL       (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_PLL_DDR2_SEL,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_PLL_DDR2_SEL & 0x3);
++    seq_printf(seq, "CPU_PWR_MODE       (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_CPU_PWR_MODE,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_CPU_PWR_MODE & 0x7);
++    seq_printf(seq, "CRYPTO_CLK_SEL     (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_CRYPTO_CLK_SEL,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_CRYPTO_CLK_SEL & 0x3);
++    seq_printf(seq, "MDC_DIV            (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_MDC_DIV,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_MDC_DIV & 0x3);
++    seq_printf(seq, "CLKOUT_SEL         (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_CLKOUT_SEL,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_CLKOUT_SEL & 0xf);
++    seq_printf(seq, "CLKOUT_DIV         (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_CLKOUT_DIV,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_CLKOUT_DIV & 0x3);
++    seq_printf(seq, "I2SCLK_SEL         (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_I2SCLK_SEL,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_I2SCLK_SEL & 0x3);
++    seq_printf(seq, "I2SCLK_DIV         (%.2d): 0x%.1x\n", PM_CLK_CTRL_REG_OFFSET_I2SCLK_DIV,
++	       reg >> PM_CLK_CTRL_REG_OFFSET_I2SCLK_DIV & 0x7);
++    
++    seq_printf(seq, "TIMER_SIM_MODE     "CLK_CTRL_STRING(TIMER_SIM_MODE));
++    seq_printf(seq, "PCIE_REF0_EN       "CLK_CTRL_STRING(PCIE_REF0_EN));
++    seq_printf(seq, "PCIE_REF1_EN       "CLK_CTRL_STRING(PCIE_REF1_EN));
++    seq_printf(seq, "DDR2_CHG_EN        "CLK_CTRL_STRING(DDR2_CHG_EN));
++    seq_printf(seq, "I2S_MCLK           "CLK_CTRL_STRING(I2S_MCLK));
++
++    return 0;
++} /* cns3xxx_pm_clk_ctrl_read_proc() */
++
++
++static int cns3xxx_pm_clk_ctrl_open_proc(struct inode *inode, struct file *file)
++{
++    return single_open(file, cns3xxx_pm_clk_ctrl_read_proc, &inode->i_private);
++}
++
++static int cns3xxx_pm_clk_ctrl_write_proc(struct file *file, const char *buffer,
++				     size_t count, loff_t *ppos)
++{
++    if (count) {
++	unsigned int val = 0;
++	sscanf(buffer, "%i", &val);
++	if (val == 0)
++	    goto clk_debug_exit;
++
++	PM_CLK_CTRL_REG_VALUE = val;
++    }
++    
++clk_debug_exit:
++    return count;
++} /* cns3xxx_pm_clk_ctrl_write_proc() */
++
++
++static const struct proc_ops cns3xxx_pm_clk_ctrl_fops = {
++    .proc_open           = cns3xxx_pm_clk_ctrl_open_proc,
++    .proc_read           = seq_read,
++    .proc_lseek         = seq_lseek,
++    .proc_release        = single_release,
++    .proc_write          = cns3xxx_pm_clk_ctrl_write_proc,
++};
++
++
++/*
++ * Berto : Here is the means by which we encourage online CPU
++ * frequency adjustment which is done mainly in order to mitigate
++ * CPU overheating issues. It would be preferable to have been
++ * able to do this via the cpufreq drivers however I simply don't
++ * have the understanding or motivation to implement that properly.
++ * Out experiments show that values below about 400MHz lead
++ * to the Ethernet interface not working.
++ */
++
++extern unsigned long loops_per_jiffy;
++
++static int cns3xxx_pm_cpu_freq_read_proc(struct seq_file *seq, void *unused)
++{
++
++    int reg = PM_CLK_CTRL_REG_VALUE;
++    int cpu_freq_index, div, cpu_freq, actual_freq;
++
++    cpu_freq_index = reg >> PM_CLK_CTRL_REG_OFFSET_PLL_CPU_SEL & 0xf;
++    cpu_freq = 300 + ((cpu_freq_index / 3) * 100) + ((cpu_freq_index % 3) * 33);
++    div = (reg >> PM_CLK_CTRL_REG_OFFSET_CPU_CLK_DIV) & 0x3;
++    actual_freq = cpu_freq >> div;
++    
++    seq_printf(seq, "%u %u\n\n", cpu_freq_index, div);
++    seq_printf(seq, "CPU Frequency Index: %u \n", cpu_freq_index);
++    seq_printf(seq, "CPU Frequency (300 + (100 / Index)): %uMHz \n", cpu_freq);
++    seq_printf(seq, "CPU Frequency Divider/Shift: %u\n", div);
++    seq_printf(seq, "CPU Clock (Freq >> Div) : %uMHz \n", actual_freq);
++    seq_printf(seq, "BogoMIPS / Loops per Jiffy: %lu.%02lu (%lu) \n\n",
++	       loops_per_jiffy/(500000/HZ),
++	       (loops_per_jiffy/(5000/HZ)) % 100,
++	       loops_per_jiffy);
++    seq_printf(seq, "Only CPU Frequency Index values between 3 and 12 \n");
++    seq_printf(seq, "and a divider vale of 0 are supported. Other values \n");
++    seq_printf(seq, "may lead to random system failures.\n");
++
++    
++    return 0;
++} /* cns3xxx_pm_cpu_freq_read_proc() */
++
++
++static int cns3xxx_pm_cpu_freq_open_proc(struct inode *inode, struct file *file)
++{
++    return single_open(file, cns3xxx_pm_cpu_freq_read_proc, &inode->i_private);
++}
++
++static int cns3xxx_pm_cpu_freq_write_proc(struct file *file, const char *buffer,
++					  size_t count, loff_t *ppos)
++{
++    uint val, vars;
++    uint old_freq_index, new_freq_index = 255;
++    uint old_div, new_div = 0;
++
++    if (!count)
++	return count;
++    
++    vars = sscanf(buffer, "%u %u", &new_freq_index, &new_div);
++    if (vars < 1) {
++	return -1;
++    }
++    
++    if (new_freq_index > 12)
++	return -1;
++
++    if (vars == 1) {
++	new_div = 0;
++    }
++    
++    if (new_div > 2)
++	return -1;
++
++    val = PM_CLK_CTRL_REG_VALUE;
++
++    old_freq_index = val & 0xf;
++    old_div = (val >> PM_CLK_CTRL_REG_OFFSET_CPU_CLK_DIV) & 0x3; 
++
++    if (old_div == new_div && new_freq_index == old_freq_index) {
++	return count;
++    }
++
++    PM_CLK_CTRL_REG_VALUE = (val & (~0x3f)) | ((new_freq_index & 0xf) + ((new_div & 0x3) << PM_CLK_CTRL_REG_OFFSET_CPU_CLK_DIV));
++
++    /*
++     * Warning. This bit is not very elegant and would probably make
++     * a proper Linux kernel coder's eyes bleed. Ideally "cpufreq_callback()"
++     * should be called but I can't figure out how to accomplish that.
++     *
++     * This part recalibrates the periodic timer interrupt so that it
++     * generates a "tick" at the right interval given the new CPU frequency.
++     */
++    cns3xxx_set_periodic(NULL);
++    calibrate_delay();
++					     
++    return count;
++} /* cns3xxx_pm_cpu_freq_write_proc() */
++
++
++static const struct proc_ops cns3xxx_pm_cpu_freq_fops = {
++    .proc_open           = cns3xxx_pm_cpu_freq_open_proc,
++    .proc_read           = seq_read,
++    .proc_lseek         = seq_lseek,
++    .proc_release        = single_release,
++    .proc_write          = cns3xxx_pm_cpu_freq_write_proc,
++};
++
++static int __init cns3xxx_pm_proc_init(void)
++{
++    cns3xxx_pm_proc_entry = proc_create("pm", S_IFREG | S_IRUGO,
++					cns3xxx_proc_dir, &cns3xxx_pm_fops);
++    cns3xxx_pm_clk_proc_entry = proc_create("pm_clk", S_IFREG | S_IRUGO,
++					    cns3xxx_proc_dir, &cns3xxx_pm_clk_fops);
++    cns3xxx_pm_pll_pd_proc_entry = proc_create("pm_pll_pd", S_IFREG | S_IRUGO,
++					       cns3xxx_proc_dir, &cns3xxx_pm_pll_pd_fops);
++    cns3xxx_pm_clk_ctrl_entry = proc_create("pm_clk_ctrl", S_IFREG | S_IRUGO,
++						cns3xxx_proc_dir, &cns3xxx_pm_clk_ctrl_fops);
++    cns3xxx_pm_cpu_freq_entry = proc_create("pm_cpu_freq", S_IFREG | S_IRUGO,
++						cns3xxx_proc_dir, &cns3xxx_pm_cpu_freq_fops);
++    return 1;
++}
++
++
++static int __init cns3xxx_pm_init(void) {
++
++    cns3xxx_lp_hs(PM_HS_CFG_REG_MASK_SUPPORT);
++    cns3xxx_pm_proc_init();
++    return 0;
++}
++        
++
++
++
++late_initcall(cns3xxx_pm_init);
+diff -rup linux-6.1.28.orig/arch/arm/mm/copypage-v6.c linux-6.1.28/arch/arm/mm/copypage-v6.c
+--- linux-6.1.28.orig/arch/arm/mm/copypage-v6.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/copypage-v6.c	2023-05-13 14:13:50.199458896 +1000
+@@ -17,10 +17,6 @@
+ 
+ #include "mm.h"
+ 
+-#if SHMLBA > 16384
+-#error FIX ME
+-#endif
+-
+ static DEFINE_RAW_SPINLOCK(v6_lock);
+ 
+ /*
+diff -rup linux-6.1.28.orig/arch/arm/mm/dma.h linux-6.1.28/arch/arm/mm/dma.h
+--- linux-6.1.28.orig/arch/arm/mm/dma.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/dma.h	2023-05-13 14:13:50.199458896 +1000
+@@ -5,8 +5,13 @@
+ #include <asm/glue-cache.h>
+ 
+ #ifndef MULTI_CACHE
++#ifndef CONFIG_DMA_CACHE_FIQ_BROADCAST
+ #define dmac_map_area			__glue(_CACHE,_dma_map_area)
+ #define dmac_unmap_area 		__glue(_CACHE,_dma_unmap_area)
++#else
++#define dmac_map_area                   __glue(fiq,_dma_map_area)
++#define dmac_unmap_area                 __glue(fiq,_dma_unmap_area)
++#endif
+ 
+ /*
+  * These are private to the dma-mapping API.  Do not use directly.
+diff -rup linux-6.1.28.orig/arch/arm/mm/dump.c linux-6.1.28/arch/arm/mm/dump.c
+--- linux-6.1.28.orig/arch/arm/mm/dump.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/dump.c	2023-05-13 14:13:50.199458896 +1000
+@@ -313,8 +313,11 @@ static void walk_pte(struct pg_state *st
+ 	pte_t *pte = pte_offset_kernel(pmd, 0);
+ 	unsigned long addr;
+ 	unsigned i;
+-
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (i = 0; i < PTRS_PER_PTE_REAL; i++, pte += PTE_STEP) {
++#else
+ 	for (i = 0; i < PTRS_PER_PTE; i++, pte++) {
++#endif
+ 		addr = start + i * PAGE_SIZE;
+ 		note_page(st, addr, 5, pte_val(*pte), domain);
+ 	}
+diff -rup linux-6.1.28.orig/arch/arm/mm/fault.c linux-6.1.28/arch/arm/mm/fault.c
+--- linux-6.1.28.orig/arch/arm/mm/fault.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/fault.c	2023-05-13 14:13:50.199458896 +1000
+@@ -27,6 +27,19 @@
+ 
+ #ifdef CONFIG_MMU
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++static long long get_large_pte_hw_val(pte_t *pte)
++{
++    unsigned long pte_ptr = (unsigned long)pte;
++    unsigned long tmp = pte_ptr;
++
++    pte_ptr += (PTE_HWTABLE_PTRS * sizeof(void *));
++    pte_ptr &= ~0x7FC;
++    tmp &= 0x7FC & (~(((PAGE_SHIFT - 12) - 1) << 7));
++    pte_ptr += (tmp << (PAGE_SHIFT - 12));
++    return (long long)pte_val(*(pte_t *)pte_ptr);
++}
++#endif
+ /*
+  * This is useful to dump out the page tables associated with
+  * 'addr' in mm 'mm'.
+@@ -87,9 +100,14 @@ void show_pte(const char *lvl, struct mm
+ 		pte = pte_offset_map(pmd, addr);
+ 		pr_cont(", *pte=%08llx", (long long)pte_val(*pte));
+ #ifndef CONFIG_ARM_LPAE
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		pr_cont(", *ppte=%08llx", get_large_pte_hw_val(pte));
++		
++#else
+ 		pr_cont(", *ppte=%08llx",
+ 		       (long long)pte_val(pte[PTE_HWTABLE_PTRS]));
+-#endif
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
++#endif /* CONFIG_ARM_LPAE */
+ 		pte_unmap(pte);
+ 	} while(0);
+ 
+diff -rup linux-6.1.28.orig/arch/arm/mm/flush.c linux-6.1.28/arch/arm/mm/flush.c
+--- linux-6.1.28.orig/arch/arm/mm/flush.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/flush.c	2023-05-13 14:13:50.199458896 +1000
+@@ -315,6 +315,7 @@ void __sync_icache_dcache(pte_t pteval)
+ void flush_dcache_page(struct page *page)
+ {
+ 	struct address_space *mapping;
++	bool skip_broadcast = true;
+ 
+ 	/*
+ 	 * The zero page is never written to, so never has any dirty
+@@ -331,7 +332,11 @@ void flush_dcache_page(struct page *page
+ 
+ 	mapping = page_mapping_file(page);
+ 
+-	if (!cache_ops_need_broadcast() &&
++#ifndef CONFIG_DMA_CACHE_FIQ_BROADCAST
++	skip_broadcast = !cache_ops_need_broadcast();
++#endif
++
++	if (skip_broadcast &&
+ 	    mapping && !page_mapcount(page))
+ 		clear_bit(PG_dcache_clean, &page->flags);
+ 	else {
+diff -rup linux-6.1.28.orig/arch/arm/mm/Kconfig linux-6.1.28/arch/arm/mm/Kconfig
+--- linux-6.1.28.orig/arch/arm/mm/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/Kconfig	2023-05-13 14:13:50.203458889 +1000
+@@ -956,6 +956,17 @@ config DMA_CACHE_RWFO
+ 	  in hardware, other workarounds are needed (e.g. cache
+ 	  maintenance broadcasting in software via FIQ).
+ 
++config DMA_CACHE_FIQ_BROADCAST
++        bool "Enable fiq broadcast DMA cache maintenance"
++	depends on CPU_V6K && SMP
++	select FIQ
++	help
++	  The Snoop Control Unit on ARM11MPCore does not detect the
++	  cache maintenance operations and the dma_{map,unmap}_area()
++	  functions may leave stale cache entries on other CPUs. By
++	  enabling this option, fiq broadcast in the ARMv6
++	  DMA cache maintenance functions is performed.
++	  
+ config OUTER_CACHE
+ 	bool
+ 
+@@ -1003,6 +1014,16 @@ config MIGHT_HAVE_CACHE_L2X0
+ 	  instead of this option, thus preventing the user from
+ 	  inadvertently configuring a broken kernel.
+ 
++config ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++        bool "64KB MMU page size support"
++        help
++          The kernel and page-table will use large 64KB pages.
++          Note that this feature enables support for large storage volumes
++          at the expense of higher memory fragmentation by enabling the
++          use of up to 64KB block sizes.
++          This is commonly required to access file systems used by
++          commercial NAS devices.
++
+ config CACHE_L2X0
+ 	bool "Enable the L2x0 outer cache controller" if MIGHT_HAVE_CACHE_L2X0
+ 	default MIGHT_HAVE_CACHE_L2X0
+diff -rup linux-6.1.28.orig/arch/arm/mm/mmu.c linux-6.1.28/arch/arm/mm/mmu.c
+--- linux-6.1.28.orig/arch/arm/mm/mmu.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/mmu.c	2023-05-13 14:13:50.203458889 +1000
+@@ -359,7 +359,11 @@ static pte_t bm_pte[PTRS_PER_PTE + PTE_H
+ 
+ static pte_t * __init pte_offset_early_fixmap(pmd_t *dir, unsigned long addr)
+ {
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	return &bm_pte[pte_index(addr) * PTE_STEP];
++#else
+ 	return &bm_pte[pte_index(addr)];
++#endif
+ }
+ 
+ static pte_t *pte_offset_late_fixmap(pmd_t *dir, unsigned long addr)
+@@ -749,7 +753,9 @@ static pte_t * __init arm_pte_alloc(pmd_
+ 				void *(*alloc)(unsigned long sz))
+ {
+ 	if (pmd_none(*pmd)) {
+-		pte_t *pte = alloc(PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE);
++	        pte_t *pte = alloc(round_up(PTE_HWTABLE_OFF +
++					    PTE_HWTABLE_SIZE,
++					    PAGE_SIZE));
+ 		__pmd_populate(pmd, __pa(pte), prot);
+ 	}
+ 	BUG_ON(pmd_bad(*pmd));
+@@ -773,7 +779,11 @@ static void __init alloc_init_pte(pmd_t
+ 		set_pte_ext(pte, pfn_pte(pfn, __pgprot(type->prot_pte)),
+ 			    ng ? PTE_EXT_NG : 0);
+ 		pfn++;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ }
+ 
+ static void __init __map_init_section(pmd_t *pmd, unsigned long addr,
+@@ -1382,7 +1392,16 @@ static void __init devicemaps_init(const
+ 	/*
+ 	 * Allocate the vector page early.
+ 	 */
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++        /*
++	 * With large page support, the pages are at least 8K, so
++	 * there is enough space in one page for the stubs that are
++	 * copied at 4K offset.
++	 */
++	vectors = early_alloc(PAGE_SIZE);
++#else
+ 	vectors = early_alloc(PAGE_SIZE * 2);
++#endif
+ 
+ 	early_trap_init(vectors);
+ 
+@@ -1452,13 +1471,22 @@ static void __init devicemaps_init(const
+ 		map.type = MT_LOW_VECTORS;
+ 		create_mapping(&map);
+ 	}
+-
++	
++	/*
++	 * With large page support, the pages are at least 8K, so this
++	 * hardware page was already mapped. Actually the hardcoded
++	 * 4KB offset cause trouble with the virtual address passed
++	 * to create_mapping: the address is no more aligned to a
++	 * page.
++	 */
++#ifndef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
+ 	/* Now create a kernel read-only mapping */
+ 	map.pfn += 1;
+ 	map.virtual = 0xffff0000 + PAGE_SIZE;
+ 	map.length = PAGE_SIZE;
+ 	map.type = MT_LOW_VECTORS;
+ 	create_mapping(&map);
++#endif
+ 
+ 	/*
+ 	 * Ask the machine support to map in the statically mapped devices.
+diff -rup linux-6.1.28.orig/arch/arm/mm/pgd.c linux-6.1.28/arch/arm/mm/pgd.c
+--- linux-6.1.28.orig/arch/arm/mm/pgd.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/pgd.c	2023-05-13 14:13:50.203458889 +1000
+@@ -119,7 +119,9 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
+ 		init_pmd = pmd_offset(init_pud, 0);
+ 		init_pte = pte_offset_map(init_pmd, 0);
+ 		set_pte_ext(new_pte + 0, init_pte[0], 0);
++#ifndef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT		
+ 		set_pte_ext(new_pte + 1, init_pte[1], 0);
++#endif
+ 		pte_unmap(init_pte);
+ 		pte_unmap(new_pte);
+ 	}
+diff -rup linux-6.1.28.orig/arch/arm/mm/proc-macros.S linux-6.1.28/arch/arm/mm/proc-macros.S
+--- linux-6.1.28.orig/arch/arm/mm/proc-macros.S	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/proc-macros.S	2023-05-13 14:13:50.203458889 +1000
+@@ -154,8 +154,16 @@
+ 
+ 	bic	r3, r1, #0x000003fc
+ 	bic	r3, r3, #PTE_TYPE_MASK
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	bic     r3, r3, #0x00000F000
++#endif
+ 	orr	r3, r3, r2
+-	orr	r3, r3, #PTE_EXT_AP0 | 2
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	orr     r3, r3, #PTE_EXT_AP0 | PTE_TYPE_LARGE
++#else
++	orr     r3, r3, #PTE_EXT_AP0 | PTE_TYPE_SMALL
++#endif
++
+ 
+ 	adr	ip, \pfx\()_mt_table
+ 	and	r2, r1, #L_PTE_MT_MASK
+@@ -183,8 +191,28 @@
+ 	tstne	r1, #L_PTE_NONE
+ 	movne	r3, #0
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++
++	/* Bits 6, 7, 8 SBZ */
++	bic     r3, r3, #0x000001c0
++
++	/*	
++         * Repeat the hw entry 16 times in case of 64k page
++         * This is a requirement from the hw ;
++         * linux ptes need not be repeated.
++        */
++	mov     r1, #16
++.Lrpt_for_hw:
++	str     r3, [r0]
++	mcr     p15, 0, r0, c7, c10, 1          @ flush_pte
++	add     r0, r0, #4
++	subs    r1, r1, #1
++	bne     .Lrpt_for_hw
++
++#else /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
+ 	str	r3, [r0]
+ 	mcr	p15, 0, r0, c7, c10, 1		@ flush_pte
++#endif /* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
+ 	.endm
+ 
+ 
+diff -rup linux-6.1.28.orig/arch/arm/mm/proc-v6.S linux-6.1.28/arch/arm/mm/proc-v6.S
+--- linux-6.1.28.orig/arch/arm/mm/proc-v6.S	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/arch/arm/mm/proc-v6.S	2023-05-13 14:13:50.203458889 +1000
+@@ -95,21 +95,31 @@ ENTRY(cpu_v6_dcache_clean_area)
+  */
+ ENTRY(cpu_v6_switch_mm)
+ #ifdef CONFIG_MMU
+-	mov	r2, #0
+ 	mmid	r1, r1				@ get mm->context.id
+-	ALT_SMP(orr	r0, r0, #TTB_FLAGS_SMP)
+-	ALT_UP(orr	r0, r0, #TTB_FLAGS_UP)
+-	mcr	p15, 0, r2, c7, c5, 6		@ flush BTAC/BTB
+-	mcr	p15, 0, r2, c7, c10, 4		@ drain write buffer
+-	mcr	p15, 0, r0, c2, c0, 0		@ set TTB 0
+ #ifdef CONFIG_PID_IN_CONTEXTIDR
+ 	mrc	p15, 0, r2, c13, c0, 1		@ read current context ID
+ 	bic	r2, r2, #0xff			@ extract the PID
+ 	and	r1, r1, #0xff
+ 	orr	r1, r1, r2			@ insert into new context ID
+ #endif
++	mov	r2, #0
++	ALT_SMP(orr	r0, r0, #TTB_FLAGS_SMP)
++	ALT_UP(orr	r0, r0, #TTB_FLAGS_UP)
++	mcr	p15, 0, r2, c7, c5, 6		@ flush BTAC/BTB
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT	
++	mcr     p15, 0, r2, c7, c10, 4          @ dsb
++	mcr     p15, 0, r2, c13, c0, 1          @ set reserved context ID
++	mcr     p15, 0, r2, c7, c5, 4           @ isb
++	mcr     p15, 0, r0, c2, c0, 0           @ set TTB 0
++	mcr     p15, 0, r2, c7, c5, 4           @ isb
++	mcr     p15, 0, r1, c13, c0, 1          @ set context ID
++	mcr     p15, 0, r2, c7, c5, 4           @ isb
++#else	
++	mcr	p15, 0, r2, c7, c10, 4		@ drain write buffer
++	mcr	p15, 0, r0, c2, c0, 0		@ set TTB 0
+ 	mcr	p15, 0, r1, c13, c0, 1		@ set context ID
+-#endif
++#endif	/* CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT */
++#endif	/* CONFIG_MMU */
+ 	ret	lr
+ 
+ /*
+diff -rup linux-6.1.28.orig/drivers/gpio/Kconfig linux-6.1.28/drivers/gpio/Kconfig
+--- linux-6.1.28.orig/drivers/gpio/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/gpio/Kconfig	2023-05-13 14:13:50.203458889 +1000
+@@ -112,6 +112,13 @@ config GPIO_MAX730X
+ menu "Memory mapped GPIO drivers"
+ 	depends on HAS_IOMEM
+ 
++config GPIO_CNS3XXX
++        bool "CNS3XXX GPIO support"
++        depends on ARCH_CNS3XXX
++        help
++	  Say yes here to support CNS3XXX GPIO device.
++	  Note : Only partial support at the moment. No IRQs
++
+ config GPIO_74XX_MMIO
+ 	tristate "GPIO driver for 74xx-ICs with MMIO access"
+ 	depends on OF_GPIO
+diff -rup linux-6.1.28.orig/drivers/gpio/Makefile linux-6.1.28/drivers/gpio/Makefile
+--- linux-6.1.28.orig/drivers/gpio/Makefile	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/gpio/Makefile	2023-05-13 14:13:50.203458889 +1000
+@@ -44,6 +44,7 @@ obj-$(CONFIG_GPIO_BRCMSTB)		+= gpio-brcm
+ obj-$(CONFIG_GPIO_BT8XX)		+= gpio-bt8xx.o
+ obj-$(CONFIG_GPIO_CADENCE)		+= gpio-cadence.o
+ obj-$(CONFIG_GPIO_CLPS711X)		+= gpio-clps711x.o
++obj-$(CONFIG_GPIO_CNS3XXX)		+= gpio-cns3xxx.o
+ obj-$(CONFIG_GPIO_SNPS_CREG)		+= gpio-creg-snps.o
+ obj-$(CONFIG_GPIO_CRYSTAL_COVE)		+= gpio-crystalcove.o
+ obj-$(CONFIG_GPIO_CS5535)		+= gpio-cs5535.o
+diff -rup linux-6.1.28.orig/drivers/irqchip/irq-gic.c linux-6.1.28/drivers/irqchip/irq-gic.c
+--- linux-6.1.28.orig/drivers/irqchip/irq-gic.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/irqchip/irq-gic.c	2023-05-13 14:13:50.203458889 +1000
+@@ -1171,6 +1171,7 @@ static const struct irq_domain_ops gic_i
+ static const struct irq_domain_ops gic_irq_domain_ops = {
+ 	.map = gic_irq_domain_map,
+ 	.unmap = gic_irq_domain_unmap,
++	.alloc = gic_irq_domain_alloc,
+ };
+ 
+ static int gic_init_bases(struct gic_chip_data *gic,
+diff -rup linux-6.1.28.orig/drivers/leds/Kconfig linux-6.1.28/drivers/leds/Kconfig
+--- linux-6.1.28.orig/drivers/leds/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/leds/Kconfig	2023-05-13 14:13:50.203458889 +1000
+@@ -122,6 +122,15 @@ config LEDS_BCM6358
+ 	  This option enables support for LEDs connected to the BCM6358
+ 	  LED HW controller accessed via MMIO registers.
+ 
++config LEDS_CNS3XXX
++	tristate "LED Support for CNS3XXX"
++	depends on LEDS_CLASS
++	depends on ARCH_CNS3XXX
++	default y
++	help
++	  This option enables support for on-chip LED drivers found on CNS3XXX.
++
++
+ config LEDS_CPCAP
+ 	tristate "LED Support for Motorola CPCAP"
+ 	depends on LEDS_CLASS
+diff -rup linux-6.1.28.orig/drivers/leds/Makefile linux-6.1.28/drivers/leds/Makefile
+--- linux-6.1.28.orig/drivers/leds/Makefile	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/leds/Makefile	2023-05-13 14:13:50.203458889 +1000
+@@ -21,6 +21,7 @@ obj-$(CONFIG_LEDS_BCM6358)		+= leds-bcm6
+ obj-$(CONFIG_LEDS_BD2802)		+= leds-bd2802.o
+ obj-$(CONFIG_LEDS_BLINKM)		+= leds-blinkm.o
+ obj-$(CONFIG_LEDS_CLEVO_MAIL)		+= leds-clevo-mail.o
++obj-$(CONFIG_LEDS_CNS3XXX)		+= leds-cns3xxx.o
+ obj-$(CONFIG_LEDS_COBALT_QUBE)		+= leds-cobalt-qube.o
+ obj-$(CONFIG_LEDS_COBALT_RAQ)		+= leds-cobalt-raq.o
+ obj-$(CONFIG_LEDS_CPCAP)		+= leds-cpcap.o
+diff -rup linux-6.1.28.orig/drivers/mtd/devices/Kconfig linux-6.1.28/drivers/mtd/devices/Kconfig
+--- linux-6.1.28.orig/drivers/mtd/devices/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/mtd/devices/Kconfig	2023-05-13 14:13:50.203458889 +1000
+@@ -95,6 +95,15 @@ config MTD_MCHP48L640
+ 	help
+ 	  This enables access to Microchip 48L640 EERAM chips, using SPI.
+ 
++config CIRRUS_DUAL_MTD_ENV
++        bool "Use two partition for env on CNS3XXX. Requires UBoot support"
++        depends on ARCH_CNS3XXX
++        default y
++        help
++	  This option allows the kernel to recognise and use the
++	  dual environment variable style partition system as used
++	  on systems such as a CNS3xxx based Seagate Central.
++
+ config MTD_SPEAR_SMI
+ 	tristate "SPEAR MTD NOR Support through SMI controller"
+ 	depends on PLAT_SPEAR || COMPILE_TEST
+diff -rup linux-6.1.28.orig/drivers/net/ethernet/cavium/Kconfig linux-6.1.28/drivers/net/ethernet/cavium/Kconfig
+--- linux-6.1.28.orig/drivers/net/ethernet/cavium/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/net/ethernet/cavium/Kconfig	2023-05-13 14:13:50.203458889 +1000
+@@ -13,6 +13,33 @@ config NET_VENDOR_CAVIUM
+ 
+ if NET_VENDOR_CAVIUM
+ 
++config CNS3XXX_ETH
++	tristate "Cavium CNS3xxx Ethernet support"
++	depends on ARCH_CNS3XXX
++	select PHYLIB
++	help
++	  Say Y here if you want to use built-in Ethernet ports
++	  on CNS3XXX processor.
++
++config CNS3XXX_ETHADDR_IN_FLASH
++        bool "CNS3XXX MAC address in flash"
++	depends on CNS3XXX_ETH && MTD
++	help
++     	  Say Y if you want to load MAC address from flash.
++
++choice
++        prompt "Load MAC address from ..."
++	depends on CNS3XXX_ETHADDR_IN_FLASH && !CIRRUS_DUAL_MTD_ENV
++	default CNS3XXX_MAC_IN_PARALLEL_FLASH
++
++config CNS3XXX_MAC_IN_PARALLEL_FLASH
++        bool "Parallel Flash"
++
++config CNS3XXX_MAC_IN_SPI_FLASH
++        bool "SPI Flash"
++
++endchoice
++
+ config THUNDER_NIC_PF
+ 	tristate "Thunder Physical function driver"
+ 	depends on 64BIT && PCI
+diff -rup linux-6.1.28.orig/drivers/net/ethernet/cavium/Makefile linux-6.1.28/drivers/net/ethernet/cavium/Makefile
+--- linux-6.1.28.orig/drivers/net/ethernet/cavium/Makefile	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/net/ethernet/cavium/Makefile	2023-05-13 14:13:50.203458889 +1000
+@@ -2,6 +2,7 @@
+ #
+ # Makefile for the Cavium ethernet device drivers.
+ #
++obj-$(CONFIG_CNS3XXX_ETH) += cns3xxx_eth.o
+ obj-$(CONFIG_NET_VENDOR_CAVIUM) += common/
+ obj-$(CONFIG_NET_VENDOR_CAVIUM) += thunder/
+ obj-$(CONFIG_NET_VENDOR_CAVIUM) += liquidio/
+diff -rup linux-6.1.28.orig/drivers/rtc/Kconfig linux-6.1.28/drivers/rtc/Kconfig
+--- linux-6.1.28.orig/drivers/rtc/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/rtc/Kconfig	2023-05-13 14:13:50.203458889 +1000
+@@ -1648,6 +1648,24 @@ config RTC_DRV_CADENCE
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called rtc-cadence.
+ 
++menuconfig RTC_DRV_CNS3XXX
++	tristate "Cavium Networks CNS3XXX RTC"
++       	depends on ARCH_CNS3XXX
++        help
++          If you say Y here you will get access to RTC found on
++	  CNS3XXX SOCs.
++
++          To compile this driver as a module, choose M here: the
++          module will be called rtc-cns3xxx.
++ 
++if RTC_DRV_CNS3XXX
++        config RTC_DRV_CNS3XXX_LOG_IN_FLASH
++        bool "CNS3XXX RTC log in flash"
++        depends on MTD
++        help
++          Say Y if you want to save/load log via flash.
++endif # RTC_DRV_CNS3XXX
++
+ config RTC_DRV_FTRTC010
+ 	tristate "Faraday Technology FTRTC010 RTC"
+ 	depends on HAS_IOMEM
+diff -rup linux-6.1.28.orig/drivers/rtc/Makefile linux-6.1.28/drivers/rtc/Makefile
+--- linux-6.1.28.orig/drivers/rtc/Makefile	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/rtc/Makefile	2023-05-13 14:13:50.207458881 +1000
+@@ -4,7 +4,7 @@
+ #
+ 
+ ccflags-$(CONFIG_RTC_DEBUG)	:= -DDEBUG
+-
++ccflags-$(CONFIG_RTC_DRV_CNS3XXX)       :=-I$(srctree)/arch/arm/mach-cns3xxx/include
+ obj-$(CONFIG_RTC_LIB)		+= lib.o
+ obj-$(CONFIG_RTC_CLASS)		+= rtc-core.o
+ obj-$(CONFIG_RTC_MC146818_LIB)	+= rtc-mc146818-lib.o
+@@ -39,6 +39,8 @@ obj-$(CONFIG_RTC_DRV_BQ4802)	+= rtc-bq48
+ obj-$(CONFIG_RTC_DRV_BRCMSTB)	+= rtc-brcmstb-waketimer.o
+ obj-$(CONFIG_RTC_DRV_CADENCE)	+= rtc-cadence.o
+ obj-$(CONFIG_RTC_DRV_CMOS)	+= rtc-cmos.o
++obj-$(CONFIG_RTC_DRV_CNS3XXX)   += rtc-cns3xxx.o
++obj-$(CONFIG_RTC_DRV_CNS3XXX_LOG_IN_FLASH) += rtc-cns3xxx-nvedit.o
+ obj-$(CONFIG_RTC_DRV_CPCAP)	+= rtc-cpcap.o
+ obj-$(CONFIG_RTC_DRV_CROS_EC)	+= rtc-cros-ec.o
+ obj-$(CONFIG_RTC_DRV_DA9052)	+= rtc-da9052.o
+diff -rup linux-6.1.28.orig/drivers/spi/Kconfig linux-6.1.28/drivers/spi/Kconfig
+--- linux-6.1.28.orig/drivers/spi/Kconfig	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/spi/Kconfig	2023-05-13 14:13:50.207458881 +1000
+@@ -36,6 +36,20 @@ config SPI_DEBUG
+ # MASTER side ... talking to discrete SPI slave chips including microcontrollers
+ #
+ 
++config SPI_CNS3XXX
++       tristate "CNS3XXX SPI controller"
++       depends on ARCH_CNS3XXX && SPI_MASTER
++       select SPI_BITBANG
++       help
++         This enables using the CNS3XXX SPI controller in master
++	 mode.
++
++config SPI_CNS3XXX_DEBUG
++       bool "Debug support for CNS3XXX SPI drivers"
++       depends on SPI_CNS3XXX
++       help
++         Say "yes" to enable debug messaging
++
+ config SPI_MASTER
+ #	bool "SPI Master Support"
+ 	bool
+diff -rup linux-6.1.28.orig/drivers/spi/Makefile linux-6.1.28/drivers/spi/Makefile
+--- linux-6.1.28.orig/drivers/spi/Makefile	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/spi/Makefile	2023-05-13 14:13:50.207458881 +1000
+@@ -38,6 +38,7 @@ obj-$(CONFIG_SPI_CADENCE_QUADSPI)	+= spi
+ obj-$(CONFIG_SPI_CADENCE_XSPI)		+= spi-cadence-xspi.o
+ obj-$(CONFIG_SPI_CLPS711X)		+= spi-clps711x.o
+ obj-$(CONFIG_SPI_COLDFIRE_QSPI)		+= spi-coldfire-qspi.o
++obj-$(CONFIG_SPI_CNS3XXX) 		+= spi-cns3xxx.o
+ obj-$(CONFIG_SPI_DAVINCI)		+= spi-davinci.o
+ obj-$(CONFIG_SPI_DLN2)			+= spi-dln2.o
+ obj-$(CONFIG_SPI_DESIGNWARE)		+= spi-dw.o
+diff -rup linux-6.1.28.orig/drivers/usb/host/ohci-hcd.c linux-6.1.28/drivers/usb/host/ohci-hcd.c
+--- linux-6.1.28.orig/drivers/usb/host/ohci-hcd.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/drivers/usb/host/ohci-hcd.c	2023-05-13 14:13:50.207458881 +1000
+@@ -1269,6 +1269,11 @@ MODULE_LICENSE ("GPL");
+ #define TMIO_OHCI_DRIVER	ohci_hcd_tmio_driver
+ #endif
+ 
++#ifdef CONFIG_USB_CNS3XXX_OHCI
++#include "ohci-cns3xxx.c"
++#define CNS3XXX_OHCI_DRIVER         ohci_hcd_cns3xxx_driver
++#endif
++
+ static int __init ohci_hcd_mod_init(void)
+ {
+ 	int retval = 0;
+@@ -1312,6 +1317,12 @@ static int __init ohci_hcd_mod_init(void
+ 		goto error_tmio;
+ #endif
+ 
++#ifdef CNS3XXX_OHCI_DRIVER
++        retval = platform_driver_register(&CNS3XXX_OHCI_DRIVER);
++	if (retval < 0)
++		goto error_cns3xxx;
++#endif
++	
+ 	return retval;
+ 
+ 	/* Error path */
+@@ -1319,6 +1330,12 @@ static int __init ohci_hcd_mod_init(void
+ 	platform_driver_unregister(&TMIO_OHCI_DRIVER);
+  error_tmio:
+ #endif
++
++#ifdef CNS3XXX_OHCI_DRIVER
++	platform_driver_unregister(&CNS3XXX_OHCI_DRIVER);
++ error_cns3xxx:
++#endif
++	
+ #ifdef SM501_OHCI_DRIVER
+ 	platform_driver_unregister(&SM501_OHCI_DRIVER);
+  error_sm501:
+@@ -1348,6 +1365,9 @@ static void __exit ohci_hcd_mod_exit(voi
+ #ifdef TMIO_OHCI_DRIVER
+ 	platform_driver_unregister(&TMIO_OHCI_DRIVER);
+ #endif
++#ifdef CNS3XXX_OHCI_DRIVER
++	platform_driver_unregister(&CNS3XXX_OHCI_DRIVER);
++#endif
+ #ifdef SM501_OHCI_DRIVER
+ 	platform_driver_unregister(&SM501_OHCI_DRIVER);
+ #endif
+diff -rup linux-6.1.28.orig/fs/ext2/ext2.h linux-6.1.28/fs/ext2/ext2.h
+--- linux-6.1.28.orig/fs/ext2/ext2.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/fs/ext2/ext2.h	2023-05-13 14:13:50.207458881 +1000
+@@ -178,7 +178,11 @@ static inline struct ext2_sb_info *EXT2_
+  * Macro-instructions used to manage several block sizes
+  */
+ #define EXT2_MIN_BLOCK_SIZE		1024
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++#define	EXT2_MAX_BLOCK_SIZE		PAGE_SIZE
++#else
+ #define	EXT2_MAX_BLOCK_SIZE		4096
++#endif
+ #define EXT2_MIN_BLOCK_LOG_SIZE		  10
+ #define EXT2_BLOCK_SIZE(s)		((s)->s_blocksize)
+ #define	EXT2_ADDR_PER_BLOCK(s)		(EXT2_BLOCK_SIZE(s) / sizeof (__u32))
+diff -rup linux-6.1.28.orig/fs/proc/task_mmu.c linux-6.1.28/fs/proc/task_mmu.c
+--- linux-6.1.28.orig/fs/proc/task_mmu.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/fs/proc/task_mmu.c	2023-05-13 14:13:50.207458881 +1000
+@@ -632,7 +632,11 @@ static int smaps_pte_range(pmd_t *pmd, u
+ 	 * in here.
+ 	 */
+ 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE)
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE)
++#endif
+ 		smaps_pte_entry(pte, addr, walk);
+ 	pte_unmap_unlock(pte - 1, ptl);
+ out:
+@@ -1189,7 +1193,11 @@ out:
+ 		return 0;
+ 
+ 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		ptent = *pte;
+ 
+ 		if (cp->type == CLEAR_REFS_SOFT_DIRTY) {
+@@ -1542,7 +1550,11 @@ static int pagemap_pmd_range(pmd_t *pmdp
+ 	 * goes beyond vma->vm_end.
+ 	 */
+ 	orig_pte = pte = pte_offset_map_lock(walk->mm, pmdp, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr < end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr < end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		pagemap_entry_t pme;
+ 
+ 		pme = pte_to_pagemap_entry(pm, vma, addr, *pte);
+@@ -1886,8 +1898,11 @@ static int gather_pte_stats(pmd_t *pmd,
+ 		if (!page)
+ 			continue;
+ 		gather_stats(page, md, pte_dirty(*pte), 1);
+-
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	pte_unmap_unlock(orig_pte, ptl);
+ 	cond_resched();
+ 	return 0;
+diff -rup linux-6.1.28.orig/include/linux/pgtable.h linux-6.1.28/include/linux/pgtable.h
+--- linux-6.1.28.orig/include/linux/pgtable.h	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/include/linux/pgtable.h	2023-05-13 14:13:50.207458881 +1000
+@@ -59,11 +59,13 @@
+  * because in such cases PTRS_PER_PxD equals 1.
+  */
+ 
++#ifndef pte_index
+ static inline unsigned long pte_index(unsigned long address)
+ {
+ 	return (address >> PAGE_SHIFT) & (PTRS_PER_PTE - 1);
+ }
+ #define pte_index pte_index
++#endif
+ 
+ #ifndef pmd_index
+ static inline unsigned long pmd_index(unsigned long address)
+@@ -94,6 +96,7 @@ static inline pte_t *pte_offset_kernel(p
+ #define pte_offset_kernel pte_offset_kernel
+ #endif
+ 
++#ifndef pte_offset_map
+ #if defined(CONFIG_HIGHPTE)
+ #define pte_offset_map(dir, address)				\
+ 	((pte_t *)kmap_atomic(pmd_page(*(dir))) +		\
+@@ -102,6 +105,7 @@ static inline pte_t *pte_offset_kernel(p
+ #else
+ #define pte_offset_map(dir, address)	pte_offset_kernel((dir), (address))
+ #define pte_unmap(pte) ((void)(pte))	/* NOP */
++#endif /* CONFIG_HIGH_PTE */
+ #endif
+ 
+ /* Find an entry in the second-level page table.. */
+diff -rup linux-6.1.28.orig/kernel/panic.c linux-6.1.28/kernel/panic.c
+--- linux-6.1.28.orig/kernel/panic.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/kernel/panic.c	2023-05-13 14:13:50.207458881 +1000
+@@ -690,6 +690,24 @@ void warn_slowpath_fmt(const char *file,
+ 	bool rcu = warn_rcu_enter();
+ 	struct warn_args args;
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	static int num_warnings = 0;
++	/*
++	 * FIXME: We're getting lots of these warnings
++	 * with 64K kernel and they're generally
++	 * all the same (Something relating to bpf).
++	 * Only bother printing the warnings every
++	 * few thousand or so. I know this is awful
++	 * but once you've seen one of these messages
++	 * you've seen them all.
++	 */
++	num_warnings = (num_warnings + 1) & 65535;
++	if (num_warnings == 1) {
++		printk ("NOTICE : Suppressing future warn_slowpath_fmt messages\n");
++	} else {
++		return;
++	}
++#endif
+ 	pr_warn(CUT_HERE);
+ 
+ 	if (!fmt) {
+diff -rup linux-6.1.28.orig/mm/kasan/init.c linux-6.1.28/mm/kasan/init.c
+--- linux-6.1.28.orig/mm/kasan/init.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/kasan/init.c	2023-05-13 14:13:50.207458881 +1000
+@@ -343,8 +343,11 @@ static void kasan_remove_pte_table(pte_t
+ 				unsigned long end)
+ {
+ 	unsigned long next;
+-
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr < end; addr = next, pte += PTE_STEP) {
++#else
+ 	for (; addr < end; addr = next, pte++) {
++#endif
+ 		next = (addr + PAGE_SIZE) & PAGE_MASK;
+ 		if (next > end)
+ 			next = end;
+diff -rup linux-6.1.28.orig/mm/madvise.c linux-6.1.28/mm/madvise.c
+--- linux-6.1.28.orig/mm/madvise.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/madvise.c	2023-05-13 14:13:50.207458881 +1000
+@@ -412,7 +412,11 @@ regular_page:
+ 	orig_pte = pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
+ 	flush_tlb_batched_pending(mm);
+ 	arch_enter_lazy_mmu_mode();
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr < end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr < end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		ptent = *pte;
+ 
+ 		if (pte_none(ptent))
+@@ -618,7 +622,11 @@ static int madvise_free_pte_range(pmd_t
+ 	orig_pte = pte = pte_offset_map_lock(mm, pmd, addr, &ptl);
+ 	flush_tlb_batched_pending(mm);
+ 	arch_enter_lazy_mmu_mode();
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		ptent = *pte;
+ 
+ 		if (pte_none(ptent))
+diff -rup linux-6.1.28.orig/mm/memcontrol.c linux-6.1.28/mm/memcontrol.c
+--- linux-6.1.28.orig/mm/memcontrol.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/memcontrol.c	2023-05-13 14:13:50.211458874 +1000
+@@ -5936,7 +5936,11 @@ static int mem_cgroup_count_precharge_pt
+ 	if (pmd_trans_unstable(pmd))
+ 		return 0;
+ 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE)
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE)
++#endif
+ 		if (get_mctgt_type(vma, addr, *pte, NULL))
+ 			mc.precharge++;	/* increment precharge temporarily */
+ 	pte_unmap_unlock(pte - 1, ptl);
+@@ -6156,10 +6160,14 @@ static int mem_cgroup_move_charge_pte_ra
+ retry:
+ 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
+ 	for (; addr != end; addr += PAGE_SIZE) {
+-		pte_t ptent = *(pte++);
++		pte_t ptent = *pte;
+ 		bool device = false;
+ 		swp_entry_t ent;
+-
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		pte += PTE_STEP;
++#else
++		pte++;
++#endif
+ 		if (!mc.precharge)
+ 			break;
+ 
+diff -rup linux-6.1.28.orig/mm/memory.c linux-6.1.28/mm/memory.c
+--- linux-6.1.28.orig/mm/memory.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/memory.c	2023-05-13 14:13:50.211458874 +1000
+@@ -1097,8 +1097,11 @@ again:
+ 			prealloc = NULL;
+ 		}
+ 		progress += 8;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (dst_pte += PTE_STEP, src_pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (dst_pte++, src_pte++, addr += PAGE_SIZE, addr != end);
+-
++#endif
+ 	arch_leave_lazy_mmu_mode();
+ 	spin_unlock(src_ptl);
+ 	pte_unmap(orig_src_pte);
+@@ -1494,8 +1497,12 @@ again:
+ 		}
+ 		pte_clear_not_present_full(mm, addr, pte, tlb->fullmm);
+ 		zap_install_uffd_wp_if_needed(vma, addr, pte, details, ptent);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
+-
++#endif
++	
+ 	add_mm_rss_vec(mm, rss);
+ 	arch_leave_lazy_mmu_mode();
+ 
+@@ -1917,14 +1924,20 @@ static int insert_pages(struct vm_area_s
+ 	unsigned long pages_to_write_in_pmd;
+ 	int ret;
+ more:
++
+ 	ret = -EFAULT;
+ 	pmd = walk_to_pmd(mm, addr);
+ 	if (!pmd)
+ 		goto out;
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	pages_to_write_in_pmd = min_t(unsigned long,
++		remaining_pages_total, PTRS_PER_PTE_REAL - pte_index(addr));
++#else
+ 	pages_to_write_in_pmd = min_t(unsigned long,
+ 		remaining_pages_total, PTRS_PER_PTE - pte_index(addr));
+-
++#endif
++	
+ 	/* Allocate the PTE if necessary; takes PMD lock once only. */
+ 	ret = -ENOMEM;
+ 	if (pte_alloc(mm, pmd))
+@@ -1935,7 +1948,11 @@ more:
+ 		const int batch_size = min_t(int, pages_to_write_in_pmd, 8);
+ 
+ 		start_pte = pte_offset_map_lock(mm, pmd, addr, &pte_lock);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		for (pte = start_pte; pte_idx < batch_size; pte += PTE_STEP, ++pte_idx) {
++#else
+ 		for (pte = start_pte; pte_idx < batch_size; ++pte, ++pte_idx) {
++#endif
+ 			int err = insert_page_in_batch_locked(vma, pte,
+ 				addr, pages[curr_page_idx], prot);
+ 			if (unlikely(err)) {
+@@ -1980,7 +1997,6 @@ int vm_insert_pages(struct vm_area_struc
+ {
+ #ifdef pte_index
+ 	const unsigned long end_addr = addr + (*num * PAGE_SIZE) - 1;
+-
+ 	if (addr < vma->vm_start || end_addr >= vma->vm_end)
+ 		return -EFAULT;
+ 	if (!(vma->vm_flags & VM_MIXEDMAP)) {
+@@ -2397,7 +2413,11 @@ static int remap_pte_range(struct mm_str
+ 		}
+ 		set_pte_at(mm, addr, pte, pte_mkspecial(pfn_pte(pfn, prot)));
+ 		pfn++;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	arch_leave_lazy_mmu_mode();
+ 	pte_unmap_unlock(mapped_pte, ptl);
+ 	return err;
+@@ -2632,7 +2652,11 @@ static int apply_to_pte_range(struct mm_
+ 	if (fn) {
+ 		do {
+ 			if (create || !pte_none(*pte)) {
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++			        err = fn(pte += PTE_STEP, addr, data);
++#else
+ 				err = fn(pte++, addr, data);
++#endif
+ 				if (err)
+ 					break;
+ 			}
+diff -rup linux-6.1.28.orig/mm/mempolicy.c linux-6.1.28/mm/mempolicy.c
+--- linux-6.1.28.orig/mm/mempolicy.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/mempolicy.c	2023-05-13 14:13:50.211458874 +1000
+@@ -518,7 +518,11 @@ static int queue_pages_pte_range(pmd_t *
+ 		return 0;
+ 
+ 	mapped_pte = pte = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; addr != end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (; addr != end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		if (!pte_present(*pte))
+ 			continue;
+ 		page = vm_normal_page(vma, addr, *pte);
+diff -rup linux-6.1.28.orig/mm/mlock.c linux-6.1.28/mm/mlock.c
+--- linux-6.1.28.orig/mm/mlock.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/mlock.c	2023-05-13 14:13:50.211458874 +1000
+@@ -329,7 +329,11 @@ static int mlock_pte_range(pmd_t *pmd, u
+ 	}
+ 
+ 	start_pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (pte = start_pte; addr < end; pte += PTE_STEP, addr += PAGE_SIZE) {
++#else
+ 	for (pte = start_pte; addr != end; pte++, addr += PAGE_SIZE) {
++#endif
+ 		if (!pte_present(*pte))
+ 			continue;
+ 		page = vm_normal_page(vma, addr, *pte);
+diff -rup linux-6.1.28.orig/mm/mprotect.c linux-6.1.28/mm/mprotect.c
+--- linux-6.1.28.orig/mm/mprotect.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/mprotect.c	2023-05-13 14:13:50.211458874 +1000
+@@ -281,7 +281,11 @@ static unsigned long change_pte_range(st
+ 			}
+ #endif
+ 		}
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	arch_leave_lazy_mmu_mode();
+ 	pte_unmap_unlock(pte - 1, ptl);
+ 
+diff -rup linux-6.1.28.orig/mm/mremap.c linux-6.1.28/mm/mremap.c
+--- linux-6.1.28.orig/mm/mremap.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/mremap.c	2023-05-13 14:13:50.211458874 +1000
+@@ -177,8 +177,13 @@ static void move_ptes(struct vm_area_str
+ 	flush_tlb_batched_pending(vma->vm_mm);
+ 	arch_enter_lazy_mmu_mode();
+ 
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (; old_addr < old_end; old_pte += PTE_STEP, old_addr += PAGE_SIZE,
++				   new_pte += PTE_STEP, new_addr += PAGE_SIZE) {
++#else	
+ 	for (; old_addr < old_end; old_pte++, old_addr += PAGE_SIZE,
+ 				   new_pte++, new_addr += PAGE_SIZE) {
++#endif
+ 		if (pte_none(*old_pte))
+ 			continue;
+ 
+diff -rup linux-6.1.28.orig/mm/page_vma_mapped.c linux-6.1.28/mm/page_vma_mapped.c
+--- linux-6.1.28.orig/mm/page_vma_mapped.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/page_vma_mapped.c	2023-05-13 14:13:50.211458874 +1000
+@@ -271,7 +271,11 @@ next_pte:
+ 				pvmw->pte = NULL;
+ 				goto restart;
+ 			}
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++			pvmw->pte += PTE_STEP;
++#else
+ 			pvmw->pte++;
++#endif
+ 			if ((pvmw->flags & PVMW_SYNC) && !pvmw->ptl) {
+ 				pvmw->ptl = pte_lockptr(mm, pvmw->pmd);
+ 				spin_lock(pvmw->ptl);
+diff -rup linux-6.1.28.orig/mm/pagewalk.c linux-6.1.28/mm/pagewalk.c
+--- linux-6.1.28.orig/mm/pagewalk.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/pagewalk.c	2023-05-13 14:13:50.211458874 +1000
+@@ -33,7 +33,11 @@ static int walk_pte_range_inner(pte_t *p
+ 		if (addr >= end - PAGE_SIZE)
+ 			break;
+ 		addr += PAGE_SIZE;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		pte += PTE_STEP;
++#else
+ 		pte++;
++#endif
+ 	}
+ 	return err;
+ }
+diff -rup linux-6.1.28.orig/mm/swapfile.c linux-6.1.28/mm/swapfile.c
+--- linux-6.1.28.orig/mm/swapfile.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/swapfile.c	2023-05-13 14:13:50.211458874 +1000
+@@ -1891,7 +1891,11 @@ static int unuse_pte_range(struct vm_are
+ 		folio_put(folio);
+ try_next:
+ 		pte = pte_offset_map(pmd, addr);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	pte_unmap(pte - 1);
+ 
+ 	ret = 0;
+diff -rup linux-6.1.28.orig/mm/swap_state.c linux-6.1.28/mm/swap_state.c
+--- linux-6.1.28.orig/mm/swap_state.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/swap_state.c	2023-05-13 14:13:50.211458874 +1000
+@@ -765,9 +765,17 @@ static void swap_ra_info(struct vm_fault
+ 	ra_info->ptes = pte;
+ #else
+ 	tpte = ra_info->ptes;
+-	for (pfn = start; pfn != end; pfn++)
++	for (pfn = start; pfn != end; pfn++) {
++
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++		*tpte = *pte;
++		tpte += PTE_STEP;
++		pte += PTE_STEP;
++#else
+ 		*tpte++ = *pte++;
+ #endif
++	}
++#endif
+ 	pte_unmap(orig_pte);
+ }
+ 
+@@ -805,8 +813,13 @@ static struct page *swap_vma_readahead(s
+ 		goto skip;
+ 
+ 	blk_start_plug(&plug);
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	for (i = 0, pte = ra_info.ptes; i < ra_info.nr_pte;
++	     i++, pte += PTE_STEP) {
++#else
+ 	for (i = 0, pte = ra_info.ptes; i < ra_info.nr_pte;
+ 	     i++, pte++) {
++#endif
+ 		pentry = *pte;
+ 		if (!is_swap_pte(pentry))
+ 			continue;
+diff -rup linux-6.1.28.orig/mm/vmalloc.c linux-6.1.28/mm/vmalloc.c
+--- linux-6.1.28.orig/mm/vmalloc.c	2023-05-12 00:04:52.000000000 +1000
++++ linux-6.1.28/mm/vmalloc.c	2023-05-13 14:13:50.211458874 +1000
+@@ -126,7 +126,11 @@ static int vmap_pte_range(pmd_t *pmd, un
+ #endif
+ 		set_pte_at(&init_mm, addr, pte, pfn_pte(pfn, prot));
+ 		pfn++;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PFN_DOWN(size) * PTE_STEP, addr += size, addr != end);
++#else
+ 	} while (pte += PFN_DOWN(size), addr += size, addr != end);
++#endif
+ 	*mask |= PGTBL_PTE_MODIFIED;
+ 	return 0;
+ }
+@@ -335,7 +339,11 @@ static void vunmap_pte_range(pmd_t *pmd,
+ 	do {
+ 		pte_t ptent = ptep_get_and_clear(&init_mm, addr, pte);
+ 		WARN_ON(!pte_none(ptent) && !pte_present(ptent));
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	*mask |= PGTBL_PTE_MODIFIED;
+ }
+ 
+@@ -473,7 +481,6 @@ static int vmap_pages_pte_range(pmd_t *p
+ 	 * nr is a running index into the array which helps higher level
+ 	 * callers keep track of where we're up to.
+ 	 */
+-
+ 	pte = pte_alloc_kernel_track(pmd, addr, mask);
+ 	if (!pte)
+ 		return -ENOMEM;
+@@ -489,7 +496,11 @@ static int vmap_pages_pte_range(pmd_t *p
+ 
+ 		set_pte_at(&init_mm, addr, pte, mk_pte(page, prot));
+ 		(*nr)++;
++#ifdef CONFIG_ARM_64KB_MMU_PAGE_SIZE_SUPPORT
++	} while (pte += PTE_STEP, addr += PAGE_SIZE, addr != end);
++#else
+ 	} while (pte++, addr += PAGE_SIZE, addr != end);
++#endif
+ 	*mask |= PGTBL_PTE_MODIFIED;
+ 	return 0;
+ }

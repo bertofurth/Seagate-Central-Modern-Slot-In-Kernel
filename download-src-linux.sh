@@ -10,18 +10,14 @@
 
 # Based on gcc's download_prerequisites script
 
-linux='https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.16.20.tar.xz'
+linux='https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.28.tar.xz'
 
 echo_archives() {
     echo "${linux}"
 }
 
 echo_patchnames() {
-    echo "../0001-SC-linux-5.16.20-arch.patch"
-    echo "../0002-SC-linux-5.16.20-drivers.patch"
-    echo "../0003-SC-linux-5.16.20-fs.patch"
-    echo "../0004-SC-linux-5.16.20-include.patch"
-    echo "../0005-SC-linux-5.16.20-mm.patch"
+    echo "../0001-SC-linux-6.1.28.patch"
 }
 
 die() {
