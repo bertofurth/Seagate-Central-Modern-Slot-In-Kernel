@@ -18,7 +18,7 @@ Linux kernel v6.1.28 for Seagate Central
     
     # Download and extract Linux kernel v6.1.28 source code
     # or another close kernel release
-    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.2.tar.xz
+    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.28.tar.xz
     tar -xf linux-6.1.28.tar.xz
     cd linux-6.1.28
      
