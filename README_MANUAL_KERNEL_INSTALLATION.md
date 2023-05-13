@@ -118,7 +118,7 @@ section of this project with a name like "uImage.v6.1.X-sc"
 then it is suggested that the file be renamed to "uImage" at this
 point. For example
 
-     mv uImage.v6.1.26-sc uImage
+     mv uImage.v6.1.X-sc uImage
 
 Transfer this image to the Seagate Central. In this example we use 
 the scp command however, any other means can be used. When using scp 
