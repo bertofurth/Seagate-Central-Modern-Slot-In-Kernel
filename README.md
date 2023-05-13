@@ -80,6 +80,7 @@ The other notable features that this project focused on include
 * Control of status indicator LED
 * Access to the "Factory Default" button
 * A fake "sgnotify" device 
+* Access to CPU frequency adjustment.
 
 ## Warning 
 **Performing modifications of this kind on the Seagate Central is not 
@@ -185,9 +186,24 @@ and file transfer performance.
 
 https://github.com/bertofurth/Seagate-Central-Tips/blob/main/Network_Performance.md
 
-### Minor caveats
+## Minor caveats
 The issues below are unlikely to impact on the normal operation of the
 Seagate Central, however for completeness sake they are documented here.
+
+### CPU overheating in SMP mode causing "Segmentation Fault"
+In some rare cases, where a unit is running in an environment that is not
+well cooled, the CPU may overheat when running a full load in SMP mode for
+an extended period of time. This might lead to spurious "Segmentation Fault"
+or "Illegal Instruction" error messages.
+
+This can be overcome by either ensuring that the unit is running in a cool
+environment (less than 25C / 75F) or by throttling the unit's CPU clock 
+from the default maximum of 700MHz to a slightly lower speed (say 600MHz).
+
+This can be done via the /proc/cns3xxx/pm_cpu_freq file.
+
+Note that the system CPU frequency must be reset back to the default of 700MHz
+on soft reboot otherwise the unit will hang on reboot and require power cycling.
 
 ### NTFS formatted external drives
 Summary : We recommend using FAT32 or exFAT instead of NTFS for external
