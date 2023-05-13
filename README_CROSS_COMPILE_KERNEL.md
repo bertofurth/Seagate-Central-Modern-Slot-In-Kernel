@@ -10,25 +10,20 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v6.1.26 for Seagate Central 
+Linux kernel v6.1.28 for Seagate Central 
 
     # Download this project to the build host
     git clone https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel
     cd Seagate-Central-Modern-Slot-In-Kernel
     
-    # Download and extract Linux kernel v6.1.26 source code
+    # Download and extract Linux kernel v6.1.28 source code
     # or another close kernel release
-    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.26.tar.xz
-    tar -xf linux-6.1.26.tar.xz
-    cd linux-6.1.26
+    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.2.tar.xz
+    tar -xf linux-6.1.28.tar.xz
+    cd linux-6.1.28
      
     # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
-    patch -p1 < ../0001-SC-linux-6.1.26-arch.patch
-    patch -p1 < ../0002-SC-linux-6.1.26-drivers.patch
-    patch -p1 < ../0003-SC-linux-6.1.26-fs.patch
-    patch -p1 < ../0004-SC-linux-6.1.26-include.patch
-    patch -p1 < ../0005-SC-linux-6.1.26-mm.patch
-    patch -p1 < ../0006-SC-linux-6.1.26-kernel.patch
+    patch -p1 < ../0001-SC-linux-6.1.28.patch
     
     # Make sure that there are no .rej files indicating a failed patch
     # If there are, manually fix the problems in any .rej files
@@ -38,7 +33,8 @@ Linux kernel v6.1.26 for Seagate Central
     cp -r ../new-files/* .
     
     # Copy the kernel config file into the build directory
-    cp ../config-sc-v6.1.26-basic.txt ../obj/.config
+    # Choose whether you want to build a 64K or 4K page size kernel
+    cp ../config-sc-v6.1.28-basic.64K.txt ../obj/.config
     
     # Optional - If necessary, add the cross compilation suite directory to the PATH 
     export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
@@ -76,7 +72,7 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-6.1.26. The v6.1.X version has been chosen as it is the latest "Long Term
+6.1.28. The v6.1.X version has been chosen as it is the latest "Long Term
 Support" release available at the time of writing. Other reasonably
 close versions of the Linux kernel should also work but may require
 some tweaking, especially at the point where the kernel source tree
@@ -183,11 +179,11 @@ code and extracting it.
 
 Download the required version of the Linux kernel into the working directory,
 extract it and then change into the newly created directory as per the
-following example which uses Linux v6.1.26.
+following example which uses Linux v6.1.28.
 
-     wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.26.tar.xz
-     tar -xf linux-6.1.26.tar.xz
-     cd linux-6.1.26
+     wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.28.tar.xz
+     tar -xf linux-6.1.28.tar.xz
+     cd linux-6.1.28
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
@@ -196,12 +192,7 @@ Linux source code base directory will apply the patches. **Please make sure
 to execute these commands one at a time and carefully ensure that each
 command is successfull before proceeding to the next.**
 
-     patch -p1 < ../0001-SC-linux-6.1.26-arch.patch
-     patch -p1 < ../0002-SC-linux-6.1.26-drivers.patch
-     patch -p1 < ../0003-SC-linux-6.1.26-fs.patch
-     patch -p1 < ../0004-SC-linux-6.1.26-include.patch
-     patch -p1 < ../0005-SC-linux-6.1.26-mm.patch
-     patch -p1 < ../0006-SC-linux-6.1.26-kernel.patch
+     patch -p1 < ../0001-SC-linux-6.1.28.patch
      
 Make careful note of any "Hunk FAILED" messages. Check for any rejected patches
 by running the following command
@@ -210,7 +201,7 @@ by running the following command
      
 You may need to manually edit kernel source files where patches have failed. This
 will most likely happen if you use a version of the linux kernel that is significantly
-different to the version that these patches were created using (v6.1.26)
+different to the version that these patches were created using (v6.1.28)
 
 ### Copy new files
 New source files need to be copied into the Linux source tree as follows.
@@ -228,7 +219,7 @@ impact.
 ### Kernel configuration file
 When building the Linux kernel it is important to use a valid configuration file.
 This project includes a kernel configuration file called
-**config-sc-v6.1.26-basic.txt** that will generate a kernel image
+**config-sc-v6.1.28-basic.64K.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central in one monolithic kernel image without the need for any
 Linux modules.
@@ -240,12 +231,11 @@ subdirectory of the base working directory.
 From the Linux source code base directory run the command
 
     mkdir -p ../obj
-    cp ../config-sc-v6.1.26-basic.txt ../obj/.config
+    cp ../config-sc-v6.1.28-basic.64K.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
-**config-sc-v5.15.70-all-usb-cam-modules.txt** that can be copied into place
-instead of the above mentioned one if you wish to build modules supporting
-USB Video cameras. (See **README_USB_DEVICE_MODULES.md**)
+**config-sc-v6.1.28-basic.4K.txt** that can be used to generate a 4K
+page size Linux kernel for use with a Debian for Seagate Central system.
 
 ### Set build environment variables
 A number of environment variables need to be set correctly in order to
@@ -329,10 +319,10 @@ Here is an example of the "make uImage" command being executed
     
 The process should complete with a message similar to the following
 
-    Image Name:   Linux-6.1.26-sc
-    Created:      Thu May  4 06:53:15 2023
+    Image Name:   Linux-6.1.28-sc
+    Created:      Thu May  13 06:53:15 2023
     Image Type:   ARM Linux Kernel Image (uncompressed)
-    Data Size:    4437272 Bytes = 4333.27 KiB = 4.23 MiB
+    Data Size:    4437296 Bytes = 4333.27 KiB = 4.23 MiB
     Load Address: 22000000
     Entry Point:  22000000
       Kernel: arch/arm/boot/uImage is ready
@@ -360,7 +350,7 @@ line similar to the following. Make sure that all of the same environment
 variables are set as used in the previous make commands shown above. For
 example
 
-    make -j6 modules
+    make -j4 modules
 
 Finally, use "make modules_install" to copy all the compiled modules to
 a holding directory on the build machine where they can be later copied
