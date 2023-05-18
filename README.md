@@ -200,7 +200,7 @@ This can be overcome by either ensuring that the unit is running in a cool
 environment (less than 25C / 75F) or by throttling the unit's CPU clock 
 from the default maximum of 700MHz to a slightly lower speed (say 600MHz).
 
-This can be done via the /proc/cns3xxx/pm_cpu_freq file.
+This can be done via the /proc/cns3xxx/pm_cpu_freq special file.
 
 Note that the system CPU frequency must be reset back to the default of 700MHz
 on soft reboot otherwise the unit will hang on reboot and require power cycling.
