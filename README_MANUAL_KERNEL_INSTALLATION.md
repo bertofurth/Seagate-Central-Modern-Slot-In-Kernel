@@ -20,7 +20,7 @@ then make sure that none of the steps below interfere with those
 changes.
 
 ## TLDNR
-* Obtain a uImage kernel image from the releases section in the project.
+* Obtain a uImage kernel image from the releases section in the project (or build one yourself).
 * Upload the uImage to the unit being upgraded.
 * Perform optional customizations and optimizations.
 * Identify then mount the boot partition (either /dev/sda1 or /dev/sda2).
@@ -54,12 +54,10 @@ and that you can successfully issue the **su** command to gain root
 privileges. Note that some later versions of Seagate Central firmware
 deliberately disable su access by default.
 
-If you do not have su access on your Seagate Central then note that 
-the "Firmware Upgrade" option of the Seagate-Central-Samba project
-provides a method of re-enabling su access as a part of installing the
-updated samba software. 
+If you do not have su access on your Seagate Central then there are
+instructions at the following URL that can help you to attain it.
 
-https://github.com/bertofurth/Seagate-Central-Samba
+https://github.com/bertofurth/Seagate-Central-Tips/blob/main/Reset-SU-Root-Password.md
 
 ### Know how to copy files between your host and the Seagate Central. 
 Not only should you know how to transfer files to and from your Seagate
@@ -70,8 +68,8 @@ samba is not working to use FTP or SCP which should both still work.
 ### Samba version on the Seagate Central
 Although this is not strictly a pre-requisite of this kernel installation
 procedure, the original samba file sharing service on the Seagate Central 
-will have imparied performance after the new kernel is installed. We suggest
-installing an up to date and modern version of samba. 
+will have slightly imparied performance after the new kernel is installed.
+We suggest installing an up to date and modern version of samba. 
 
 See the Seagate-Central-Samba project at the following link for more
 details and instructions on how to upgrade the samba service on the
@@ -405,7 +403,7 @@ that subdirectory there should be more module configuration files
 and a "kernel/" subdirectory containing the module tree. For example
 
     #ls -p cross-mod/lib/modules/
-    6.1.26-sc/
+    6.1.69-sc/
     #ls -p cross-mod/lib/modules/6.1.26-sc
     build
     kernel/
@@ -443,14 +441,14 @@ following command
 should show an output similar to the following.
 
      drwxrwxr-x 4 root root 4096 Sep 17  2015 2.6.35.13-cavm1.whitney-econa.whitney-econa
-     drwxr-xr-x 3 root root 4096 Sep 28 14:47 6.1.26-sc
+     drwxr-xr-x 3 root root 4096 Sep 28 14:47 6.1.69-sc
      
 Finally remove the original "modules.dep" file in the new module 
 subdirectory. Removing this file will cause the unit to perform a
 "depmod" for the newly installed modules on next boot which will
 properly index them.
 
-     rm /lib/modules/6.1.26-sc/modules.dep
+     rm /lib/modules/6.1.69-sc/modules.dep
      
 ### Reboot and confirm the upgrade    
 Finally, we reboot the unit and confirm that the new kernel is
@@ -492,7 +490,7 @@ The output should indicate that the version of the running kernel is now
 6.1.x-sc and that SMP functionality is enabled, as per the following sample
 output.
 
-     Linux NAS-X 6.1.26-sc #1 SMP Wed May 6 16:43:29 EST 2023 armv6l GNU/Linux   
+     Linux NAS-X 6.1.69-sc #1 SMP Sun Dec 31 09:25:15 AEDT 2023 armv6l GNU/Linux
      
 Further confirm that the services you wish to make use of on the Seagate Central
 are functional, including
@@ -560,23 +558,16 @@ to have the power supply disconnected then reconnected for the Ethernet
 to work.
 
 If power cycling the unit once or twice does not resolve the problem then 
-the next 
-suggested course of action is to force the unit to revert to it's
-backup firmware as per the procedure at
-
-http://seagatecentralenhancementclub.blogspot.com/2015/08/revert-to-previous-firmware-on-seagate.html
-
-Archive : https://archive.ph/3eOX0
-
-In essence the steps are
+the next suggested course of action is to force the unit to revert to it's
+backup firmware as per the following procedure
 
 1) Power down then power up the Seagate Central by disconnecting and reconnecting the power.
 2) Wait about 30 seconds to a minute for the LED status light on top of the unit to turn from solid amber to flashing green. 
-3) As soon as the LED flashes green execute the first 2 steps three more times in a row.
+3) As soon as the LED starts flashing green execute the first 2 steps three more times in a row.
 4) On the 4th boot up let the unit fully boot. It should now load the backup / alternate version of firmware
 
 Make sure that step 2 is followed correctly. That is, power off the 
-unit as soon as the LEF status light starts flashing green. Don't
+unit as soon as the LED status light starts flashing green. Don't
 let it proceed to the solid green state.
 
 After the unit boots up with the alternate version of firmware, take
