@@ -10,20 +10,20 @@ Manual installation of the cross compiled kernel is covered by
 ## TLDNR
 On a build server with an appropriate cross compilation suite 
 installed run the following commands to download and compile
-Linux kernel v6.1.28 for Seagate Central 
+Linux kernel v6.1.69 for Seagate Central 
 
     # Download this project to the build host
     git clone https://github.com/bertofurth/Seagate-Central-Modern-Slot-In-Kernel
     cd Seagate-Central-Modern-Slot-In-Kernel
     
-    # Download and extract Linux kernel v6.1.28 source code
+    # Download and extract Linux kernel v6.1.69 source code
     # or another close kernel release
-    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.28.tar.xz
-    tar -xf linux-6.1.28.tar.xz
-    cd linux-6.1.28
+    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.69.tar.xz
+    tar -xf linux-6.1.69.tar.xz
+    cd linux-6.1.69
      
     # Apply Seagate Central patches to Linux (Make sure to check for FAILED messages)
-    patch -p1 < ../0001-SC-linux-6.1.28.patch
+    patch -p1 < ../0001-SC-linux-6.1.69.patch
     
     # Make sure that there are no .rej files indicating a failed patch
     # If there are, manually fix the problems in any .rej files
@@ -33,11 +33,12 @@ Linux kernel v6.1.28 for Seagate Central
     cp -r ../new-files/* .
     
     # Copy the kernel config file into the build directory
-    # Choose whether you want to build a 64K or 4K page size kernel
-    cp ../config-sc-v6.1.28-basic.64K.txt ../obj/.config
+    # By default we compile a 64K kernel but there is a 4K kernel
+    # config file included that you can use instead.
+    cp ../config-sc-v6.1.69-basic.64K.txt ../obj/.config
     
-    # Optional - If necessary, add the cross compilation suite directory to the PATH 
-    export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
+    # Unlikely - If necessary, add the cross compilation suite directory to the PATH 
+    # export PATH=$HOME/Seagate-Central-Toolchain/cross/tools/bin:$PATH
     
     # Specify the name of the arm cross compilation suite prefix
     # This could be "arm-none-eabi-" or it could be the
@@ -72,7 +73,7 @@ installed on the Seagate Central as per the instructions in
 
 ## Tested versions
 This procedure has been tested to work building Linux Kernel version
-6.1.28. The v6.1.X version has been chosen as it is the latest "Long Term
+6.1.69. The v6.1.X version has been chosen as it is the latest "Long Term
 Support" release available at the time of writing. Other reasonably
 close versions of the Linux kernel should also work but may require
 some tweaking, especially at the point where the kernel source tree
@@ -105,7 +106,7 @@ on the building host. The generated kernel will only consume about
 
 ### Time
 The kernel build component takes in the order of about 8 minutes to complete
-on an 8 core i7 PC. It takes about 45 minutes on a Raspberry Pi 4B.
+on an 8 core i7 Gen 10 PC. It takes about 45 minutes on a Raspberry Pi 4B.
 
 ### A cross compilation suite on the build host
 It is possible to use the generic "arm-none-eabi-" style cross compiler 
@@ -181,18 +182,16 @@ Download the required version of the Linux kernel into the working directory,
 extract it and then change into the newly created directory as per the
 following example which uses Linux v6.1.28.
 
-     wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.28.tar.xz
-     tar -xf linux-6.1.28.tar.xz
-     cd linux-6.1.28
+     wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.29.tar.xz
+     tar -xf linux-6.1.69.tar.xz
+     cd linux-6.1.69
 
 ### Apply patches
 After changing into the Linux source subdirectory, patches need to be applied
 to the native Linux kernel source code. The following commands executed from the 
-Linux source code base directory will apply the patches. **Please make sure
-to execute these commands one at a time and carefully ensure that each
-command is successfull before proceeding to the next.**
+Linux source code base directory will apply the patches. 
 
-     patch -p1 < ../0001-SC-linux-6.1.28.patch
+     patch -p1 < ../0001-SC-linux-6.1.69.patch
      
 Make careful note of any "Hunk FAILED" messages. Check for any rejected patches
 by running the following command
@@ -201,7 +200,7 @@ by running the following command
      
 You may need to manually edit kernel source files where patches have failed. This
 will most likely happen if you use a version of the linux kernel that is significantly
-different to the version that these patches were created using (v6.1.28)
+different to the version that these patches were created using (v6.1.69)
 
 ### Copy new files
 New source files need to be copied into the Linux source tree as follows.
@@ -219,7 +218,7 @@ impact.
 ### Kernel configuration file
 When building the Linux kernel it is important to use a valid configuration file.
 This project includes a kernel configuration file called
-**config-sc-v6.1.28-basic.64K.txt** that will generate a kernel image
+**config-sc-v6.1.69-basic.64K.txt** that will generate a kernel image
 containing all the base functionality required for normal operation of the
 Seagate Central in one monolithic kernel image without the need for any
 Linux modules.
@@ -231,17 +230,20 @@ subdirectory of the base working directory.
 From the Linux source code base directory run the command
 
     mkdir -p ../obj
-    cp ../config-sc-v6.1.28-basic.64K.txt ../obj/.config
+    cp ../config-sc-v6.1.69-basic.64K.txt ../obj/.config
      
 N.B. There is another example configuration file in this project called
-**config-sc-v6.1.28-basic.4K.txt** that can be used to generate a 4K
-page size Linux kernel for use with a Debian for Seagate Central system.
+**config-sc-v6.1.69-basic.4K.txt** that can be used to generate a 4K
+page size Linux kernel. This might be appropriate if you are planning on
+running Debian on the unit instead of the native Seagate Central system.
+See the Seagate-Central-Debian project at 
+https://github.com/bertofurth/Seagate-Central-Debian for more details.
 
 ### Set build environment variables
 A number of environment variables need to be set correctly in order to
 correctly cross compile the Linux kernel.
 
-#### Optional - PATH
+#### Optional (Unlikely to be needed) - PATH
 If the cross compililation tool binaries are not in the standard path then the 
 location of the tools needs to be prepended to the path. This will most likely be
 the case when using the tools generated by the Seagate-Central-Toolchain project.
@@ -311,18 +313,19 @@ a kernel suitable for loading on the Seagate Central.
 Note also that it might be useful to include the "-j[num-cpus]" parameter in the make
 command as this will let the compilation process make use of multiple CPU threads
 to speed up the build process. In general this j value is set to the number of
-available cpu cores on your building system.
-    
-Here is an example of the "make uImage" command being executed
+available cpu cores available on your building system (cat /proc/cpuinfo)
+
+Here is an example of the "make uImage" command being executed to make use of 4
+CPU threads.
 
     make -j4 uImage
     
 The process should complete with a message similar to the following
 
-    Image Name:   Linux-6.1.28-sc
-    Created:      Thu May  13 06:53:15 2023
+    Image Name:   Linux-6.1.69-sc
+    Created:      Sun Dec 31 09:25:27 2023
     Image Type:   ARM Linux Kernel Image (uncompressed)
-    Data Size:    4437296 Bytes = 4333.27 KiB = 4.23 MiB
+    Data Size:    4531096 Bytes = 4424.90 KiB = 4.32 MiB
     Load Address: 22000000
     Entry Point:  22000000
       Kernel: arch/arm/boot/uImage is ready
@@ -332,7 +335,7 @@ under the build directory at ../obj/arch/arm/boot/uImage . This kernel
 image can be installed on the Seagate Central as per the instructions
 in **INSTRUCTIONS_MANUAL_KERNEL_INSTALLATION.md** .
 
-#### Optional - Build Linux modules 
+#### Optional (Unlikely needed) - Build Linux modules 
 The default kernel configuration file in this project generates a
 monolithic Linux kernel containing all the basic functionality required
 for the Seagate Central to operate as per the original kernel.
